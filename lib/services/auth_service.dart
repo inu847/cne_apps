@@ -86,7 +86,9 @@ class AuthService {
   // Get stored token
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(ApiConfig.tokenKey);
+    final token = prefs.getString(ApiConfig.tokenKey);
+    print('AuthService: Retrieved token - ${token != null ? "Token exists with length ${token.length}" : "Token is null"}');
+    return token;
   }
 
   // Save auth data to SharedPreferences

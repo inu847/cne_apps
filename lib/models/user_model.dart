@@ -1,3 +1,5 @@
+import '../utils/format_utils.dart';
+
 class User {
   final int id;
   final String name;
@@ -10,11 +12,21 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-    );
+    try {
+      return User(
+        id: FormatUtils.safeParseInt(json['id']),
+        name: json['name'] ?? '',
+        email: json['email'] ?? '',
+      );
+    } catch (e) {
+      print('Error parsing User JSON: $e');
+      print('Problematic JSON: $json');
+      return User(
+        id: 0,
+        name: json['name'] ?? 'Unknown User',
+        email: json['email'] ?? 'unknown@example.com',
+      );
+    }
   }
 
   Map<String, dynamic> toJson() {

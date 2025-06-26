@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/pos_screen.dart';
 import 'services/auth_service.dart';
 import 'models/user_model.dart';
+import 'providers/settings_provider.dart';
+import 'providers/order_provider.dart';
+import 'providers/transaction_provider.dart';
+import 'providers/payment_method_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,7 +52,14 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => TransactionProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentMethodProvider()),
+      ],
+      child: MaterialApp(
       title: 'CashNEntry POS',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -64,6 +76,6 @@ class _MyAppState extends State<MyApp> {
         '/dashboard': (context) => _user != null ? DashboardScreen(user: _user!) : const LoginScreen(),
         '/pos': (context) => const POSScreen(),
       },
-    );
+    ));
   }
 }
