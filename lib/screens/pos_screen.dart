@@ -5,6 +5,7 @@ import '../models/category_model.dart';
 import '../models/product_model.dart';
 import '../models/order_model.dart';
 import '../models/payment_method_model.dart';
+import '../models/receipt_model.dart';
 import '../utils/format_utils.dart';
 import '../services/category_service.dart';
 import '../services/product_service.dart';
@@ -13,8 +14,10 @@ import '../config/api_config.dart';
 import '../providers/settings_provider.dart';
 import '../providers/order_provider.dart';
 import '../providers/payment_method_provider.dart';
+import '../providers/voucher_provider.dart';
 import '../widgets/payment_method_dialog.dart';
 import 'saved_orders_screen.dart';
+import 'receipt_screen.dart';
 
 class POSScreen extends StatefulWidget {
   const POSScreen({Key? key}) : super(key: key);
@@ -28,6 +31,10 @@ class _POSScreenState extends State<POSScreen> {
   final CategoryService _categoryService = CategoryService();
   final ProductService _productService = ProductService();
   final AuthService _authService = AuthService();
+  
+  // Controller untuk input nama pelanggan dan voucher
+  final TextEditingController _customerNameController = TextEditingController();
+  final TextEditingController _voucherController = TextEditingController();
   
   // ScrollController untuk infinite scroll
   final ScrollController _scrollController = ScrollController();
@@ -122,9 +129,13 @@ class _POSScreenState extends State<POSScreen> {
     return 0.0;
   }
   
-  // Menghitung total belanja termasuk pajak
+  // Menghitung total belanja termasuk pajak dan diskon voucher
   double get _totalAmount {
-    return _subtotal + _tax;
+    final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
+    final discountValue = voucherProvider.activeVoucher != null ? voucherProvider.discountValue : 0;
+    
+    // Total setelah pajak dan diskon
+    return (_subtotal + _tax) - discountValue;
   }
   
   // Menghitung total item di keranjang
@@ -438,7 +449,63 @@ class _POSScreenState extends State<POSScreen> {
     // Membersihkan controller saat widget di-dispose
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
+    _customerNameController.dispose();
+    _voucherController.dispose();
     super.dispose();
+  }
+  
+  // Validasi voucher
+  void _validateVoucher() async {
+    final voucherCode = _voucherController.text.trim();
+    if (voucherCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Masukkan kode voucher terlebih dahulu')),
+      );
+      return;
+    }
+    
+    final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
+    final customerName = _customerNameController.text.trim();
+    
+    // Validasi voucher dengan API
+    final result = await voucherProvider.validateVoucher(
+      code: voucherCode,
+      orderAmount: _totalAmount,
+      // Jika perlu mengirim customer_id, tambahkan di sini
+      // customerId: customerId,
+    );
+    
+    if (result) {
+      // Voucher valid, update UI
+      setState(() {
+        // Recalculate total with discount
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Voucher ${voucherProvider.voucherName} berhasil diterapkan'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      // Voucher tidak valid
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(voucherProvider.error ?? 'Voucher tidak valid'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+  
+  // Hapus voucher
+  void _clearVoucher() {
+    final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
+    voucherProvider.clearVoucher();
+    _voucherController.clear();
+    setState(() {
+      // Recalculate total without discount
+    });
   }
   
   // Listener untuk infinite scroll
@@ -1058,10 +1125,13 @@ class _POSScreenState extends State<POSScreen> {
       // Simpan jumlah item dan total untuk ditampilkan di pesan sukses
       final itemCount = _totalItems;
       final totalAmount = _totalAmount;
+      final customerName = _customerNameController.text.trim();
       
-      // Dapatkan OrderProvider dan TransactionProvider
+      // Dapatkan OrderProvider, TransactionProvider, dan VoucherProvider
       final orderProvider = Provider.of<OrderProvider>(context, listen: false);
       final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+      final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
+      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
       
       // Konversi item keranjang ke OrderItem
       final List<OrderItem> orderItems = _cart.map((item) => OrderItem.fromCartItem(item)).toList();
@@ -1081,6 +1151,7 @@ class _POSScreenState extends State<POSScreen> {
       final List<Map<String, dynamic>> payments = [
         {
           'payment_method_id': paymentMethod.id,
+          'payment_method_name': paymentMethod.name,
           'amount': amount,
           'reference_number': 'REF-${DateTime.now().millisecondsSinceEpoch}'
         }
@@ -1090,14 +1161,22 @@ class _POSScreenState extends State<POSScreen> {
       final result = await transactionProvider.createTransaction(
         order,
         isParked: false, // Transaksi langsung selesai
+        customerName: customerName.isNotEmpty ? customerName : null,
         payments: payments,
+        voucherCode: voucherProvider.activeVoucher != null ? voucherProvider.voucherCode : null,
       );
       
       if (result) {
-        // Bersihkan keranjang
+        // Bersihkan keranjang, nama pelanggan, dan voucher
         setState(() {
           _cart = [];
+          _customerNameController.clear();
+          _voucherController.clear();
         });
+        
+        // Bersihkan voucher di provider
+        final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
+        voucherProvider.clearVoucher();
         
         // Tampilkan pesan sukses
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1113,6 +1192,10 @@ class _POSScreenState extends State<POSScreen> {
                 const SizedBox(height: 4),
                 Text('$itemCount item dengan total Rp ${FormatUtils.formatCurrency(totalAmount.toInt())}'),
                 Text('Metode Pembayaran: ${paymentMethod.name}'),
+                if (customerName.isNotEmpty)
+                  Text('Pelanggan: $customerName'),
+                if (Provider.of<VoucherProvider>(context, listen: false).activeVoucher != null)
+                  Text('Voucher: ${Provider.of<VoucherProvider>(context, listen: false).voucherName} (${Provider.of<VoucherProvider>(context, listen: false).voucherCode})'),
                 if (transactionProvider.lastTransaction != null)
                   Text('No. Invoice: ${transactionProvider.lastTransaction!["invoice_number"]}'),
               ],
@@ -1120,9 +1203,32 @@ class _POSScreenState extends State<POSScreen> {
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
             action: SnackBarAction(
-              label: 'OK',
+              label: 'Lihat Struk',
               textColor: Colors.white,
               onPressed: () {
+                // Tampilkan receipt screen
+                if (transactionProvider.lastTransaction != null) {
+                  // Buat objek Receipt dari data transaksi
+                  final receipt = Receipt.fromTransaction(
+                    transaction: transactionProvider.lastTransaction!,
+                    order: order,
+                    receiptSettings: settingsProvider.receipt,
+                    cashierName: settingsProvider.general.cashierName,
+                    storeName: settingsProvider.store.storeName,
+                    storeAddress: settingsProvider.store.storeAddress,
+                    storePhone: settingsProvider.store.storePhone,
+                  );
+                  
+                  // Navigasi ke receipt screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ReceiptScreen(receipt: receipt),
+                    ),
+                  );
+                }
+                
+                // Hide the snackbar
                 ScaffoldMessenger.of(context).hideCurrentSnackBar();
               },
             ),
@@ -1159,9 +1265,11 @@ class _POSScreenState extends State<POSScreen> {
     if (_cart.isEmpty) return;
     
     try {
-      // Dapatkan OrderProvider dan TransactionProvider
+      // Dapatkan OrderProvider, TransactionProvider, dan VoucherProvider
       final orderProvider = Provider.of<OrderProvider>(context, listen: false);
       final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+      final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
+      final customerName = _customerNameController.text.trim();
       
       // Konversi item keranjang ke OrderItem
       final List<OrderItem> orderItems = _cart.map((item) => OrderItem.fromCartItem(item)).toList();
@@ -1181,7 +1289,9 @@ class _POSScreenState extends State<POSScreen> {
       final apiResult = await transactionProvider.createTransaction(
         order,
         isParked: true, // Transaksi disimpan/parked
+        customerName: customerName.isNotEmpty ? customerName : null,
         notes: 'Pesanan disimpan',
+        voucherCode: voucherProvider.activeVoucher != null ? voucherProvider.voucherCode : null,
       );
       
       if (apiResult) {
@@ -1204,6 +1314,11 @@ class _POSScreenState extends State<POSScreen> {
                   Text('${order.totalItems} item dengan total Rp ${FormatUtils.formatCurrency(order.total.toInt())}'),
                   const SizedBox(height: 4),
                   Text('Nomor Pesanan: ${order.orderNumber}'),
+                  if (customerName.isNotEmpty)
+                    Text('Pelanggan: $customerName'),
+                  // Get voucher information from provider
+                  if (Provider.of<VoucherProvider>(context, listen: false).activeVoucher != null)
+                    Text('Voucher: ${Provider.of<VoucherProvider>(context, listen: false).voucherName} (${Provider.of<VoucherProvider>(context, listen: false).voucherCode})'),
                   if (transactionProvider.lastTransaction != null)
                     Text('No. Invoice: ${transactionProvider.lastTransaction!['invoice_number']}'),
                 ],
@@ -1226,10 +1341,16 @@ class _POSScreenState extends State<POSScreen> {
             ),
           );
           
-          // Bersihkan keranjang
+          // Bersihkan keranjang, nama pelanggan, dan voucher
           setState(() {
             _cart = [];
+            _customerNameController.clear();
+            _voucherController.clear();
           });
+          
+          // Bersihkan voucher di provider
+          final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
+          voucherProvider.clearVoucher();
         } else {
           // Tampilkan pesan error lokal
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1528,6 +1649,110 @@ class _POSScreenState extends State<POSScreen> {
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: _primaryColor),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Input nama pelanggan
+                    TextField(
+                      controller: _customerNameController,
+                      decoration: InputDecoration(
+                        labelText: 'Nama Pelanggan (Opsional)',
+                        hintText: 'Masukkan nama pelanggan',
+                        prefixIcon: Icon(Icons.person, color: _primaryColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: _primaryColor),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Input kode voucher
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _voucherController,
+                            decoration: InputDecoration(
+                              labelText: 'Kode Voucher',
+                              hintText: 'Masukkan kode voucher',
+                              prefixIcon: Icon(Icons.discount, color: _primaryColor),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide(color: _primaryColor),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _validateVoucher,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          ),
+                          child: const Text('Terapkan'),
+                        ),
+                      ],
+                    ),
+                    // Tampilkan informasi voucher jika ada
+                    Consumer<VoucherProvider>(
+                      builder: (context, voucherProvider, child) {
+                        if (voucherProvider.activeVoucher != null) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Voucher ${voucherProvider.voucherName}',
+                                      style: const TextStyle(color: Colors.green),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      '- Rp ${FormatUtils.formatCurrency(voucherProvider.discountValue.toInt())}',
+                                      style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                                    ),
+                                    IconButton(
+                                      onPressed: _clearVoucher,
+                                      icon: const Icon(Icons.close, size: 16),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(),
+                                      color: Colors.red,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
                     ),
                   ],
                 ),

@@ -102,4 +102,32 @@ class TransactionProvider with ChangeNotifier {
     _lastTransaction = null;
     notifyListeners();
   }
+  
+  // Mendapatkan detail transaksi berdasarkan ID
+  Future<Map<String, dynamic>?> getTransactionDetail(int transactionId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    
+    try {
+      final result = await _transactionService.getTransactionDetail(transactionId);
+      
+      _isLoading = false;
+      
+      if (result['success']) {
+        final transactionData = result['data']['transaction'];
+        notifyListeners();
+        return transactionData;
+      } else {
+        _error = result['message'];
+        notifyListeners();
+        return null;
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = 'Terjadi kesalahan: $e';
+      notifyListeners();
+      return null;
+    }
+  }
 }

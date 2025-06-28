@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../screens/transactions_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -19,6 +20,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _onItemTapped(int index) {
     if (index == 1) { // POS menu
       Navigator.pushNamed(context, '/pos');
+      return;
+    } else if (index == 4) { // Transactions menu
+      Navigator.pushNamed(context, '/transactions');
       return;
     }
     
@@ -118,6 +122,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icon(Icons.people_outline),
             activeIcon: Icon(Icons.people),
             label: 'Customers',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_outlined),
+            activeIcon: Icon(Icons.receipt),
+            label: 'Transactions',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt_long_outlined),
@@ -294,8 +303,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _buildNavItem(1, 'POS', Icons.point_of_sale_outlined, Icons.point_of_sale),
                 _buildNavItem(2, 'Inventory', Icons.inventory_outlined, Icons.inventory),
                 _buildNavItem(3, 'Customers', Icons.people_outline, Icons.people),
-                _buildNavItem(4, 'Reports', Icons.receipt_long_outlined, Icons.receipt_long),
-                _buildNavItem(5, 'Settings', Icons.settings_outlined, Icons.settings),
+                _buildNavItem(4, 'Transactions', Icons.receipt_outlined, Icons.receipt),
+                _buildNavItem(5, 'Reports', Icons.receipt_long_outlined, Icons.receipt_long),
+                _buildNavItem(6, 'Settings', Icons.settings_outlined, Icons.settings),
               ],
             ),
           ),
@@ -327,8 +337,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 1: return 'Point of Sale';
       case 2: return 'Inventory Management';
       case 3: return 'Customer Management';
-      case 4: return 'Reports & Analytics';
-      case 5: return 'Settings';
+      case 4: return 'Transactions';
+      case 5: return 'Reports & Analytics';
+      case 6: return 'Settings';
       default: return 'Dashboard';
     }
   }
@@ -342,6 +353,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onTap: () {
           if (index == 1) { // POS menu
             Navigator.pushNamed(context, '/pos');
+            return;
+          } else if (index == 4) { // Transactions menu
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TransactionsScreen(),
+              ),
+            );
             return;
           }
           setState(() {

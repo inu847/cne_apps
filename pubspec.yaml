@@ -39,6 +39,35 @@ dependencies:
   http: ^1.2.0
   shared_preferences: ^2.2.2
   provider: ^6.1.1
+  
+  # Library untuk thermal printer - menggunakan library yang lebih kompatibel
+  # Replacing blue_thermal_printer with print_bluetooth_thermal which has better compatibility
+  print_bluetooth_thermal: ^1.0.9
+  esc_pos_bluetooth: ^0.4.1
+  # Using esc_pos_utils_plus instead of esc_pos_utils for better compatibility
+  esc_pos_utils_plus: ^2.0.4
+  html: ^0.15.0
+  
+  # Library untuk manipulasi gambar - menggunakan versi terbaru dengan performa lebih baik
+  image: ^4.1.3
+
+  # Library untuk pembuatan dan pencetakan PDF - menggunakan pdf_render untuk rendering yang lebih cepat
+  pdf_render: ^1.4.0
+  # Menggunakan pdf package untuk pembuatan PDF yang lebih fleksibel
+  pdf: ^3.10.7
+  # Menggunakan pdf_viewer_plugin untuk preview yang lebih ringan
+  pdf_viewer_plugin: ^2.0.1
+  
+  # Library untuk caching - menggunakan cached_network_image yang lebih optimal
+  cached_network_image: ^3.3.1
+  
+  # Library untuk manajemen file - lebih efisien untuk operasi file
+  path_provider: ^2.1.2
+  path_provider_windows: ^2.2.1
+  path_provider_linux: ^2.2.1
+  
+  # Library untuk kompresi - mengoptimalkan ukuran file
+  archive: ^3.4.10
 
 dev_dependencies:
   flutter_test:
@@ -50,6 +79,12 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
+
+# Override dependencies to resolve version conflicts
+dependency_overrides:
+  # Force image package to version 4.1.3 for all dependencies
+  image: ^4.1.3
+  # Remove esc_pos_utils override to avoid conflicts with esc_pos_utils_plus
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -77,17 +112,12 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito/static/Nunito-Regular.ttf
+        - asset: assets/fonts/Nunito/static/Nunito-Bold.ttf
+          weight: 700
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

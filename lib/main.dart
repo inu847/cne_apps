@@ -1,18 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:path_provider/path_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/pos_screen.dart';
+import 'screens/transactions_screen.dart';
 import 'services/auth_service.dart';
+import 'services/receipt_service.dart';
+import 'services/platform_service.dart';
 import 'models/user_model.dart';
 import 'providers/settings_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/payment_method_provider.dart';
+import 'providers/voucher_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize platform service
+  await initPlatformService();
   runApp(const MyApp());
+}
+
+// Initialize platform service
+Future<void> initPlatformService() async {
+  try {
+    // Initialize the platform service
+    final platformService = PlatformService();
+    
+    // Get platform name for logging
+    final platformName = await platformService.getPlatformName();
+    print('Running on platform: $platformName');
+    
+    // Initialize temporary directory
+    final tempDir = await platformService.getTemporaryDir();
+    print('Temporary directory initialized: ${tempDir.path}');
+  } catch (e) {
+    print('Error initializing platform service: $e');
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -58,8 +83,10 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => PaymentMethodProvider()),
+        ChangeNotifierProvider(create: (_) => VoucherProvider()),
       ],
       child: MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'CashNEntry POS',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -75,6 +102,7 @@ class _MyAppState extends State<MyApp> {
         '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => _user != null ? DashboardScreen(user: _user!) : const LoginScreen(),
         '/pos': (context) => const POSScreen(),
+        '/transactions': (context) => const TransactionsScreen(),
       },
     ));
   }

@@ -46,6 +46,7 @@ class GeneralSettings {
   final String storePhone;
   final String storeEmail;
   final String currencySymbol;
+  final String cashierName;
 
   GeneralSettings({
     required this.storeName,
@@ -53,6 +54,7 @@ class GeneralSettings {
     required this.storePhone,
     required this.storeEmail,
     required this.currencySymbol,
+    this.cashierName = 'Kasir',
   });
 
   factory GeneralSettings.fromJson(Map<String, dynamic> json) {
@@ -62,6 +64,7 @@ class GeneralSettings {
       storePhone: json['store_phone'] ?? '',
       storeEmail: json['store_email'] ?? '',
       currencySymbol: json['currency_symbol'] ?? 'Rp',
+      cashierName: json['cashier_name'] ?? 'Kasir',
     );
   }
 
@@ -72,6 +75,7 @@ class GeneralSettings {
       'store_phone': storePhone,
       'store_email': storeEmail,
       'currency_symbol': currencySymbol,
+      'cashier_name': cashierName,
     };
   }
 }

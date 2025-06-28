@@ -140,4 +140,48 @@ class TransactionService {
       };
     }
   }
+  
+  // Mendapatkan detail transaksi berdasarkan ID
+  Future<Map<String, dynamic>> getTransactionDetail(int transactionId) async {
+    try {
+      // Dapatkan token
+      final token = await _authService.getToken();
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Tidak ada token autentikasi. Silakan login kembali.'
+        };
+      }
+      
+      // Kirim request
+      final response = await http.get(
+        Uri.parse('${ApiConfig.transactionsEndpoint}/$transactionId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      
+      // Parse response
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        return {
+          'success': true,
+          'data': responseData['data'],
+          'message': responseData['message'] ?? 'Berhasil mendapatkan detail transaksi'
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Gagal mendapatkan detail transaksi'
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Terjadi kesalahan: $e'
+      };
+    }
+  }
 }
