@@ -57,14 +57,6 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Struk Pembayaran'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.print),
-            onPressed: () async {
-              await receiptService.printReceipt(context, widget.receipt);
-            },
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

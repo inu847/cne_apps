@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../screens/transactions_screen.dart';
+import '../screens/inventory_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final User user;
@@ -20,6 +21,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _onItemTapped(int index) {
     if (index == 1) { // POS menu
       Navigator.pushNamed(context, '/pos');
+      return;
+    } else if (index == 2) { // Inventory menu
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const InventoryScreen(),
+        ),
+      );
       return;
     } else if (index == 4) { // Transactions menu
       Navigator.pushNamed(context, '/transactions');
@@ -116,7 +125,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.inventory_outlined),
             activeIcon: Icon(Icons.inventory),
-            label: 'Inventory',
+            label: 'Persediaan',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people_outline),
@@ -301,7 +310,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 _buildNavItem(0, 'Dashboard', Icons.dashboard_outlined, Icons.dashboard),
                 _buildNavItem(1, 'POS', Icons.point_of_sale_outlined, Icons.point_of_sale),
-                _buildNavItem(2, 'Inventory', Icons.inventory_outlined, Icons.inventory),
+                _buildNavItem(2, 'Persediaan', Icons.inventory_outlined, Icons.inventory),
                 _buildNavItem(3, 'Customers', Icons.people_outline, Icons.people),
                 _buildNavItem(4, 'Transactions', Icons.receipt_outlined, Icons.receipt),
                 _buildNavItem(5, 'Reports', Icons.receipt_long_outlined, Icons.receipt_long),
@@ -335,7 +344,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     switch (_selectedIndex) {
       case 0: return 'Dashboard';
       case 1: return 'Point of Sale';
-      case 2: return 'Inventory Management';
+      case 2: return 'Manajemen Persediaan';
       case 3: return 'Customer Management';
       case 4: return 'Transactions';
       case 5: return 'Reports & Analytics';
@@ -353,6 +362,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onTap: () {
           if (index == 1) { // POS menu
             Navigator.pushNamed(context, '/pos');
+            return;
+          } else if (index == 2) { // Inventory menu
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const InventoryScreen(),
+              ),
+            );
             return;
           } else if (index == 4) { // Transactions menu
             Navigator.push(

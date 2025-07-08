@@ -12,6 +12,9 @@ class ApiConfig {
   static const String ordersEndpoint = '$baseUrl/orders';
   static const String transactionsEndpoint = '$baseUrl/transactions';
   static const String paymentMethodsEndpoint = '$baseUrl/payment-methods';
+  static const String dailyInventoryStocksEndpoint = '$baseUrl/daily-inventory-stocks';
+  static const String warehousesEndpoint = '$baseUrl/warehouses';
+  static const String inventoryItemsEndpoint = '$baseUrl/inventory-items';
   
   // Token Key for SharedPreferences
   static const String tokenKey = 'auth_token';
@@ -28,5 +31,8 @@ class ApiConfig {
     print('ApiConfig: Orders Endpoint - $ordersEndpoint');
     print('ApiConfig: Transactions Endpoint - $transactionsEndpoint');
     print('ApiConfig: Payment Methods Endpoint - $paymentMethodsEndpoint');
+    print('ApiConfig: Daily Inventory Stocks Endpoint - $dailyInventoryStocksEndpoint');
+    print('ApiConfig: Warehouses Endpoint - $warehousesEndpoint');
+    print('ApiConfig: Inventory Items Endpoint - $inventoryItemsEndpoint');
   }
 }

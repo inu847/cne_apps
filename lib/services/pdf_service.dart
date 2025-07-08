@@ -118,7 +118,7 @@ class PdfService {
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            pw.Text('No. Invoice:', style: pw.TextStyle(font: font, fontSize: 8)),
+            pw.Text('Invoice:', style: pw.TextStyle(font: font, fontSize: 8)),
             pw.Text(receipt.invoiceNumber, style: pw.TextStyle(font: font, fontSize: 8)),
           ],
         ),

@@ -1197,7 +1197,7 @@ class _POSScreenState extends State<POSScreen> {
                 if (Provider.of<VoucherProvider>(context, listen: false).activeVoucher != null)
                   Text('Voucher: ${Provider.of<VoucherProvider>(context, listen: false).voucherName} (${Provider.of<VoucherProvider>(context, listen: false).voucherCode})'),
                 if (transactionProvider.lastTransaction != null)
-                  Text('No. Invoice: ${transactionProvider.lastTransaction!["invoice_number"]}'),
+                  Text('Invoice: ${transactionProvider.lastTransaction!["invoice_number"]}'),
               ],
             ),
             backgroundColor: Colors.green,
@@ -1320,7 +1320,7 @@ class _POSScreenState extends State<POSScreen> {
                   if (Provider.of<VoucherProvider>(context, listen: false).activeVoucher != null)
                     Text('Voucher: ${Provider.of<VoucherProvider>(context, listen: false).voucherName} (${Provider.of<VoucherProvider>(context, listen: false).voucherCode})'),
                   if (transactionProvider.lastTransaction != null)
-                    Text('No. Invoice: ${transactionProvider.lastTransaction!['invoice_number']}'),
+                    Text('Invoice: ${transactionProvider.lastTransaction!['invoice_number']}'),
                 ],
               ),
               backgroundColor: Colors.green,

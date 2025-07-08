@@ -5,6 +5,7 @@ import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/pos_screen.dart';
 import 'screens/transactions_screen.dart';
+import 'screens/inventory_screen.dart';
 import 'services/auth_service.dart';
 import 'services/receipt_service.dart';
 import 'services/platform_service.dart';
@@ -14,6 +15,7 @@ import 'providers/order_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/payment_method_provider.dart';
 import 'providers/voucher_provider.dart';
+import 'providers/daily_inventory_stock_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,6 +86,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => PaymentMethodProvider()),
         ChangeNotifierProvider(create: (_) => VoucherProvider()),
+        ChangeNotifierProvider(create: (_) => DailyInventoryStockProvider()),
       ],
       child: MaterialApp(
       navigatorKey: navigatorKey,
@@ -103,6 +106,7 @@ class _MyAppState extends State<MyApp> {
         '/dashboard': (context) => _user != null ? DashboardScreen(user: _user!) : const LoginScreen(),
         '/pos': (context) => const POSScreen(),
         '/transactions': (context) => const TransactionsScreen(),
+        '/inventory': (context) => const InventoryScreen(),
       },
     ));
   }
