@@ -6,6 +6,8 @@ import 'screens/dashboard_screen.dart';
 import 'screens/pos_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'screens/inventory_screen.dart';
+import 'screens/reports/daily_recap_screen.dart';
+import 'screens/reports/sales_report_screen.dart';
 import 'services/auth_service.dart';
 import 'services/receipt_service.dart';
 import 'services/platform_service.dart';
@@ -107,6 +109,8 @@ class _MyAppState extends State<MyApp> {
         '/pos': (context) => const POSScreen(),
         '/transactions': (context) => const TransactionsScreen(),
         '/inventory': (context) => const InventoryScreen(),
+        '/reports/daily-recap': (context) => const DailyRecapScreen(),
+        '/reports/sales': (context) => const SalesReportScreen(),
       },
     ));
   }

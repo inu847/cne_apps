@@ -64,6 +64,18 @@ class DailyInventoryStockProvider with ChangeNotifier {
     notifyListeners();
   }
   
+  // Reset filter
+  void resetFilters() {
+    _dateFrom = null;
+    _dateTo = null;
+    _warehouseId = null;
+    _isLocked = null;
+    _currentPage = 1;
+    notifyListeners();
+  }
+  
+
+  
   // Mendapatkan daftar persediaan harian
   Future<bool> fetchDailyInventoryStocks() async {
     _isLoading = true;
@@ -95,6 +107,49 @@ class DailyInventoryStockProvider with ChangeNotifier {
       }
     } catch (e) {
       _isLoading = false;
+      _error = 'Terjadi kesalahan: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+  
+  // Memuat lebih banyak data persediaan harian (untuk infinite scroll)
+  Future<bool> loadMoreDailyInventoryStocks() async {
+    // Jika sudah di halaman terakhir, tidak perlu memuat lagi
+    if (_pagination != null && _currentPage >= _pagination!.lastPage) {
+      return true;
+    }
+    
+    // Increment halaman
+    _currentPage++;
+    
+    try {
+      final result = await _dailyInventoryStockService.getDailyInventoryStocks(
+        dateFrom: _dateFrom,
+        dateTo: _dateTo,
+        warehouseId: _warehouseId,
+        isLocked: _isLocked,
+        page: _currentPage,
+        perPage: _perPage,
+      );
+      
+      if (result['success']) {
+        final data = DailyInventoryStockData.fromJson(result['data']);
+        // Gabungkan data baru dengan data yang sudah ada
+        _dailyInventoryStocks = [..._dailyInventoryStocks, ...data.dailyInventoryStocks];
+        _pagination = data.pagination;
+        notifyListeners();
+        return true;
+      } else {
+        // Jika gagal, kembalikan halaman ke sebelumnya
+        _currentPage--;
+        _error = result['message'];
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      // Jika terjadi error, kembalikan halaman ke sebelumnya
+      _currentPage--;
       _error = 'Terjadi kesalahan: $e';
       notifyListeners();
       return false;
@@ -213,16 +268,6 @@ class DailyInventoryStockProvider with ChangeNotifier {
   void clearSelectedStock() {
     _selectedStock = null;
     _selectedStockDetail = null;
-    notifyListeners();
-  }
-  
-  // Reset filter
-  void resetFilters() {
-    _dateFrom = null;
-    _dateTo = null;
-    _warehouseId = null;
-    _isLocked = null;
-    _currentPage = 1;
     notifyListeners();
   }
   

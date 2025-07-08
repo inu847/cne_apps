@@ -29,45 +29,180 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   }
 
   Future<void> _fetchTransactionDetail() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    
     try {
       final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
       final result = await transactionProvider.getTransactionDetail(widget.transactionId);
+      
+      if (!mounted) return;
+      
+      if (result == null) {
+        setState(() {
+          _error = 'Transaksi tidak ditemukan';
+          _isLoading = false;
+        });
+        return;
+      }
       
       setState(() {
         _transaction = result;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
+      
       setState(() {
-        _error = e.toString();
+        _error = 'Terjadi kesalahan: ${e.toString()}';
         _isLoading = false;
       });
+      
+      // Tampilkan pesan error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat detail transaksi: ${e.toString()}'))
+      );
     }
   }
 
   // Membuat objek Order dari data transaksi
   Order _createOrderFromTransaction(Map<String, dynamic> transaction) {
-    final List<dynamic> itemsData = transaction['items'] as List<dynamic>;
-    
-    final List<OrderItem> orderItems = itemsData.map((item) {
+    final itemsList = transaction['items'] as List<dynamic>? ?? [];
+    final items = itemsList.map((item) {
+      int productId = 0;
+      String productName = '';
+      int price = 0;
+      int quantity = 0;
+      String category = '';
+      
+      try {
+        productId = int.tryParse(item['product_id']?.toString() ?? '0') ?? 0;
+      } catch (e) {
+        productId = 0;
+      }
+      
+      try {
+        productName = item['product_name']?.toString() ?? 'Produk tidak diketahui';
+      } catch (e) {
+        productName = 'Produk tidak diketahui';
+      }
+      
+      try {
+        // Konversi ke int karena OrderItem.price adalah int
+        price = (double.parse((item['unit_price'] ?? '0').toString())).round();
+      } catch (e) {
+        price = 0;
+      }
+      
+      try {
+        quantity = int.parse((item['quantity'] ?? '0').toString());
+      } catch (e) {
+        quantity = 0;
+      }
+      
+      try {
+        category = item['category']?.toString() ?? 'Umum';
+      } catch (e) {
+        category = 'Umum';
+      }
+      
+      // Menentukan icon berdasarkan kategori
+      IconData getIconForCategory(String category) {
+        switch (category.toLowerCase()) {
+          case 'elektronik':
+            return Icons.devices;
+          case 'pakaian':
+            return Icons.checkroom;
+          case 'makanan':
+            return Icons.restaurant;
+          case 'minuman':
+            return Icons.local_drink;
+          case 'kesehatan':
+            return Icons.health_and_safety;
+          case 'kecantikan':
+            return Icons.face;
+          case 'rumah tangga':
+            return Icons.home;
+          case 'olahraga':
+            return Icons.sports_soccer;
+          case 'mainan':
+            return Icons.toys;
+          case 'buku':
+            return Icons.book;
+          default:
+            return Icons.inventory_2;
+        }
+      }
+      
       return OrderItem(
-        productId: item['product_id'],
-        productName: item['product_name'],
-        price: item['unit_price'].toDouble(),
-        quantity: item['quantity'],
-        category: item['category'] ?? 'Umum',
-        icon: Icons.inventory_2,
+        id: int.tryParse(item['id']?.toString() ?? '0') ?? 0,
+        productId: productId,
+        productName: productName,
+        price: price,
+        quantity: quantity,
+        category: category,
+        icon: getIconForCategory(category),
       );
     }).toList();
     
+    String invoiceNumber = '';
+    double totalAmount = 0;
+    double taxAmount = 0;
+    double finalAmount = 0;
+    DateTime createdAt = DateTime.now();
+    String status = '';
+    
+    try {
+      invoiceNumber = transaction['invoice_number']?.toString() ?? 'INV-${DateTime.now().millisecondsSinceEpoch}';
+    } catch (e) {
+      invoiceNumber = 'INV-${DateTime.now().millisecondsSinceEpoch}';
+    }
+    
+    try {
+      totalAmount = double.parse((transaction['total_amount'] ?? '0').toString());
+    } catch (e) {
+      totalAmount = 0;
+    }
+    
+    try {
+      taxAmount = double.parse((transaction['tax_amount'] ?? '0').toString());
+    } catch (e) {
+      taxAmount = 0;
+    }
+    
+    try {
+      finalAmount = double.parse((transaction['final_amount'] ?? '0').toString());
+    } catch (e) {
+      finalAmount = 0;
+    }
+    
+    try {
+      if (transaction['created_at'] != null) {
+        createdAt = DateTime.tryParse(transaction['created_at'].toString()) ?? DateTime.now();
+      }
+    } catch (e) {
+      createdAt = DateTime.now();
+    }
+    
+    try {
+      status = transaction['status']?.toString() ?? 'pending';
+    } catch (e) {
+      status = 'pending';
+    }
+    
     return Order(
-      orderNumber: transaction['invoice_number'],
-      items: orderItems,
-      subtotal: transaction['total_amount'].toDouble() - transaction['tax_amount'].toDouble(),
-      tax: transaction['tax_amount'].toDouble(),
-      total: transaction['final_amount'].toDouble(),
-      createdAt: DateTime.parse(transaction['created_at']),
-      status: transaction['status'],
+      id: int.tryParse(transaction['id']?.toString() ?? '0') ?? 0,
+      orderNumber: invoiceNumber,
+      items: items,
+      subtotal: totalAmount,
+      tax: taxAmount,
+      total: finalAmount,
+      createdAt: createdAt,
+      status: status,
     );
   }
 
@@ -75,27 +210,33 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   void _showReceipt() {
     if (_transaction == null) return;
     
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    final order = _createOrderFromTransaction(_transaction!);
-    
-    // Buat objek Receipt dari data transaksi
-    final receipt = Receipt.fromTransaction(
-      transaction: _transaction!,
-      order: order,
-      receiptSettings: settingsProvider.receipt,
-      cashierName: settingsProvider.general.cashierName,
-      storeName: settingsProvider.store.storeName,
-      storeAddress: settingsProvider.store.storeAddress,
-      storePhone: settingsProvider.store.storePhone,
-    );
-    
-    // Navigasi ke receipt screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ReceiptScreen(receipt: receipt),
-      ),
-    );
+    try {
+      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+      final order = _createOrderFromTransaction(_transaction!);
+      
+      // Buat objek Receipt dari data transaksi
+      final receipt = Receipt.fromTransaction(
+        transaction: _transaction!,
+        order: order,
+        receiptSettings: settingsProvider.receipt,
+        cashierName: settingsProvider.general.cashierName ?? 'Kasir',
+        storeName: settingsProvider.store.storeName ?? 'Toko',
+        storeAddress: settingsProvider.store.storeAddress ?? 'Alamat Toko',
+        storePhone: settingsProvider.store.storePhone ?? '-',
+      );
+      
+      // Navigasi ke receipt screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ReceiptScreen(receipt: receipt),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menampilkan struk: ${e.toString()}'))
+      );
+    }
   }
 
   @override
@@ -118,44 +259,84 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Memuat detail transaksi...'),
+          ],
+        ),
+      );
     }
-
+    
     if (_error != null) {
-      return Center(child: Text('Error: $_error'));
-    }
-
-    if (_transaction == null) {
-      return const Center(child: Text('Transaksi tidak ditemukan'));
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 24),
-          _buildItems(),
-          const SizedBox(height: 24),
-          _buildPaymentInfo(),
-          const SizedBox(height: 24),
-          Center(
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.receipt),
-              label: const Text('Lihat Struk'),
-              onPressed: _showReceipt,
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: Colors.red),
+            SizedBox(height: 16),
+            Text('Error: $_error', textAlign: TextAlign.center),
+            SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _fetchTransactionDetail,
+              child: const Text('Coba Lagi'),
             ),
-          ),
-        ],
+          ],
+        ),
+      );
+    }
+    
+    if (_transaction == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 48, color: Colors.orange),
+            SizedBox(height: 16),
+            Text('Transaksi tidak ditemukan', textAlign: TextAlign.center),
+            SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Kembali'),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return RefreshIndicator(
+      onRefresh: _fetchTransactionDetail,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 24),
+            _buildItems(),
+            const SizedBox(height: 24),
+            _buildPaymentInfo(),
+            const SizedBox(height: 24),
+            Center(
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.receipt),
+                label: const Text('Lihat Struk'),
+                onPressed: _showReceipt,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHeader() {
     final transaction = _transaction!;
-    final status = transaction['status'];
-    final paymentStatus = transaction['payment_status'];
+    final status = transaction['status'] ?? 'pending';
+    final paymentStatus = transaction['payment_status'] ?? 'pending';
     
     Color statusColor;
     if (status == 'completed') {
@@ -164,6 +345,15 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
       statusColor = Colors.red;
     } else {
       statusColor = Colors.orange;
+    }
+    
+    String formattedDate;
+    try {
+      formattedDate = transaction['created_at'] != null 
+          ? transaction['created_at'].toString().substring(0, 10)
+          : DateTime.now().toString().substring(0, 10);
+    } catch (e) {
+      formattedDate = DateTime.now().toString().substring(0, 10);
     }
     
     return Card(
@@ -176,7 +366,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  transaction['invoice_number'],
+                  transaction['invoice_number'] ?? 'INV-${DateTime.now().millisecondsSinceEpoch}',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Row(
@@ -209,8 +399,8 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Text('Tanggal: ${transaction['created_at'].toString().substring(0, 10)}'),
-            Text('Pelanggan: ${transaction['customer_name']}'),
+            Text('Tanggal: $formattedDate'),
+            Text('Pelanggan: ${transaction['customer_name'] ?? 'Pelanggan Umum'}'),
           ],
         ),
       ),
@@ -219,7 +409,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
 
   Widget _buildItems() {
     final transaction = _transaction!;
-    final items = transaction['items'] as List<dynamic>;
+    final items = transaction['items'] as List<dynamic>? ?? [];
     
     return Card(
       child: Padding(
@@ -233,49 +423,59 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             ),
             const SizedBox(height: 8),
             const Divider(),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Text(item['product_name']),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Text('${item['quantity']}x'),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          FormatUtils.formatCurrency(item['unit_price']),
-                          textAlign: TextAlign.right,
+            items.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Center(child: Text('Tidak ada item')),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final productName = item['product_name']?.toString() ?? 'Produk tidak diketahui';
+                      final quantity = FormatUtils.safeParseInt(item['quantity'], defaultValue: 1);
+                      final unitPrice = FormatUtils.safeParseInt(item['unit_price']);
+                      final subtotal = FormatUtils.safeParseInt(item['subtotal']) ?? (unitPrice * quantity);
+                      
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: Text(productName),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: Text('${quantity}x'),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                FormatUtils.formatCurrency(unitPrice),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                FormatUtils.formatCurrency(subtotal),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          FormatUtils.formatCurrency(item['subtotal']),
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
-            ),
             const Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Subtotal'),
-                Text(FormatUtils.formatCurrency(transaction['total_amount'])),
+                Text(FormatUtils.formatCurrency(FormatUtils.safeParseInt(transaction['total_amount']))),
               ],
             ),
             const SizedBox(height: 4),
@@ -283,16 +483,16 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Pajak'),
-                Text(FormatUtils.formatCurrency(transaction['tax_amount'])),
+                Text(FormatUtils.formatCurrency(FormatUtils.safeParseInt(transaction['tax_amount']))),
               ],
             ),
-            if (transaction['discount_amount'] > 0) ...[  
+            if (FormatUtils.safeParseInt(transaction['discount_amount']) > 0) ...[  
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Diskon'),
-                  Text(FormatUtils.formatCurrency(transaction['discount_amount'])),
+                  Text(FormatUtils.formatCurrency(FormatUtils.safeParseInt(transaction['discount_amount']))),
                 ],
               ),
             ],
@@ -306,7 +506,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  FormatUtils.formatCurrency(transaction['final_amount']),
+                  FormatUtils.formatCurrency(FormatUtils.safeParseInt(transaction['final_amount'])),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
@@ -319,7 +519,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
 
   Widget _buildPaymentInfo() {
     final transaction = _transaction!;
-    final payments = transaction['payments'] as List<dynamic>;
+    final payments = transaction['payments'] as List<dynamic>? ?? [];
     
     return Card(
       child: Padding(
@@ -333,24 +533,32 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             ),
             const SizedBox(height: 8),
             const Divider(),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: payments.length,
-              itemBuilder: (context, index) {
-                final payment = payments[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(payment['payment_method']),
-                      Text(FormatUtils.formatCurrency(payment['amount'])),
-                    ],
+            payments.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Center(child: Text('Tidak ada informasi pembayaran')),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: payments.length,
+                    itemBuilder: (context, index) {
+                      final payment = payments[index];
+                      final paymentMethod = payment['payment_method']?.toString() ?? 'Metode tidak diketahui';
+                      final amount = FormatUtils.safeParseInt(payment['amount']);
+                      
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(paymentMethod),
+                            Text(FormatUtils.formatCurrency(amount)),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ],
         ),
       ),

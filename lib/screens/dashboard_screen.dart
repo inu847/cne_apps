@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../services/receipt_service.dart'; // Impor untuk navigatorKey
 import '../screens/transactions_screen.dart';
 import '../screens/inventory_screen.dart';
 
@@ -30,8 +31,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
       return;
-    } else if (index == 4) { // Transactions menu
+    } else if (index == 3) { // Transactions menu
       Navigator.pushNamed(context, '/transactions');
+      return;
+    } else if (index == 4) { // Reports menu
+      // Navigasi langsung ke halaman rekapitulasi harian
+      print('Navigating to daily recap screen from bottom nav');
+      navigatorKey.currentState?.pushNamed('/reports/daily-recap');
       return;
     }
     
@@ -126,11 +132,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icon(Icons.inventory_outlined),
             activeIcon: Icon(Icons.inventory),
             label: 'Persediaan',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            activeIcon: Icon(Icons.people),
-            label: 'Customers',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt_outlined),
@@ -311,10 +312,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _buildNavItem(0, 'Dashboard', Icons.dashboard_outlined, Icons.dashboard),
                 _buildNavItem(1, 'POS', Icons.point_of_sale_outlined, Icons.point_of_sale),
                 _buildNavItem(2, 'Persediaan', Icons.inventory_outlined, Icons.inventory),
-                _buildNavItem(3, 'Customers', Icons.people_outline, Icons.people),
-                _buildNavItem(4, 'Transactions', Icons.receipt_outlined, Icons.receipt),
-                _buildNavItem(5, 'Reports', Icons.receipt_long_outlined, Icons.receipt_long),
-                _buildNavItem(6, 'Settings', Icons.settings_outlined, Icons.settings),
+                _buildNavItem(3, 'Transactions', Icons.receipt_outlined, Icons.receipt),
+                _buildNavItem(4, 'Reports', Icons.receipt_long_outlined, Icons.receipt_long),
+                _buildNavItem(5, 'Settings', Icons.settings_outlined, Icons.settings),
               ],
             ),
           ),
@@ -345,10 +345,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 0: return 'Dashboard';
       case 1: return 'Point of Sale';
       case 2: return 'Manajemen Persediaan';
-      case 3: return 'Customer Management';
-      case 4: return 'Transactions';
-      case 5: return 'Reports & Analytics';
-      case 6: return 'Settings';
+      case 3: return 'Transactions';
+      case 4: return 'Reports & Analytics';
+      case 5: return 'Settings';
       default: return 'Dashboard';
     }
   }
@@ -371,13 +370,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             );
             return;
-          } else if (index == 4) { // Transactions menu
+          } else if (index == 3) { // Transactions menu
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => const TransactionsScreen(),
               ),
             );
+            return;
+          } else if (index == 4) { // Reports menu
+            // Navigasi langsung ke halaman rekapitulasi harian
+            print('Navigating to daily recap screen from sidebar');
+            navigatorKey.currentState?.pushNamed('/reports/daily-recap');
             return;
           }
           setState(() {
@@ -692,6 +696,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 5: return Icons.settings;
       default: return Icons.dashboard;
     }
+  }
+  
+  // Show reports menu popup
+  void _showReportsMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu(
+      context: context,
+      position: position,
+      items: [
+        PopupMenuItem(
+          value: 'daily-recap',
+          child: Row(
+            children: const [
+              Icon(Icons.summarize, color: Color(0xFF1E2A78)),
+              SizedBox(width: 8),
+              Text('Rekapitulasi Harian'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'sales-report',
+          child: Row(
+            children: const [
+              Icon(Icons.bar_chart, color: Color(0xFF1E2A78)),
+              SizedBox(width: 8),
+              Text('Laporan Penjualan'),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'daily-recap') {
+        // Navigasi ke halaman rekapitulasi harian
+        print('Navigating to daily recap screen');
+        print('Navigator key valid: ${navigatorKey.currentState != null}');
+        print('Route name: /reports/daily-recap');
+        // Coba gunakan Navigator.of(context) sebagai fallback jika navigatorKey tidak berfungsi
+        try {
+          navigatorKey.currentState?.pushNamed('/reports/daily-recap');
+          print('Navigation attempted with navigatorKey');
+        } catch (e) {
+          print('Error using navigatorKey: $e');
+          Navigator.of(context).pushNamed('/reports/daily-recap');
+          print('Fallback to Navigator.of(context)');
+        }
+      } else if (value == 'sales-report') {
+        print('Navigating to sales report screen');
+        // Coba gunakan Navigator.of(context) sebagai fallback jika navigatorKey tidak berfungsi
+        try {
+          navigatorKey.currentState?.pushNamed('/reports/sales');
+          print('Navigation attempted with navigatorKey');
+        } catch (e) {
+          print('Error using navigatorKey: $e');
+          Navigator.of(context).pushNamed('/reports/sales');
+          print('Fallback to Navigator.of(context)');
+        }
+      }
+    });
   }
 
   Widget _buildDashboardCard(String title, String value, IconData icon, Color color, {String? subtitle, String? trend}) {

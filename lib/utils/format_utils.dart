@@ -67,22 +67,49 @@ class FormatUtils {
     return null;
   }
   
-  /// Formats an integer price value to a readable currency string with thousand separators
+  /// Formats a price value to a readable currency string with thousand separators
   /// 
-  /// Example: 20000 becomes "20.000"
-  static String formatCurrency(int price) {
-    return price.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (Match m) => '.');
-  }
-  
-  /// Formats a nullable integer price value to a readable currency string with thousand separators
-  /// 
-  /// Example: 20000 becomes "20.000", null becomes "-"
+  /// Example: 20000 becomes "20.000" or "Rp 20.000" if showSymbol is true
+  /// Can handle int, double, or String inputs
   /// 
   /// Parameters:
-  /// - price: The price to format (can be null)
+  /// - price: The price to format (can be int, double, or String)
+  /// - showSymbol: Whether to show the currency symbol (defaults to true)
+  static String formatCurrency(dynamic price, {bool showSymbol = true}) {
+    // Handle different input types
+    int numericValue;
+    
+    if (price is int) {
+      numericValue = price;
+    } else if (price is double) {
+      numericValue = price.toInt();
+    } else if (price is String) {
+      try {
+        // Try to parse as double first to handle decimal strings
+        numericValue = double.tryParse(price)?.toInt() ?? 0;
+      } catch (e) {
+        print('Error parsing currency value: $price - $e');
+        numericValue = 0;
+      }
+    } else {
+      numericValue = 0;
+    }
+    
+    final formattedValue = numericValue.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (Match m) => '.');
+    return showSymbol ? 'Rp $formattedValue' : formattedValue;
+  }
+  
+  /// Formats a nullable price value to a readable currency string with thousand separators
+  /// 
+  /// Example: 20000 becomes "20.000" or "Rp 20.000" if showSymbol is true, null becomes "-"
+  /// Can handle int, double, or String inputs
+  /// 
+  /// Parameters:
+  /// - price: The price to format (can be null, int, double, or String)
   /// - nullDisplay: The string to display if price is null (defaults to "-")
-  static String formatCurrencyNullable(int? price, {String nullDisplay = "-"}) {
+  /// - showSymbol: Whether to show the currency symbol (defaults to true)
+  static String formatCurrencyNullable(dynamic price, {String nullDisplay = "-", bool showSymbol = true}) {
     if (price == null) return nullDisplay;
-    return formatCurrency(price);
+    return formatCurrency(price, showSymbol: showSymbol);
   }
 }

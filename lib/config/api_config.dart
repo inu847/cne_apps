@@ -11,6 +11,8 @@ class ApiConfig {
   static const String settingsEndpoint = '$baseUrl/settings';
   static const String ordersEndpoint = '$baseUrl/orders';
   static const String transactionsEndpoint = '$baseUrl/transactions';
+  static const String dailyRecapEndpoint = '$baseUrl/transactions/daily-recap';
+  static const String dailyRecapDetailsEndpoint = '$baseUrl/transactions/daily-recap/details';
   static const String paymentMethodsEndpoint = '$baseUrl/payment-methods';
   static const String dailyInventoryStocksEndpoint = '$baseUrl/daily-inventory-stocks';
   static const String warehousesEndpoint = '$baseUrl/warehouses';

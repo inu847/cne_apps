@@ -97,8 +97,18 @@ class TransactionService {
     }
   }
   
-  // Mendapatkan daftar transaksi
-  Future<Map<String, dynamic>> getTransactions() async {
+  // Mendapatkan daftar transaksi dengan filter dan pagination
+  Future<Map<String, dynamic>> getTransactions({
+    String? search,
+    String? status,
+    String? customerName,
+    String? startDate,
+    String? endDate,
+    int? minAmount,
+    int? maxAmount,
+    int? page,
+    int? perPage,
+  }) async {
     try {
       // Dapatkan token
       final token = await _authService.getToken();
@@ -109,9 +119,23 @@ class TransactionService {
         };
       }
       
-      // Kirim request
+      // Buat query parameters
+      final Map<String, String> queryParams = {};
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (status != null && status.isNotEmpty) queryParams['status'] = status;
+      if (customerName != null && customerName.isNotEmpty) queryParams['customer_name'] = customerName;
+      if (startDate != null && startDate.isNotEmpty) queryParams['start_date'] = startDate;
+      if (endDate != null && endDate.isNotEmpty) queryParams['end_date'] = endDate;
+      if (minAmount != null) queryParams['min_amount'] = minAmount.toString();
+      if (maxAmount != null) queryParams['max_amount'] = maxAmount.toString();
+      if (page != null) queryParams['page'] = page.toString();
+      if (perPage != null) queryParams['per_page'] = perPage.toString();
+      
+      // Kirim request dengan query parameters
+      final uri = Uri.parse(ApiConfig.transactionsEndpoint).replace(queryParameters: queryParams);
+      
       final response = await http.get(
-        Uri.parse(ApiConfig.transactionsEndpoint),
+        uri,
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -175,6 +199,124 @@ class TransactionService {
         return {
           'success': false,
           'message': responseData['message'] ?? 'Gagal mendapatkan detail transaksi'
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Terjadi kesalahan: $e'
+      };
+    }
+  }
+  
+  // Mendapatkan rekapitulasi harian
+  Future<Map<String, dynamic>> getDailyRecap({
+    String? date,
+    int? warehouseId,
+  }) async {
+    try {
+      // Dapatkan token
+      final token = await _authService.getToken();
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Tidak ada token autentikasi. Silakan login kembali.'
+        };
+      }
+      
+      // Buat query parameters
+      final Map<String, String> queryParams = {};
+      if (date != null && date.isNotEmpty) queryParams['date'] = date;
+      if (warehouseId != null) queryParams['warehouse_id'] = warehouseId.toString();
+      
+      // Kirim request dengan query parameters
+      final uri = Uri.parse(ApiConfig.dailyRecapEndpoint).replace(queryParameters: queryParams);
+      
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      
+      // Parse response
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        return {
+          'success': true,
+          'data': responseData['data'],
+          'message': responseData['message'] ?? 'Berhasil mendapatkan rekapitulasi harian'
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Gagal mendapatkan rekapitulasi harian'
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Terjadi kesalahan: $e'
+      };
+    }
+  }
+  
+  // Mendapatkan detail rekapitulasi harian
+  Future<Map<String, dynamic>> getDailyRecapDetails({
+    required String date,
+    int? warehouseId,
+    int? pettyCashId,
+  }) async {
+    try {
+      // Dapatkan token
+      final token = await _authService.getToken();
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Tidak ada token autentikasi. Silakan login kembali.'
+        };
+      }
+      
+      // Buat query parameters
+      final Map<String, String> queryParams = {
+        'date': date,
+      };
+      if (warehouseId != null) queryParams['warehouse_id'] = warehouseId.toString();
+      
+      // Buat URL dengan path parameter pettyCashId jika ada
+      String url = ApiConfig.dailyRecapDetailsEndpoint;
+      if (pettyCashId != null) {
+        url = '$url/$pettyCashId';
+      }
+      
+      // Kirim request dengan query parameters
+      final uri = Uri.parse(url).replace(queryParameters: queryParams);
+      
+      print('TransactionService: Fetching daily recap details from $uri');
+      
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      
+      // Parse response
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        return {
+          'success': true,
+          'data': responseData['data'],
+          'message': responseData['message'] ?? 'Berhasil mendapatkan detail rekapitulasi harian'
+        };
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Gagal mendapatkan detail rekapitulasi harian'
         };
       }
     } catch (e) {

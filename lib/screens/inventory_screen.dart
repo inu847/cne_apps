@@ -26,6 +26,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
   String? _dateTo;
   int? _warehouseId;
   bool? _isLocked;
+  bool _isFilterExpanded = false;
+  
+  // Scroll controller untuk infinite scroll
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
   
   @override
   void initState() {
@@ -34,13 +39,41 @@ class _InventoryScreenState extends State<InventoryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DailyInventoryStockProvider>(context, listen: false).fetchDailyInventoryStocks();
     });
+    
+    // Tambahkan listener untuk infinite scroll
+    _scrollController.addListener(_scrollListener);
   }
   
   @override
   void dispose() {
     _dateFromController.dispose();
     _dateToController.dispose();
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
     super.dispose();
+  }
+  
+  // Listener untuk infinite scroll
+  void _scrollListener() async {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore) {
+      final provider = Provider.of<DailyInventoryStockProvider>(context, listen: false);
+      
+      // Periksa apakah masih ada halaman berikutnya
+      if (provider.pagination != null && 
+          provider.currentPage < provider.pagination!.lastPage) {
+        setState(() {
+          _isLoadingMore = true;
+        });
+        
+        // Muat halaman berikutnya
+        await provider.loadMoreDailyInventoryStocks();
+        
+        setState(() {
+          _isLoadingMore = false;
+        });
+      }
+    }
   }
   
   // Fungsi untuk menampilkan date picker
@@ -98,8 +131,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Widget build(BuildContext context) {
     // Mendapatkan ukuran layar untuk responsivitas
     final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 1100;
-    final isTablet = screenWidth >= 650 && screenWidth < 1100;
     final isMobile = screenWidth < 650;
     
     return Scaffold(
@@ -107,54 +138,96 @@ class _InventoryScreenState extends State<InventoryScreen> {
         title: const Text('Manajemen Persediaan'),
         backgroundColor: const Color(0xFF1E2A78),
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              Provider.of<DailyInventoryStockProvider>(context, listen: false).fetchDailyInventoryStocks();
+            },
+          ),
+        ],
       ),
+      // FloatingActionButton dipindahkan ke bagian bawah
       body: Column(
         children: [
-          // Filter section
-          Container(
+          // Search bar
+          Padding(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Cari persediaan...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    ),
+                    onSubmitted: (value) {
+                      // Implementasi pencarian dapat ditambahkan di sini
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(
+                    _isFilterExpanded ? Icons.filter_list_off : Icons.filter_list,
+                    color: _isFilterExpanded ? Colors.blue : null,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isFilterExpanded = !_isFilterExpanded;
+                    });
+                  },
+                  tooltip: 'Filter',
                 ),
               ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Filter',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                isMobile || isTablet // Gunakan tampilan mobile untuk tablet juga
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildDateFilter(context),
-                          const SizedBox(height: 16),
-                          _buildWarehouseAndStatusFilter(context),
-                          const SizedBox(height: 16),
-                          _buildFilterButtons(context),
-                        ],
-                      )
-                    : IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(child: _buildDateFilter(context)),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildWarehouseAndStatusFilter(context)),
-                            const SizedBox(width: 16),
-                            SizedBox(width: 300, child: _buildFilterButtons(context)),
-                          ],
+          ),
+          
+          // Filter section
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            height: _isFilterExpanded ? null : 0,
+            child: Card(
+              margin: const EdgeInsets.all(0),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Filter Persediaan',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDateFilter(context),
+                    const SizedBox(height: 16),
+                    _buildWarehouseAndStatusFilter(context),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: _resetFilters,
+                          child: const Text('Reset'),
                         ),
-                      ),
-              ],
+                        const SizedBox(width: 16),
+                        ElevatedButton(
+                          onPressed: _applyFilters,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1E2A78),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Terapkan'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           
@@ -195,75 +268,82 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   );
                 }
                 
-                return Column(
-                  children: [
-                    Expanded(
-                      child: isMobile
-                          ? _buildMobileList(provider)
-                          : isTablet
-                              ? _buildMobileList(provider) // Gunakan tampilan mobile untuk tablet
-                              : _buildDesktopTable(provider),
-                    ),
-                    // Pagination
-                    if (provider.pagination != null)
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, -2),
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    await provider.fetchDailyInventoryStocks();
+                  },
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: provider.dailyInventoryStocks.length + (_isLoadingMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == provider.dailyInventoryStocks.length && _isLoadingMore) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+                      
+                      final stock = provider.dailyInventoryStocks[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              title: Text(
+                                'Stok #${stock.id}',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Tanggal: ${stock.stockDate}'),
+                                  Text('Gudang: ${stock.warehouseName}'),
+                                  Text('Jumlah Item: ${stock.itemsCount}'),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: stock.statusColor,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          stock.statusText,
+                                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              trailing: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Dibuat oleh: ${stock.createdBy}',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  const Text('Lihat Detail', style: TextStyle(color: Colors.blue, fontSize: 12)),
+                                ],
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => InventoryDetailScreen(stockId: stock.id),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    'Menampilkan ${provider.dailyInventoryStocks.length} dari ${provider.pagination!.total} data',
-                                    style: const TextStyle(fontSize: 14),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.chevron_left),
-                                      onPressed: provider.currentPage > 1
-                                          ? () {
-                                              provider.setPage(provider.currentPage - 1);
-                                              provider.fetchDailyInventoryStocks();
-                                            }
-                                          : null,
-                                      constraints: const BoxConstraints(),
-                                      padding: const EdgeInsets.all(8),
-                                    ),
-                                    Text('${provider.currentPage} / ${provider.pagination!.lastPage}'),
-                                    IconButton(
-                                      icon: const Icon(Icons.chevron_right),
-                                      onPressed: provider.currentPage < provider.pagination!.lastPage
-                                          ? () {
-                                              provider.setPage(provider.currentPage + 1);
-                                              provider.fetchDailyInventoryStocks();
-                                            }
-                                          : null,
-                                      constraints: const BoxConstraints(),
-                                      padding: const EdgeInsets.all(8),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                  ],
+                      );
+                    },
+                  ),
                 );
               },
             ),
@@ -292,289 +372,153 @@ class _InventoryScreenState extends State<InventoryScreen> {
   
   // Widget untuk filter tanggal
   Widget _buildDateFilter(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: TextField(
-                controller: _dateFromController,
-                decoration: const InputDecoration(
-                  labelText: 'Tanggal Awal',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                readOnly: true,
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Dari Tanggal'),
+              const SizedBox(height: 4),
+              InkWell(
                 onTap: () => _selectDate(context, true),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Flexible(
-              child: TextField(
-                controller: _dateToController,
-                decoration: const InputDecoration(
-                  labelText: 'Tanggal Akhir',
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons.calendar_today),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _dateFrom != null
+                            ? _displayDateFormat.format(DateTime.parse(_dateFrom!))
+                            : 'Pilih Tanggal',
+                        style: TextStyle(
+                          color: _dateFrom != null ? Colors.black : Colors.grey,
+                        ),
+                      ),
+                      const Icon(Icons.calendar_today, size: 16),
+                    ],
+                  ),
                 ),
-                readOnly: true,
-                onTap: () => _selectDate(context, false),
               ),
-            ),
-          ],
-        );
-      },
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Sampai Tanggal'),
+              const SizedBox(height: 4),
+              InkWell(
+                onTap: () => _selectDate(context, false),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _dateTo != null
+                            ? _displayDateFormat.format(DateTime.parse(_dateTo!))
+                            : 'Pilih Tanggal',
+                        style: TextStyle(
+                          color: _dateTo != null ? Colors.black : Colors.grey,
+                        ),
+                      ),
+                      const Icon(Icons.calendar_today, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
   
   // Widget untuk filter gudang dan status
   Widget _buildWarehouseAndStatusFilter(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: DropdownButtonFormField<int>(
-                decoration: const InputDecoration(
-                  labelText: 'Gudang',
-                  border: OutlineInputBorder(),
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Gudang'),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4),
                 ),
-                value: _warehouseId,
-                items: const [
-                  DropdownMenuItem(value: null, child: Text('Semua Gudang')),
-                  DropdownMenuItem(value: 1, child: Text('Gudang Pusat')),
-                  // TODO: Tambahkan daftar gudang dari API
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _warehouseId = value;
-                  });
-                },
-              ),
-            ),
-            const SizedBox(width: 16),
-            Flexible(
-              child: DropdownButtonFormField<bool?>(
-                decoration: const InputDecoration(
-                  labelText: 'Status',
-                  border: OutlineInputBorder(),
-                ),
-                value: _isLocked,
-                items: const [
-                  DropdownMenuItem(value: null, child: Text('Semua Status')),
-                  DropdownMenuItem(value: true, child: Text('Terkunci')),
-                  DropdownMenuItem(value: false, child: Text('Belum Terkunci')),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _isLocked = value;
-                  });
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-  
-  // Widget untuk tombol filter
-  Widget _buildFilterButtons(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: ElevatedButton.icon(
-                onPressed: _applyFilters,
-                icon: const Icon(Icons.filter_list),
-                label: const Text('Terapkan Filter'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1E2A78),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Flexible(
-              child: OutlinedButton.icon(
-                onPressed: _resetFilters,
-                icon: const Icon(Icons.clear),
-                label: const Text('Reset'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF1E2A78),
-                  side: const BorderSide(color: Color(0xFF1E2A78)),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-  
-  // Widget untuk tampilan list pada mobile
-  Widget _buildMobileList(DailyInventoryStockProvider provider) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: provider.dailyInventoryStocks.length,
-      itemBuilder: (context, index) {
-        final stock = provider.dailyInventoryStocks[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            title: Text(
-              'Stok Tanggal: ${stock.stockDate}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                Text('Gudang: ${stock.warehouseName}'),
-                Text('Jumlah Item: ${stock.itemsCount}'),
-                Text('Dibuat oleh: ${stock.createdBy}'),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      stock.statusIcon,
-                      size: 16,
-                      color: stock.statusColor,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      stock.statusText,
-                      style: TextStyle(color: stock.statusColor),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.arrow_forward_ios, size: 16),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => InventoryDetailScreen(stockId: stock.id),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    isExpanded: true,
+                    value: _warehouseId,
+                    hint: const Text('Semua Gudang'),
+                    items: const [
+                      DropdownMenuItem(value: 1, child: Text('Gudang Pusat')),
+                      // TODO: Tambahkan daftar gudang dari API
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _warehouseId = value;
+                      });
+                    },
                   ),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
-  
-  // Widget untuk tampilan tabel pada desktop
-  Widget _buildDesktopTable(DailyInventoryStockProvider provider) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
+                ),
               ),
             ],
           ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: MediaQuery.of(context).size.width - 32,
-            ),
-            child: DataTable(
-              columnSpacing: 16,
-              headingRowColor: MaterialStateProperty.all(Colors.grey.shade100),
-              columns: const [
-                DataColumn(label: Text('ID')),
-                DataColumn(label: Text('Tanggal')),
-                DataColumn(label: Text('Gudang')),
-                DataColumn(label: Text('Jumlah Item')),
-                DataColumn(label: Text('Status')),
-                DataColumn(label: Text('Dibuat Oleh')),
-                DataColumn(label: Text('Aksi')),
-              ],
-              rows: provider.dailyInventoryStocks.map((stock) {
-                return DataRow(
-                  cells: [
-                    DataCell(Text('#${stock.id}')),
-                    DataCell(Text(stock.stockDate)),
-                    DataCell(Text(stock.warehouseName)),
-                    DataCell(Text('${stock.itemsCount}')),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            stock.statusIcon,
-                            size: 16,
-                            color: stock.statusColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            stock.statusText,
-                            style: TextStyle(color: stock.statusColor),
-                          ),
-                        ],
-                      ),
-                    ),
-                    DataCell(Text(stock.createdBy)),
-                    DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.visibility, size: 20),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => InventoryDetailScreen(stockId: stock.id),
-                                ),
-                              );
-                            },
-                            tooltip: 'Lihat Detail',
-                            constraints: const BoxConstraints(),
-                            padding: const EdgeInsets.all(8),
-                          ),
-                          if (!stock.isLocked)
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 20),
-                              onPressed: () {
-                                // TODO: Navigasi ke edit persediaan
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Fitur edit akan segera tersedia')),
-                                );
-                              },
-                              tooltip: 'Edit',
-                              constraints: const BoxConstraints(),
-                              padding: const EdgeInsets.all(8),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Status'),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<bool?>(
+                    isExpanded: true,
+                    value: _isLocked,
+                    hint: const Text('Semua Status'),
+                    items: const [
+                      DropdownMenuItem(value: true, child: Text('Terkunci')),
+                      DropdownMenuItem(value: false, child: Text('Belum Terkunci')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _isLocked = value;
+                      });
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
+      ],
     );
   }
+  
+  // Widget untuk tombol filter telah dihapus karena sudah digantikan dengan tombol di filter section
+  
+  // Fungsi-fungsi yang tidak lagi digunakan telah dihapus
 }
