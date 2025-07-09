@@ -8,7 +8,7 @@ import '../providers/transaction_provider.dart';
 import '../screens/receipt_screen.dart';
 import '../screens/transaction_detail_screen.dart';
 import '../utils/format_utils.dart';
-import '../utils/responsive_helper.dart';
+// import '../utils/responsive_helper.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({Key? key}) : super(key: key);
@@ -520,7 +520,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final createdAt = transaction['created_at'] ?? DateTime.now().toString();
     final invoiceNumber = transaction['invoice_number'] ?? 'INV-${DateTime.now().millisecondsSinceEpoch}';
     final customerName = transaction['customer_name'] ?? 'Pelanggan Umum';
-    final finalAmount = transaction['final_amount'] ?? 0;
+    final totalAmount = transaction['total_amount'] ?? 0;
     final id = transaction['id'] ?? 0;
     
     Color statusColor;
@@ -587,7 +587,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  FormatUtils.formatCurrency(finalAmount),
+                  FormatUtils.formatCurrency(totalAmount),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const Text('Lihat Detail', style: TextStyle(color: Colors.blue, fontSize: 12)),
@@ -602,19 +602,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               );
             },
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  icon: const Icon(Icons.receipt, size: 16),
-                  label: const Text('Lihat Struk'),
-                  onPressed: () => _showReceipt(transaction),
-                ),
-              ],
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.end,
+          //     children: [
+          //       TextButton.icon(
+          //         icon: const Icon(Icons.receipt, size: 16),
+          //         label: const Text('Lihat Struk'),
+          //         onPressed: () => _showReceipt(transaction),
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );

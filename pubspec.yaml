@@ -62,6 +62,11 @@ dependencies:
   # pdf_render and pdf_viewer_plugin are commented out due to NDK issues
   # pdf_render: ^1.4.5
   # pdf_viewer_plugin: ^2.0.1
+  
+  # Thermal printer libraries - best combination for Bluetooth printing
+  print_bluetooth_thermal: ^1.1.1
+  esc_pos_utils_plus: ^2.0.1
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

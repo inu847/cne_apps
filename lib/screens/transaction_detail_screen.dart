@@ -22,11 +22,35 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   bool _isLoading = true;
   Map<String, dynamic>? _transaction;
   String? _error;
+  String _taxName = 'Pajak'; // Default value
 
   @override
   void initState() {
     super.initState();
     _fetchTransactionDetail();
+    _loadTaxName();
+  }
+
+  Future<void> _loadTaxName() async {
+    try {
+      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+      
+      // Fetch settings if not already loaded
+      if (settingsProvider.settings == null) {
+        await settingsProvider.fetchSettings();
+      }
+      
+      // Get tax name from settings
+      final taxName = settingsProvider.tax.taxName;
+      if (taxName.isNotEmpty) {
+        setState(() {
+          _taxName = taxName;
+        });
+      }
+    } catch (e) {
+      print('Error loading tax name: $e');
+      // Keep default value if error occurs
+    }
   }
 
   Future<void> _fetchTransactionDetail() async {
@@ -349,11 +373,11 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             Center(
               child: Column(
                 children: [
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.receipt),
-                    label: const Text('Lihat Struk'),
-                    onPressed: _showReceipt,
-                  ),
+                  // ElevatedButton.icon(
+                  //   icon: const Icon(Icons.receipt),
+                  //   label: const Text('Lihat Struk'),
+                  //   onPressed: _showReceipt,
+                  // ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
                     icon: const Icon(Icons.print),
@@ -518,7 +542,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Pajak'),
+                Text(_taxName),
                 Text(FormatUtils.formatCurrency(FormatUtils.safeParseInt(transaction['tax_amount']))),
               ],
             ),
