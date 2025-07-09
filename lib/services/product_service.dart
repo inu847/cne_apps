@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/product_model.dart';
 import '../config/api_config.dart';
+import '../utils/error_handler.dart';
+import 'receipt_service.dart';
 
 class ProductService {
   String? _token;
@@ -22,6 +24,13 @@ class ProductService {
     int perPage = 10,
   }) async {
     if (_token == null) {
+      // Redirect ke halaman login
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      }
       throw Exception('Token tidak tersedia. Silakan login terlebih dahulu.');
     }
     
@@ -74,6 +83,13 @@ class ProductService {
       } else {
         print('ProductService: API returned error status code ${response.statusCode}');
         print('ProductService: Response body - ${response.body}');
+        
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        
         throw Exception('Gagal memuat data produk: HTTP ${response.statusCode}');
       }
     } catch (e) {

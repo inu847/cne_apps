@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/order_model.dart';
 import 'auth_service.dart';
+import '../utils/error_handler.dart';
+import 'receipt_service.dart'; // Import untuk navigatorKey
 
 class TransactionService {
   final AuthService _authService = AuthService();
@@ -22,6 +24,13 @@ class TransactionService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -84,6 +93,12 @@ class TransactionService {
           'message': responseData['message']
         };
       } else {
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        
         return {
           'success': false,
           'message': responseData['message'] ?? 'Gagal membuat transaksi'
@@ -113,6 +128,13 @@ class TransactionService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -152,6 +174,12 @@ class TransactionService {
           'message': responseData['message'] ?? 'Berhasil mendapatkan transaksi'
         };
       } else {
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        
         return {
           'success': false,
           'message': responseData['message'] ?? 'Gagal mendapatkan transaksi'
@@ -171,6 +199,13 @@ class TransactionService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -196,6 +231,12 @@ class TransactionService {
           'message': responseData['message'] ?? 'Berhasil mendapatkan detail transaksi'
         };
       } else {
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        
         return {
           'success': false,
           'message': responseData['message'] ?? 'Gagal mendapatkan detail transaksi'
@@ -218,6 +259,13 @@ class TransactionService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -250,6 +298,12 @@ class TransactionService {
           'message': responseData['message'] ?? 'Berhasil mendapatkan rekapitulasi harian'
         };
       } else {
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        
         return {
           'success': false,
           'message': responseData['message'] ?? 'Gagal mendapatkan rekapitulasi harian'
@@ -273,6 +327,13 @@ class TransactionService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -314,6 +375,12 @@ class TransactionService {
           'message': responseData['message'] ?? 'Berhasil mendapatkan detail rekapitulasi harian'
         };
       } else {
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        
         return {
           'success': false,
           'message': responseData['message'] ?? 'Gagal mendapatkan detail rekapitulasi harian'

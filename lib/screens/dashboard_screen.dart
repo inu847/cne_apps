@@ -87,10 +87,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ) : null,
         actions: [
-          // Search icon pada mobile
-          if (isMobile) IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
+          // Help icon
+          IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.black),
             onPressed: () {},
+            tooltip: 'Help',
           ),
           // Notification icon
           IconButton(
@@ -98,11 +99,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: () {},
             tooltip: 'Notifications',
           ),
-          // Help icon
+          // Logout icon
           IconButton(
-            icon: const Icon(Icons.help_outline, color: Colors.black),
-            onPressed: () {},
-            tooltip: 'Help',
+            icon: const Icon(Icons.logout, color: Colors.black),
+            onPressed: _logout,
+            tooltip: 'Logout',
           ),
         ],
       ) : null,
@@ -197,17 +198,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
+                      // Help icon
+                      IconButton(
+                        icon: const Icon(Icons.help_outline),
+                        onPressed: () {},
+                        tooltip: 'Help',
+                      ),
                       // Notification icon
                       IconButton(
                         icon: const Icon(Icons.notifications_outlined),
                         onPressed: () {},
                         tooltip: 'Notifications',
                       ),
-                      // Help icon
+                      // Logout icon
                       IconButton(
-                        icon: const Icon(Icons.help_outline),
-                        onPressed: () {},
-                        tooltip: 'Help',
+                        icon: const Icon(Icons.logout),
+                        onPressed: _logout,
+                        tooltip: 'Logout',
                       ),
                     ],
                   ),
@@ -1194,6 +1201,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1E2A78),
+              foregroundColor: Colors.white,
             ),
             child: const Text('Logout'),
           ),
@@ -1213,7 +1221,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (result) {
       // Navigate to login screen
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/');
+      Navigator.of(context).pushReplacementNamed('/login');
     } else {
       // Show error
       if (!mounted) return;

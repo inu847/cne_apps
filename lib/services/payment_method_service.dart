@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/payment_method_model.dart';
 import 'auth_service.dart';
+import 'receipt_service.dart';
 
 class PaymentMethodService {
   final AuthService _authService = AuthService();
@@ -17,6 +18,13 @@ class PaymentMethodService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'

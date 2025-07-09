@@ -4,6 +4,7 @@ import 'package:cne_pos_apps/models/daily_inventory_stock_model.dart';
 import 'package:cne_pos_apps/models/daily_inventory_stock_item_model.dart';
 import 'package:cne_pos_apps/config/api_config.dart';
 import 'package:cne_pos_apps/services/auth_service.dart';
+import 'receipt_service.dart'; // Import untuk navigatorKey
 
 class DailyInventoryStockService {
   final AuthService _authService = AuthService();
@@ -21,6 +22,13 @@ class DailyInventoryStockService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -83,6 +91,13 @@ class DailyInventoryStockService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -163,6 +178,13 @@ class DailyInventoryStockService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -230,6 +252,13 @@ class DailyInventoryStockService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -294,6 +323,13 @@ class DailyInventoryStockService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -347,6 +383,13 @@ class DailyInventoryStockService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'

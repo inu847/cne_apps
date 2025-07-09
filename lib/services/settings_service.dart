@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import '../models/settings_model.dart';
+import '../utils/error_handler.dart';
+import 'receipt_service.dart';
 
 class SettingsService {
   String? _token;
@@ -25,6 +27,13 @@ class SettingsService {
     // Check if token is available
     if (_token == null) {
       print('Token is null. Cannot fetch settings.');
+      // Redirect ke halaman login
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      }
       // Try to get cached settings from SharedPreferences
       return await _getCachedSettingsFromPrefs();
     }
@@ -61,10 +70,20 @@ class SettingsService {
           return settings;
         } else {
           print('API returned success: false or no data');
+          // Check for unauthorized error
+          await ErrorHandler.handleApiError(
+            statusCode: response.statusCode,
+            responseBody: response.body,
+          );
           return await _getCachedSettingsFromPrefs();
         }
       } else {
         print('Failed to load settings. Status code: ${response.statusCode}');
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
         return await _getCachedSettingsFromPrefs();
       }
     } catch (e) {

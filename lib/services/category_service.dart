@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/category_model.dart';
 import '../config/api_config.dart';
+import '../utils/error_handler.dart';
 
 class CategoryService {
   // Menggunakan endpoint dari ApiConfig
@@ -93,6 +94,13 @@ class CategoryService {
       } else {
         final errorMsg = 'Failed to load categories: Status ${response.statusCode}, Body: ${response.body}';
         print('CategoryService: Error - $errorMsg');
+        
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        
         throw Exception(errorMsg);
       }
     } catch (e) {

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cne_pos_apps/config/api_config.dart';
 import 'package:cne_pos_apps/services/auth_service.dart';
+import 'package:cne_pos_apps/services/receipt_service.dart';
+import '../utils/error_handler.dart';
 
 class InventoryItemService {
   final AuthService _authService = AuthService();
@@ -18,6 +20,13 @@ class InventoryItemService {
       // Dapatkan token
       final token = await _authService.getToken();
       if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
         return {
           'success': false,
           'message': 'Tidak ada token autentikasi. Silakan login kembali.'
@@ -66,6 +75,13 @@ class InventoryItemService {
         };
       } else {
         print('InventoryItemService: API error - ${response.body}');
+        
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        
         // Jika API gagal, gunakan data dummy sebagai fallback
         print('InventoryItemService: Using dummy data as fallback');
         return _getDummyInventoryItems();

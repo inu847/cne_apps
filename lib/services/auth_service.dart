@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/api_config.dart';
 import '../models/user_model.dart';
+import '../utils/error_handler.dart';
 
 class AuthService {
   // Singleton pattern
@@ -44,7 +45,11 @@ class AuthService {
   Future<bool> logout() async {
     try {
       final token = await getToken();
-      if (token == null) return true; // Already logged out
+      if (token == null) {
+        // Already logged out, clear any remaining data
+        await _clearAuthData();
+        return true;
+      }
 
       final response = await http.post(
         Uri.parse(ApiConfig.logoutEndpoint),
@@ -54,14 +59,28 @@ class AuthService {
         },
       );
 
-      if (response.statusCode == 200) {
+      // Parse response
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 && responseData['success'] == true) {
         // Clear stored auth data
         await _clearAuthData();
         return true;
+      } else {
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        
+        // Even if logout API fails, clear local data for security
+        await _clearAuthData();
+        return false;
       }
-      return false;
     } catch (e) {
       print('Logout error: ${e.toString()}');
+      // Clear local data even on error for security
+      await _clearAuthData();
       return false;
     }
   }
