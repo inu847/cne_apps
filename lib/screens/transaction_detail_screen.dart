@@ -6,6 +6,7 @@ import '../providers/settings_provider.dart';
 import '../utils/format_utils.dart';
 import '../models/order_model.dart';
 import '../models/receipt_model.dart';
+import '../services/receipt_service.dart';
 import 'receipt_screen.dart';
 
 class TransactionDetailScreen extends StatefulWidget {
@@ -239,6 +240,31 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     }
   }
 
+  // Mencetak receipt
+  void _printReceipt() async {
+    if (_transaction == null) return;
+    try {
+      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+      final order = _createOrderFromTransaction(_transaction!);
+      final receipt = Receipt.fromTransaction(
+        transaction: _transaction!,
+        order: order,
+        receiptSettings: settingsProvider.receipt,
+        cashierName: settingsProvider.general.cashierName ?? 'Kasir',
+        storeName: settingsProvider.store.storeName ?? 'Toko',
+        storeAddress: settingsProvider.store.storeAddress ?? 'Alamat Toko',
+        storePhone: settingsProvider.store.storePhone ?? '-',
+      );
+      // Panggil ReceiptService untuk cetak struk
+      final receiptService = ReceiptService();
+      await receiptService.printReceipt(context, receipt);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mencetak struk: ${e.toString()}')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -321,10 +347,20 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             _buildPaymentInfo(),
             const SizedBox(height: 24),
             Center(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.receipt),
-                label: const Text('Lihat Struk'),
-                onPressed: _showReceipt,
+              child: Column(
+                children: [
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.receipt),
+                    label: const Text('Lihat Struk'),
+                    onPressed: _showReceipt,
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.print),
+                    label: const Text('Cetak Struk'),
+                    onPressed: _printReceipt,
+                  ),
+                ],
               ),
             ),
           ],

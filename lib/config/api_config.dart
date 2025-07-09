@@ -1,6 +1,7 @@
 class ApiConfig {
   // Base URL for API
-  static const String baseUrl = 'http://cne.test/api';
+  // static const String baseUrl = 'http://cne.test/api';
+  static const String baseUrl = 'https://cjxa6v1p84.sharedwithexpose.com/api';
   
   // API Endpoints
   // Karena baseUrl sudah termasuk '/api', kita tidak perlu menambahkan '/api' lagi

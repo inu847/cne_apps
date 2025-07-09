@@ -42,13 +42,6 @@ dependencies:
   intl: ^0.19.0
   
   html: ^0.15.0
-
-  # Library untuk pembuatan dan pencetakan PDF - menggunakan pdf_render untuk rendering yang lebih cepat
-  pdf_render: ^1.4.0
-  # Menggunakan pdf package untuk pembuatan PDF yang lebih fleksibel
-  pdf: ^3.10.7
-  # Menggunakan pdf_viewer_plugin untuk preview yang lebih ringan
-  pdf_viewer_plugin: ^2.0.1
   
   # Library untuk caching - menggunakan cached_network_image yang lebih optimal
   cached_network_image: ^3.3.1
@@ -63,6 +56,12 @@ dependencies:
   
   # Library untuk chart dan visualisasi data
   fl_chart: ^0.65.0
+  
+  # PDF generation library
+  pdf: ^3.10.7
+  # pdf_render and pdf_viewer_plugin are commented out due to NDK issues
+  # pdf_render: ^1.4.5
+  # pdf_viewer_plugin: ^2.0.1
 
 dev_dependencies:
   flutter_test:

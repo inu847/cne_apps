@@ -3,6 +3,7 @@ import '../models/settings_model.dart';
 
 class Receipt {
   final String invoiceNumber;
+  final String transactionId; // Added for compatibility with receipt_service
   final Order order;
   final String customerName;
   final DateTime transactionDate;
@@ -18,6 +19,7 @@ class Receipt {
 
   Receipt({
     required this.invoiceNumber,
+    String? transactionId,
     required this.order,
     required this.customerName,
     required this.transactionDate,
@@ -30,7 +32,7 @@ class Receipt {
     required this.storeName,
     required this.storeAddress,
     required this.storePhone,
-  });
+  }) : this.transactionId = transactionId ?? invoiceNumber;
 
   // Membuat Receipt dari data transaksi
   factory Receipt.fromTransaction({
@@ -44,6 +46,7 @@ class Receipt {
   }) {
     return Receipt(
       invoiceNumber: transaction['invoice_number'] ?? '',
+      transactionId: transaction['id']?.toString() ?? transaction['invoice_number'] ?? '',
       order: order,
       customerName: transaction['customer_name'] ?? 'Pelanggan Umum',
       transactionDate: DateTime.parse(transaction['created_at'] ?? DateTime.now().toIso8601String()),

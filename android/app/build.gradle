@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.cne_pos_apps"
-    compileSdk = 33 // Explicitly set to 33 for blue_thermal_printer compatibility
+    compileSdk = 34 // Explicitly set to 33 for blue_thermal_printer compatibility
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
