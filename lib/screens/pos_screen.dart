@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:lottie/lottie.dart';
 import '../providers/transaction_provider.dart';
 import '../models/category_model.dart';
 import '../models/product_model.dart';
@@ -16,8 +17,10 @@ import '../providers/order_provider.dart';
 import '../providers/payment_method_provider.dart';
 import '../providers/voucher_provider.dart';
 import '../widgets/payment_method_dialog.dart';
+import '../services/receipt_service.dart';
 import 'saved_orders_screen.dart';
 import 'receipt_screen.dart';
+import 'transaction_detail_screen.dart';
 
 class POSScreen extends StatefulWidget {
   const POSScreen({Key? key}) : super(key: key);
@@ -726,7 +729,7 @@ class _POSScreenState extends State<POSScreen> {
                                           icon: const Icon(Icons.refresh),
                                           label: const Text('Coba Lagi'),
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: _primaryColor,
+                                            backgroundColor: Theme.of(context).colorScheme.primary,
                                             foregroundColor: Colors.white,
                                           ),
                                         ),
@@ -1107,12 +1110,18 @@ class _POSScreenState extends State<POSScreen> {
     // Jika keranjang kosong, tidak perlu melakukan apa-apa
     if (_cart.isEmpty) return;
     
+    // Tambahkan log untuk debugging
+    print('Menampilkan dialog pemilihan metode pembayaran');
+    print('totalAmount: $_totalAmount');
+    
     // Tampilkan dialog pemilihan metode pembayaran
     showDialog(
       context: context,
+      barrierDismissible: false, // Pastikan dialog tidak bisa ditutup dengan tap di luar
       builder: (context) => PaymentMethodDialog(
         totalAmount: _totalAmount,
         onPaymentSelected: (PaymentMethod paymentMethod, double amount) {
+          print('Metode pembayaran dipilih: ${paymentMethod.name}, amount: $amount');
           _processCheckout(paymentMethod, amount);
         },
       ),
@@ -1122,10 +1131,18 @@ class _POSScreenState extends State<POSScreen> {
   // Proses checkout dengan metode pembayaran yang dipilih
   void _processCheckout(PaymentMethod paymentMethod, double amount) async {
     try {
+      // Tambahkan log untuk debugging
+      print('Memproses checkout dengan metode pembayaran: ${paymentMethod.name}');
+      print('Amount: $amount');
+      
       // Simpan jumlah item dan total untuk ditampilkan di pesan sukses
       final itemCount = _totalItems;
       final totalAmount = _totalAmount;
       final customerName = _customerNameController.text.trim();
+      
+      print('itemCount: $itemCount');
+      print('totalAmount: $totalAmount');
+      print('customerName: $customerName');
       
       // Dapatkan OrderProvider, TransactionProvider, dan VoucherProvider
       final orderProvider = Provider.of<OrderProvider>(context, listen: false);
@@ -1166,6 +1183,10 @@ class _POSScreenState extends State<POSScreen> {
         voucherCode: voucherProvider.activeVoucher != null ? voucherProvider.voucherCode : null,
       );
       
+      // Tambahkan log untuk debugging
+      print('Hasil createTransaction: $result');
+      print('lastTransaction setelah createTransaction: ${transactionProvider.lastTransaction}');
+      
       if (result) {
         // Bersihkan keranjang, nama pelanggan, dan voucher
         setState(() {
@@ -1178,62 +1199,24 @@ class _POSScreenState extends State<POSScreen> {
         final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
         voucherProvider.clearVoucher();
         
-        // Tampilkan pesan sukses
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Pembayaran Berhasil!',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 4),
-                Text('$itemCount item dengan total Rp ${FormatUtils.formatCurrency(totalAmount.toInt())}'),
-                Text('Metode Pembayaran: ${paymentMethod.name}'),
-                if (customerName.isNotEmpty)
-                  Text('Pelanggan: $customerName'),
-                if (Provider.of<VoucherProvider>(context, listen: false).activeVoucher != null)
-                  Text('Voucher: ${Provider.of<VoucherProvider>(context, listen: false).voucherName} (${Provider.of<VoucherProvider>(context, listen: false).voucherCode})'),
-                if (transactionProvider.lastTransaction != null)
-                  Text('Invoice: ${transactionProvider.lastTransaction!["invoice_number"]}'),
-              ],
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-            action: SnackBarAction(
-              label: 'Lihat Struk',
-              textColor: Colors.white,
-              onPressed: () {
-                // Tampilkan receipt screen
-                if (transactionProvider.lastTransaction != null) {
-                  // Buat objek Receipt dari data transaksi
-                  final receipt = Receipt.fromTransaction(
-                    transaction: transactionProvider.lastTransaction!,
-                    order: order,
-                    receiptSettings: settingsProvider.receipt,
-                    cashierName: settingsProvider.general.cashierName,
-                    storeName: settingsProvider.store.storeName,
-                    storeAddress: settingsProvider.store.storeAddress,
-                    storePhone: settingsProvider.store.storePhone,
-                  );
-                  
-                  // Navigasi ke receipt screen
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ReceiptScreen(receipt: receipt),
-                    ),
-                  );
-                }
-                
-                // Hide the snackbar
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              },
-            ),
-          ),
-        );
+        print('Sebelum menampilkan dialog sukses transaksi');
+        print('lastTransaction: ${transactionProvider.lastTransaction}');
+        
+        // Gunakan Future.delayed untuk memastikan state sudah diperbarui sebelum menampilkan dialog
+        Future.delayed(Duration(milliseconds: 300), () {
+          if (mounted) {
+            // Tampilkan popup konfirmasi transaksi berhasil
+            _showTransactionSuccessDialog(
+              itemCount: itemCount,
+              totalAmount: totalAmount,
+              paymentMethod: paymentMethod,
+              customerName: customerName,
+              order: order,
+              transactionProvider: transactionProvider,
+              settingsProvider: settingsProvider,
+            );
+          }
+        });
         
         // Tutup bottom sheet jika di mobile
         if (MediaQuery.of(context).size.width < 650) {
@@ -1380,6 +1363,298 @@ class _POSScreenState extends State<POSScreen> {
     }
   }
   
+  // Menampilkan dialog konfirmasi transaksi berhasil
+  void _showTransactionSuccessDialog({
+    required int itemCount,
+    required double totalAmount,
+    required PaymentMethod paymentMethod,
+    required String customerName,
+    required Order order,
+    required TransactionProvider transactionProvider,
+    required SettingsProvider settingsProvider,
+  }) {
+    // Tambahkan log untuk debugging
+    print('Menampilkan dialog transaksi berhasil');
+    print('itemCount: $itemCount');
+    print('totalAmount: $totalAmount');
+    print('paymentMethod: ${paymentMethod.name}');
+    print('customerName: $customerName');
+    print('lastTransaction: ${transactionProvider.lastTransaction != null}');
+    print('lastTransaction detail: ${transactionProvider.lastTransaction}');
+    
+    // Tampilkan dialog langsung tanpa delay
+    if (!mounted) {
+      print('Widget tidak mounted, tidak bisa menampilkan dialog');
+      return;
+    }
+    
+    // Tampilkan dialog dengan animasi dan layout yang lebih menarik
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Animasi checklist
+                SizedBox(
+                  height: 150,
+                  width: 150,
+                  child: Lottie.asset(
+                    'assets/animations/success_check.json',
+                    repeat: false,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Judul dengan style yang lebih menarik
+                const Text(
+                  'Transaksi Berhasil!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Detail transaksi dalam card
+                Container(
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Total item dan harga
+                      Row(
+                        children: [
+                          const Icon(Icons.shopping_cart, color: Colors.blue, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '$itemCount item',
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                          Text(
+                            'Rp ${FormatUtils.formatCurrency(totalAmount.toInt())}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 20),
+                      // Metode pembayaran
+                      Row(
+                        children: [
+                          const Icon(Icons.payment, color: Colors.green, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Metode Pembayaran:',
+                              style: TextStyle(color: Colors.grey.shade700),
+                            ),
+                          ),
+                          Text(
+                            paymentMethod.name,
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Pelanggan (jika ada)
+                      if (customerName.isNotEmpty) ...[                        
+                        Row(
+                          children: [
+                            const Icon(Icons.person, color: Colors.orange, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Pelanggan:',
+                                style: TextStyle(color: Colors.grey.shade700),
+                              ),
+                            ),
+                            Text(
+                              customerName,
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      // Voucher (jika ada)
+                      if (Provider.of<VoucherProvider>(context, listen: false).activeVoucher != null) ...[                        
+                        Row(
+                          children: [
+                            const Icon(Icons.discount, color: Colors.purple, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Voucher:',
+                                style: TextStyle(color: Colors.grey.shade700),
+                              ),
+                            ),
+                            Text(
+                              '${Provider.of<VoucherProvider>(context, listen: false).voucherName}',
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      // Invoice (jika ada)
+                      if (transactionProvider.lastTransaction != null) ...[                        
+                        Row(
+                          children: [
+                            const Icon(Icons.receipt, color: Colors.indigo, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Invoice:',
+                                style: TextStyle(color: Colors.grey.shade700),
+                              ),
+                            ),
+                            Text(
+                              '${transactionProvider.lastTransaction!["invoice_number"]}',
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 25),
+                // Tombol aksi dengan style yang lebih menarik
+                Row(
+                  children: [
+                    // Tombol Transaksi Lagi
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Tutup dialog
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Transaksi Lagi'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Tombol Lihat Transaksi
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Tutup dialog
+                          if (transactionProvider.lastTransaction != null) {
+                            final transactionId = transactionProvider.lastTransaction!['id'];
+                            if (transactionId != null) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TransactionDetailScreen(
+                                    transactionId: int.parse(transactionId.toString()),
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.visibility),
+                        label: const Text('Lihat Transaksi'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Tombol Cetak Transaksi
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.of(context).pop(); // Tutup dialog
+                      await _printTransactionReceipt(
+                        order: order,
+                        transactionProvider: transactionProvider,
+                        settingsProvider: settingsProvider,
+                      );
+                    },
+                    icon: const Icon(Icons.print),
+                    label: const Text('Cetak Transaksi'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Mencetak struk transaksi
+  Future<void> _printTransactionReceipt({
+    required Order order,
+    required TransactionProvider transactionProvider,
+    required SettingsProvider settingsProvider,
+  }) async {
+    try {
+      if (transactionProvider.lastTransaction != null) {
+        // Buat objek Receipt dari data transaksi
+        final receipt = Receipt.fromTransaction(
+          transaction: transactionProvider.lastTransaction!,
+          order: order,
+          receiptSettings: settingsProvider.receipt,
+          cashierName: settingsProvider.general.cashierName ?? 'Kasir',
+          storeName: settingsProvider.store.storeName ?? 'Toko',
+          storeAddress: settingsProvider.store.storeAddress ?? 'Alamat Toko',
+          storePhone: settingsProvider.store.storePhone ?? '-',
+        );
+        
+        // Panggil ReceiptService untuk cetak struk
+        final receiptService = ReceiptService();
+        await receiptService.printReceipt(context, receipt);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mencetak struk: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   // Widget untuk bagian keranjang
   Widget _buildCartSection() {
     return Column(

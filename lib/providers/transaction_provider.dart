@@ -99,10 +99,16 @@ class TransactionProvider with ChangeNotifier {
       
       if (result['success']) {
         _lastTransaction = result['data']['transaction'];
+        // Tambahkan log untuk debugging
+        print('Transaksi berhasil dibuat');
+        print('lastTransaction: $_lastTransaction');
+        print('invoice_number: ${_lastTransaction?["invoice_number"]}');
         notifyListeners();
         return true;
       } else {
         _error = result['message'];
+        // Tambahkan log untuk debugging
+        print('Gagal membuat transaksi: $_error');
         notifyListeners();
         return false;
       }

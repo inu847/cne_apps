@@ -204,8 +204,8 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
                             ? null
                             : () {
                                 final amount = double.tryParse(_amountController.text) ?? widget.totalAmount;
-                                widget.onPaymentSelected(_selectedMethod!, amount);
-                                Navigator.pop(context);
+                                Navigator.pop(context); // Tutup dialog terlebih dahulu
+                                widget.onPaymentSelected(_selectedMethod!, amount); // Panggil callback setelah dialog ditutup
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryColor,
