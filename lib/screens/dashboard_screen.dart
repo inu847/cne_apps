@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../models/user_model.dart';
+import '../models/sales_dashboard_model.dart';
 import '../services/auth_service.dart';
 import '../services/receipt_service.dart'; // Impor untuk navigatorKey
+import '../services/sales_dashboard_service.dart';
+import '../services/transaction_service.dart';
 import '../screens/transactions_screen.dart';
 import '../screens/inventory_screen.dart';
+import '../screens/transaction_detail_screen.dart';
+import '../widgets/sales_chart_widget.dart';
+import '../widgets/sales_stat_card_widget.dart';
+import '../config/api_config.dart'; // Import untuk ApiConfig
 
 class DashboardScreen extends StatefulWidget {
   final User user;
 
-  const DashboardScreen({Key? key, required this.user}) : super(key: key);
+  const DashboardScreen({super.key, required this.user});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -17,7 +27,15 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final AuthService _authService = AuthService();
+  final SalesDashboardService _salesDashboardService = SalesDashboardService();
+  final TransactionService _transactionService = TransactionService();
   int _selectedIndex = 0;
+  
+  // Data dashboard penjualan
+  SalesDashboardData? _salesDashboardData;
+  bool _isLoadingSalesData = false;
+  String? _salesDataError;
+  int _selectedPeriod = 30; // Default 30 hari
   
   void _onItemTapped(int index) {
     if (index == 1) { // POS menu
@@ -46,20 +64,190 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
   
-  // Simulasi data untuk grafik dan tabel
-  final List<Map<String, dynamic>> _recentTransactions = [
-    {'id': 'INV-001', 'customer': 'John Doe', 'date': '2023-06-15', 'amount': 'Rp 350,000', 'status': 'Completed'},
-    {'id': 'INV-002', 'customer': 'Jane Smith', 'date': '2023-06-15', 'amount': 'Rp 125,000', 'status': 'Completed'},
-    {'id': 'INV-003', 'customer': 'Robert Johnson', 'date': '2023-06-14', 'amount': 'Rp 780,000', 'status': 'Pending'},
-    {'id': 'INV-004', 'customer': 'Emily Davis', 'date': '2023-06-14', 'amount': 'Rp 450,000', 'status': 'Completed'},
-    {'id': 'INV-005', 'customer': 'Michael Brown', 'date': '2023-06-13', 'amount': 'Rp 920,000', 'status': 'Cancelled'},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchSalesDashboardData();
+    _fetchRecentTransactions();
+    _fetchTopProducts();
+  }
   
-  final List<Map<String, dynamic>> _topProducts = [
-    {'name': 'Product A', 'sold': 42, 'revenue': 'Rp 840,000'},
-    {'name': 'Product B', 'sold': 38, 'revenue': 'Rp 760,000'},
-    {'name': 'Product C', 'sold': 30, 'revenue': 'Rp 600,000'},
-  ];
+  // Fungsi untuk mengambil data produk terlaris
+  Future<void> _fetchTopProducts() async {
+    setState(() {
+      _isLoadingTopProducts = true;
+      _topProductsError = null;
+    });
+    
+    try {
+      final token = await _authService.getToken();
+      if (token == null) {
+        setState(() {
+          _topProductsError = 'Tidak ada token autentikasi. Silakan login kembali.';
+          _isLoadingTopProducts = false;
+        });
+        return;
+      }
+      
+      // Membuat URL dengan query parameters
+      final uri = Uri.parse('${ApiConfig.baseUrl}/transactions/top-selling-products');
+      
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print(response.statusCode);
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        
+        if (responseData['success'] == true && responseData['data'] != null && responseData['data']['top_products'] != null) {
+          final topProductsData = responseData['data']['top_products'] as List<dynamic>;
+          
+          setState(() {
+            _topProducts = topProductsData.map((product) {
+              // Format jumlah dengan Rupiah
+              final totalSales = product['total_sales'];
+              final numTotalSales = totalSales is String ? double.tryParse(totalSales) ?? 0 : (totalSales as num);
+              final formattedRevenue = 'Rp ${NumberFormat('#,###', 'id_ID').format(numTotalSales)}';
+              
+              return {
+                'id': product['id'],
+                'name': product['name'],
+                'sku': product['sku'],
+                'sold': product['quantity_sold'],
+                'revenue': formattedRevenue,
+                'profit': product['profit'],
+                'profit_margin': product['profit_margin'],
+              };
+            }).toList();
+            _isLoadingTopProducts = false;
+          });
+        } else {
+          setState(() {
+            _topProductsError = responseData['message'] ?? 'Gagal memuat data produk terlaris';
+            _isLoadingTopProducts = false;
+          });
+        }
+      } else if (response.statusCode == 401) {
+        setState(() {
+          _topProductsError = 'Sesi telah berakhir. Silakan login kembali.';
+          _isLoadingTopProducts = false;
+        });
+        // Redirect ke halaman login
+        navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+      } else {
+        setState(() {
+          _topProductsError = 'Gagal memuat data produk terlaris: ${response.statusCode}';
+          _isLoadingTopProducts = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _topProductsError = e.toString();
+        _isLoadingTopProducts = false;
+      });
+    }
+  }
+  
+  // Fungsi untuk mengambil data transaksi terbaru
+  Future<void> _fetchRecentTransactions() async {
+    setState(() {
+      _isLoadingTransactions = true;
+      _transactionsError = null;
+    });
+    
+    try {
+      final result = await _transactionService.getTransactions(
+        page: 1,
+        perPage: 5, // Hanya ambil 5 transaksi terbaru
+      );
+      
+      if (result['success'] == true && result['data'] != null) {
+        final transactionsData = result['data']['transactions'] as List<dynamic>;
+        
+        setState(() {
+          _recentTransactions = transactionsData.map((transaction) {
+            // Format tanggal dari API (asumsi format ISO)
+            final date = DateTime.parse(transaction['created_at']);
+            final formattedDate = DateFormat('yyyy-MM-dd').format(date);
+            
+            // Format jumlah dengan Rupiah
+            final amount = transaction['total_amount'] is String 
+                ? double.tryParse(transaction['total_amount'].toString()) ?? 0 
+                : transaction['total_amount'] as num;
+            final formattedAmount = 'Rp ${NumberFormat('#,###', 'id_ID').format(amount)}';
+            
+            return {
+              'id': transaction['invoice_number'] ?? 'INV-${transaction['id']}',
+              'customer': transaction['customer_name'] ?? 'Pelanggan Umum',
+              'date': formattedDate,
+              'amount': formattedAmount,
+              'status': transaction['status'] ?? 'Completed',
+            };
+          }).toList();
+          _isLoadingTransactions = false;
+        });
+      } else {
+        setState(() {
+          _recentTransactions = [];
+          _transactionsError = result['message'] ?? 'Gagal memuat data transaksi';
+          _isLoadingTransactions = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _recentTransactions = [];
+        _transactionsError = e.toString();
+        _isLoadingTransactions = false;
+      });
+    }
+  }
+  
+  // Fungsi untuk mengambil data dashboard penjualan
+  Future<void> _fetchSalesDashboardData() async {
+    setState(() {
+      _isLoadingSalesData = true;
+      _salesDataError = null;
+    });
+    
+    try {
+      final data = await _salesDashboardService.getDashboardData(period: _selectedPeriod);
+      setState(() {
+        _salesDashboardData = data as SalesDashboardData?;
+        _isLoadingSalesData = false;
+      });
+    } catch (e) {
+      setState(() {
+        _salesDataError = e.toString();
+        _isLoadingSalesData = false;
+      });
+    }
+  }
+  
+  // Fungsi untuk mengubah periode dan memuat ulang data
+  void _changePeriod(int days) {
+    if (_selectedPeriod != days) {
+      setState(() {
+        _selectedPeriod = days;
+      });
+      _fetchSalesDashboardData();
+    }
+  }
+  
+  // Data transaksi terbaru dari API
+  List<Map<String, dynamic>> _recentTransactions = [];
+  bool _isLoadingTransactions = false;
+  String? _transactionsError;
+  
+  // Data produk terlaris dari API
+  List<Map<String, dynamic>> _topProducts = [];
+  bool _isLoadingTopProducts = false;
+  String? _topProductsError;
 
   // Menambahkan variabel untuk drawer
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -435,6 +623,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // Helper to get color for transaction status
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed': return Colors.green;
+      case 'pending': return Colors.orange;
+      case 'cancelled': return Colors.red;
+      default: return Colors.grey;
+    }
+  }
+
   Widget _buildMainContent() {
     // Mendapatkan ukuran layar untuk responsivitas
     final screenWidth = MediaQuery.of(context).size.width;
@@ -512,15 +710,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.calendar_today, size: 18),
-                            const SizedBox(width: 8),
-                            const Text('Today'),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.arrow_drop_down, size: 18),
-                          ],
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            value: _selectedPeriod,
+                            icon: const Icon(Icons.arrow_drop_down, size: 18),
+                            isExpanded: true,
+                            onChanged: (int? newValue) {
+                              if (newValue != null) {
+                                _changePeriod(newValue);
+                              }
+                            },
+                            items: const [
+                              DropdownMenuItem(
+                                value: 7,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.calendar_today, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('7 Hari Terakhir'),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 30,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.calendar_today, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('30 Hari Terakhir'),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 90,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.calendar_today, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('90 Hari Terakhir'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -556,14 +788,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.calendar_today, size: 18),
-                            const SizedBox(width: 8),
-                            const Text('Today'),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.arrow_drop_down, size: 18),
-                          ],
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            value: _selectedPeriod,
+                            icon: const Icon(Icons.arrow_drop_down, size: 18),
+                            onChanged: (int? newValue) {
+                              if (newValue != null) {
+                                _changePeriod(newValue);
+                              }
+                            },
+                            items: const [
+                              DropdownMenuItem(
+                                value: 7,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.calendar_today, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('7 Hari Terakhir'),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 30,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.calendar_today, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('30 Hari Terakhir'),
+                                  ],
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 90,
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.calendar_today, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('90 Hari Terakhir'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -571,94 +837,142 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 24),
             
             // Stats cards - responsif untuk mobile
-            isMobile
-                ? Column(
-                    children: [
-                      _buildDashboardCard(
-                        'Today\'s Sales',
-                        'Rp 2,500,000',
-                        Icons.attach_money,
-                        const Color(0xFF1E2A78),
-                        subtitle: '+15% from yesterday',
-                        trend: 'up',
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDashboardCard(
-                        'Orders',
-                        '24',
-                        Icons.shopping_cart,
-                        const Color(0xFF1E2A78),
-                        subtitle: '18 completed, 6 pending',
-                        trend: 'up',
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDashboardCard(
-                        'Customers',
-                        '8',
-                        Icons.people,
-                        const Color(0xFF1E2A78),
-                        subtitle: '3 new today',
-                        trend: 'up',
-                      ),
-                      const SizedBox(height: 16),
-                      _buildDashboardCard(
-                        'Products',
-                        '120',
-                        Icons.inventory_2,
-                        const Color(0xFF1E2A78),
-                        subtitle: '5 low in stock',
-                        trend: 'neutral',
-                      ),
-                    ],
+            _isLoadingSalesData
+                ? const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: CircularProgressIndicator(color: Color(0xFF1E2A78)),
+                    ),
                   )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: _buildDashboardCard(
-                          'Today\'s Sales',
-                          'Rp 2,500,000',
-                          Icons.attach_money,
-                          const Color(0xFF1E2A78),
-                          subtitle: '+15% from yesterday',
-                          trend: 'up',
+                : _salesDataError != null
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'Gagal memuat data penjualan',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(_salesDataError!),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _fetchSalesDashboardData,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1E2A78),
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: const Text('Coba Lagi'),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildDashboardCard(
-                          'Orders',
-                          '24',
-                          Icons.shopping_cart,
-                          const Color(0xFF1E2A78),
-                          subtitle: '18 completed, 6 pending',
-                          trend: 'up',
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildDashboardCard(
-                          'Customers',
-                          '8',
-                          Icons.people,
-                          const Color(0xFF1E2A78),
-                          subtitle: '3 new today',
-                          trend: 'up',
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildDashboardCard(
-                          'Products',
-                          '120',
-                          Icons.inventory_2,
-                          const Color(0xFF1E2A78),
-                          subtitle: '5 low in stock',
-                          trend: 'neutral',
-                        ),
-                      ),
-                    ],
-                  ),
+                      )
+                    : _salesDashboardData == null
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20.0),
+                              child: Text('Tidak ada data penjualan'),
+                            ),
+                          )
+                        : isMobile
+                            ? Column(
+                                children: [
+                                  SalesStatCardWidget(
+                                    title: 'Total Penjualan',
+                                    value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.totalSales),
+                                    icon: Icons.attach_money,
+                                    color: const Color(0xFF1E2A78),
+                                    changePercentage: _salesDashboardData!.comparison.totalSalesChange,
+                                    isCurrency: true,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  SalesStatCardWidget(
+                                    title: 'Jumlah Transaksi',
+                                    value: SalesStatCardWidget.formatNumber(_salesDashboardData!.currentPeriod.transactionCount.toDouble()),
+                                    icon: Icons.receipt_long,
+                                    color: const Color(0xFF1E2A78),
+                                    changePercentage: _salesDashboardData!.comparison.transactionCountChange,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  SalesStatCardWidget(
+                                    title: 'Rata-rata Transaksi',
+                                    value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.averageTransactionValue),
+                                    icon: Icons.trending_up,
+                                    color: const Color(0xFF1E2A78),
+                                    changePercentage: _salesDashboardData!.comparison.averageTransactionValueChange,
+                                    isCurrency: true,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  SalesStatCardWidget(
+                                    title: 'Total Profit',
+                                    value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.totalProfit),
+                                    icon: Icons.account_balance_wallet,
+                                    color: const Color(0xFF1E2A78),
+                                    changePercentage: _salesDashboardData!.comparison.profitChange,
+                                    isCurrency: true,
+                                  ),
+                                ],
+                              )
+                            : Row(
+                                children: [
+                                  Expanded(
+                                    child: SalesStatCardWidget(
+                                      title: 'Total Penjualan',
+                                      value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.totalSales),
+                                      icon: Icons.attach_money,
+                                      color: const Color(0xFF1E2A78),
+                                      changePercentage: _salesDashboardData!.comparison.totalSalesChange,
+                                      isCurrency: true,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: SalesStatCardWidget(
+                                      title: 'Jumlah Transaksi',
+                                      value: SalesStatCardWidget.formatNumber(_salesDashboardData!.currentPeriod.transactionCount.toDouble()),
+                                      icon: Icons.receipt_long,
+                                      color: const Color(0xFF1E2A78),
+                                      changePercentage: _salesDashboardData!.comparison.transactionCountChange,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: SalesStatCardWidget(
+                                      title: 'Rata-rata Transaksi',
+                                      value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.averageTransactionValue),
+                                      icon: Icons.trending_up,
+                                      color: const Color(0xFF1E2A78),
+                                      changePercentage: _salesDashboardData!.comparison.averageTransactionValueChange,
+                                      isCurrency: true,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: SalesStatCardWidget(
+                                      title: 'Total Profit',
+                                      value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.totalProfit),
+                                      icon: Icons.account_balance_wallet,
+                                      color: const Color(0xFF1E2A78),
+                                      changePercentage: _salesDashboardData!.comparison.profitChange,
+                                      isCurrency: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
             const SizedBox(height: 24),
+            
+            // Grafik penjualan harian
+            if (_salesDashboardData != null) ...[  
+              SalesChartWidget(
+                dailySalesData: _salesDashboardData!.dailySales,
+                isMobile: isMobile,
+              ),
+              const SizedBox(height: 24),
+            ],
             
             // Recent transactions and top products - responsif untuk mobile
             isMobile
@@ -705,6 +1019,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
   
+
+  
   // Show reports menu popup
   void _showReportsMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject() as RenderBox;
@@ -721,20 +1037,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       position: position,
       items: [
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'daily-recap',
           child: Row(
-            children: const [
+            children: [
               Icon(Icons.summarize, color: Color(0xFF1E2A78)),
               SizedBox(width: 8),
               Text('Rekapitulasi Harian'),
             ],
           ),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'sales-report',
           child: Row(
-            children: const [
+            children: [
               Icon(Icons.bar_chart, color: Color(0xFF1E2A78)),
               SizedBox(width: 8),
               Text('Laporan Penjualan'),
@@ -772,83 +1088,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  Widget _buildDashboardCard(String title, String value, IconData icon, Color color, {String? subtitle, String? trend}) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade700,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 20,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          if (subtitle != null) ...[  
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                if (trend != null) ...[  
-                  Icon(
-                    trend == 'up' ? Icons.arrow_upward : (trend == 'down' ? Icons.arrow_downward : Icons.remove),
-                    color: trend == 'up' ? Colors.green : (trend == 'down' ? Colors.red : Colors.grey),
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                ],
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: trend == 'up' ? Colors.green : (trend == 'down' ? Colors.red : Colors.grey.shade600),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-  
   // Recent transactions card with table
   Widget _buildRecentTransactionsCard() {
     // Mendapatkan ukuran layar untuk responsivitas
@@ -882,88 +1121,143 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               TextButton(
-                onPressed: () {},
-                child: const Text('View All'),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/transactions');
+                },
                 style: TextButton.styleFrom(
-                  foregroundColor: Color(0xFF1E2A78),
+                  foregroundColor: const Color(0xFF1E2A78),
                 ),
+                child: const Text('View All'),
               ),
             ],
           ),
           const SizedBox(height: 16),
           
-          // Tampilan mobile menggunakan ListView dengan Card
-          if (isMobile) ...[
-            ...List.generate(_recentTransactions.length, (index) {
-              final transaction = _recentTransactions[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
+          // Menampilkan loading indicator
+          if (_isLoadingTransactions) ...[  
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ]
+          // Menampilkan pesan error jika ada
+          else if (_transactionsError != null) ...[  
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          transaction['id'],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(transaction['status']).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            transaction['status'],
-                            style: TextStyle(
-                              color: _getStatusColor(transaction['status']),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.person_outline, size: 16, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            transaction['customer'],
-                            style: TextStyle(color: Colors.grey.shade700),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                            const SizedBox(width: 4),
-                            Text(
-                              transaction['date'],
-                              style: TextStyle(color: Colors.grey.shade700),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          transaction['amount'],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text(_transactionsError!, textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _fetchRecentTransactions,
+                      child: const Text('Coba Lagi'),
                     ),
                   ],
+                ),
+              ),
+            ),
+          ]
+          // Menampilkan pesan jika tidak ada data
+          else if (_recentTransactions.isEmpty) ...[  
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text('Tidak ada data transaksi terbaru'),
+              ),
+            ),
+          ]
+          // Tampilan mobile menggunakan ListView dengan Card
+          else if (isMobile) ...[
+            ...List.generate(_recentTransactions.length, (index) {
+              final transaction = _recentTransactions[index];
+              return InkWell(
+                onTap: () {
+                  // Navigasi ke halaman detail transaksi
+                  if (transaction.containsKey('id')) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransactionDetailScreen(
+                          transactionId: int.parse(transaction['id'].toString().replaceAll('INV-', '')),
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            transaction['id'],
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(transaction['status']).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              transaction['status'],
+                              style: TextStyle(
+                                color: _getStatusColor(transaction['status']),
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.person_outline, size: 16, color: Colors.grey),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              transaction['customer'],
+                              style: TextStyle(color: Colors.grey.shade700),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Text(
+                                transaction['date'],
+                                style: TextStyle(color: Colors.grey.shade700),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            transaction['amount'],
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             }),
@@ -989,54 +1283,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Table rows
             ...List.generate(_recentTransactions.length, (index) {
               final transaction = _recentTransactions[index];
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        transaction['id'],
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: Text(transaction['customer']),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(transaction['date']),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        transaction['amount'],
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(transaction['status']).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
+              return InkWell(
+                onTap: () {
+                  // Navigasi ke halaman detail transaksi
+                  if (transaction.containsKey('id')) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransactionDetailScreen(
+                          transactionId: int.parse(transaction['id'].toString().replaceAll('INV-', '')),
                         ),
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
                         child: Text(
-                          transaction['status'],
-                          style: TextStyle(
-                            color: _getStatusColor(transaction['status']),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
+                          transaction['id'],
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: Text(transaction['customer']),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(transaction['date']),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          transaction['amount'],
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(transaction['status']).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            transaction['status'],
+                            style: TextStyle(
+                              color: _getStatusColor(transaction['status']),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             }),
@@ -1072,7 +1381,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Top Selling Products',
+                'Top Selling Products This Month',
                 style: TextStyle(
                   fontSize: isMobile ? 16 : 18,
                   fontWeight: FontWeight.bold,
@@ -1080,110 +1389,172 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               TextButton(
                 onPressed: () {},
-                child: const Text('View All'),
                 style: TextButton.styleFrom(
-                  foregroundColor: Color(0xFF1E2A78),
+                  foregroundColor: const Color(0xFF1E2A78),
                 ),
+                child: const Text('View All'),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          // Product list
-          ...List.generate(_topProducts.length, (index) {
-            final product = _topProducts[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
+          
+          // Menampilkan loading indicator
+          if (_isLoadingTopProducts) ...[  
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ]
+          // Menampilkan pesan error jika ada
+          else if (_topProductsError != null) ...[  
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 16),
+                    Text(_topProductsError!, textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _fetchTopProducts,
+                      child: const Text('Coba Lagi'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ]
+          // Menampilkan pesan jika tidak ada data
+          else if (_topProducts.isEmpty) ...[  
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text('Tidak ada data produk terlaris'),
+              ),
+            ),
+          ]
+          // Menampilkan daftar produk terlaris
+          else ...[  
+            ...List.generate(_topProducts.length, (index) {
+              final product = _topProducts[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  children: [
+                    // Product rank
+                    Container(
+                      width: 32,
+                      height: 32,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E2A78),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        '${index + 1}',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Product details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            product['name'],
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                '${product['sold']} units sold',
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                              ),
+                              if (product['sku'] != null) ...[  
+                                Text(
+                                  ' • SKU: ${product['sku']}',
+                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                                ),
+                              ],
+                            ],
+                          ),
+                          if (product['profit_margin'] != null) ...[  
+                            const SizedBox(height: 4),
+                            Text(
+                              'Profit Margin: ${product['profit_margin']}%',
+                              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    // Revenue
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          product['revenue'],
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        if (product['profit'] != null) ...[  
+                          const SizedBox(height: 4),
+                          Text(
+                            'Profit: Rp ${NumberFormat('#,###', 'id_ID').format(product['profit'])}',
+                            style: TextStyle(color: Colors.green.shade700, fontSize: 14),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
+            
+            // Chart placeholder - ukuran disesuaikan untuk mobile
+            Container(
+              height: isMobile ? 150 : 200,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey.shade200),
               ),
-              child: Row(
-                children: [
-                  // Product rank
-                  Container(
-                    width: 32,
-                    height: 32,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E2A78),
-                      borderRadius: BorderRadius.circular(16),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.bar_chart,
+                      size: isMobile ? 36 : 48,
+                      color: Colors.grey.shade400,
                     ),
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Sales Chart',
+                      style: TextStyle(color: Colors.grey.shade600),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Product details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          product['name'],
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${product['sold']} units sold',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Revenue
-                  Text(
-                    product['revenue'],
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ],
-              ),
-            );
-          }),
-          
-          // Chart placeholder - ukuran disesuaikan untuk mobile
-          Container(
-            height: isMobile ? 150 : 200,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.bar_chart,
-                    size: isMobile ? 36 : 48,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Sales Chart',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
   
-  // Helper to get color for transaction status
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed': return Colors.green;
-      case 'pending': return Colors.orange;
-      case 'cancelled': return Colors.red;
-      default: return Colors.grey;
-    }
-  }
+
 
   void _logout() async {
     // Show confirmation dialog

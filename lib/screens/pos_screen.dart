@@ -879,7 +879,7 @@ class _POSScreenState extends State<POSScreen> {
               backgroundColor: _primaryColor,
               icon: Stack(
                 children: [
-                  const Icon(Icons.shopping_cart),
+                  const Icon(Icons.shopping_cart, color: Colors.white),
                   if (_totalItems > 0)
                     Positioned(
                       right: 0,
@@ -909,7 +909,7 @@ class _POSScreenState extends State<POSScreen> {
               ),
               label: Text(
                 'Rp ${FormatUtils.formatCurrency(_totalAmount.toInt())}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
               ),
               elevation: 4,
             )
@@ -1083,7 +1083,8 @@ class _POSScreenState extends State<POSScreen> {
                     child: ElevatedButton.icon(
                       onPressed: product.stock > 0 ? () => _addToCart(product) : null,
                       icon: const Icon(Icons.add_shopping_cart, size: 16),
-                      label: Text(product.stock > 0 ? 'Tambah' : 'Stok Habis'),
+                      label: const Text('Tambah'),
+                      // label: Text(product.stock > 0 ? 'Tambah' : 'Stok Habis'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _primaryColor,
                         foregroundColor: Colors.white,

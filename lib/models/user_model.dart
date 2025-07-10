@@ -4,11 +4,13 @@ class User {
   final int id;
   final String name;
   final String email;
+  final int? warehouseId;
 
   User({
     required this.id,
     required this.name,
     required this.email,
+    this.warehouseId,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class User {
         id: FormatUtils.safeParseInt(json['id']),
         name: json['name'] ?? '',
         email: json['email'] ?? '',
+        warehouseId: json['warehouse_id'] != null ? FormatUtils.safeParseInt(json['warehouse_id']) : null,
       );
     } catch (e) {
       print('Error parsing User JSON: $e');
@@ -25,6 +28,7 @@ class User {
         id: 0,
         name: json['name'] ?? 'Unknown User',
         email: json['email'] ?? 'unknown@example.com',
+        warehouseId: null,
       );
     }
   }
@@ -34,6 +38,7 @@ class User {
       'id': id,
       'name': name,
       'email': email,
+      'warehouse_id': warehouseId,
     };
   }
 }
