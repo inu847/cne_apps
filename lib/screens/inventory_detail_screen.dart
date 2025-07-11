@@ -309,6 +309,10 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
     
     // Tampilkan pesan hasil
     if (success) {
+      // Reload data setelah update berhasil
+      Provider.of<DailyInventoryStockProvider>(context, listen: false)
+          .fetchDailyInventoryStockDetail(widget.stockId);
+          
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Persediaan berhasil diperbarui')),
       );
@@ -379,6 +383,10 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
       
       // Tampilkan pesan sukses/error
       if (success) {
+        // Reload data setelah lock berhasil
+        Provider.of<DailyInventoryStockProvider>(context, listen: false)
+            .fetchDailyInventoryStockDetail(widget.stockId);
+            
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Persediaan berhasil dikunci')),
         );
@@ -614,14 +622,14 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
                                   backgroundColor: const Color(0xFF1E2A78),
                                   textColor: Colors.white,
                                 ),
+                                CustomButton(
+                                  onPressed: () => _showDeleteConfirmationDialog(stockDetail),
+                                  text: 'Hapus',
+                                  icon: Icons.delete,
+                                  backgroundColor: Colors.red,
+                                  textColor: Colors.white,
+                                ),
                               ],
-                              CustomButton(
-                                onPressed: () => _showDeleteConfirmationDialog(stockDetail),
-                                text: 'Hapus',
-                                icon: Icons.delete,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                              ),
                             ],
                           ),
                         ],
@@ -697,14 +705,14 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
                                   backgroundColor: const Color(0xFF1E2A78),
                                   textColor: Colors.white,
                                 ),
+                                CustomButton(
+                                  onPressed: () => _showDeleteConfirmationDialog(stockDetail),
+                                  text: 'Hapus',
+                                  icon: Icons.delete,
+                                  backgroundColor: Colors.red,
+                                  textColor: Colors.white,
+                                ),
                               ],
-                              CustomButton(
-                                onPressed: () => _showDeleteConfirmationDialog(stockDetail),
-                                text: 'Hapus',
-                                icon: Icons.delete,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                              ),
                             ],
                           ),
                         ],
@@ -782,17 +790,16 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
                                       backgroundColor: const Color(0xFF1E2A78),
                                       textColor: Colors.white,
                                     ),
+                                    const SizedBox(width: 8),
+                                    CustomButton(
+                                      onPressed: () => _showDeleteConfirmationDialog(stockDetail),
+                                      text: 'Hapus',
+                                      icon: Icons.delete,
+                                      backgroundColor: Colors.red,
+                                      textColor: Colors.white,
+                                    ),
                                   ],
                                 ),
-                              // Tombol hapus selalu ditampilkan
-                              const SizedBox(width: 8),
-                              CustomButton(
-                                onPressed: () => _showDeleteConfirmationDialog(stockDetail),
-                                text: 'Hapus',
-                                icon: Icons.delete,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                              ),
                             ],
                           ),
                         ],
@@ -986,7 +993,7 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
                 dataRowMinHeight: 64,
                 dataRowMaxHeight: 80,
                 columns: const [
-                  DataColumn(label: Text('ID')),
+                  DataColumn(label: Text('No')),
                   DataColumn(label: Text('Nama Item')),
                   DataColumn(label: Text('Satuan')),
                   DataColumn(label: Text('Masuk')),
@@ -994,10 +1001,12 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
                   DataColumn(label: Text('Bersih')),
                   DataColumn(label: Text('Catatan')),
                 ],
-                rows: items.map((item) {
+                rows: items.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
                   return DataRow(
                     cells: [
-                      DataCell(Text('#${item.id}')),
+                      DataCell(Text('${index + 1}')),
                       DataCell(
                         SizedBox(
                           width: 200,

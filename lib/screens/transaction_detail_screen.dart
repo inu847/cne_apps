@@ -294,6 +294,8 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detail Transaksi'),
+        backgroundColor: const Color(0xFF1E2A78),
+        foregroundColor: Colors.white,
         actions: [
           if (_transaction != null)
             IconButton(

@@ -361,6 +361,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Transaksi'),
+        backgroundColor: const Color(0xFF1E2A78),
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

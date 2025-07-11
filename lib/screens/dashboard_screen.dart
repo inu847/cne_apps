@@ -509,7 +509,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _buildNavItem(2, 'Persediaan', Icons.inventory_outlined, Icons.inventory),
                 _buildNavItem(3, 'Transactions', Icons.receipt_outlined, Icons.receipt),
                 _buildNavItem(4, 'Reports', Icons.receipt_long_outlined, Icons.receipt_long),
-                _buildNavItem(5, 'Settings', Icons.settings_outlined, Icons.settings),
+                // _buildNavItem(5, 'Settings', Icons.settings_outlined, Icons.settings),
               ],
             ),
           ),

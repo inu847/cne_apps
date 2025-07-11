@@ -107,6 +107,8 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
                 },
               )
             : null,
+        backgroundColor: const Color(0xFF1E2A78),
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today),
