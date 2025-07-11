@@ -11,6 +11,7 @@ class Order {
   final double total;
   final DateTime createdAt;
   final String status; // 'saved', 'completed', 'cancelled'
+  final String? customerName; // Menambahkan properti customerName
 
   Order({
     this.id,
@@ -21,6 +22,7 @@ class Order {
     required this.total,
     required this.createdAt,
     required this.status,
+    this.customerName,
   });
 
   // Menghitung total item dalam pesanan
@@ -39,6 +41,7 @@ class Order {
       'total': total,
       'created_at': createdAt.toIso8601String(),
       'status': status,
+      'customer_name': customerName,
     };
   }
 
@@ -55,6 +58,7 @@ class Order {
       total: json['total'].toDouble(),
       createdAt: DateTime.parse(json['created_at']),
       status: json['status'],
+      customerName: json['customer_name'],
     );
   }
 
@@ -68,6 +72,7 @@ class Order {
     double? total,
     DateTime? createdAt,
     String? status,
+    String? customerName,
   }) {
     return Order(
       id: id ?? this.id,
@@ -78,6 +83,7 @@ class Order {
       total: total ?? this.total,
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
+      customerName: customerName ?? this.customerName,
     );
   }
 }

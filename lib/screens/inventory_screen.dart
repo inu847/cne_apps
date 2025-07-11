@@ -365,7 +365,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           });
         },
         backgroundColor: const Color(0xFF1E2A78),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

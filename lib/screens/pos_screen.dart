@@ -448,6 +448,60 @@ class _POSScreenState extends State<POSScreen> {
   }
   
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Memeriksa apakah ada order yang akan diedit
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && args is Map<String, dynamic> && args['edit_mode'] == true) {
+      final Order order = args['order'];
+      
+      // Hanya load order jika cart masih kosong (mencegah double loading)
+      if (_cart.isEmpty) {
+        setState(() {
+          // Mengisi cart dengan item dari order
+          for (var item in order.items) {
+            // Mencari produk yang sesuai di _apiProducts
+            final productIndex = _apiProducts.indexWhere((p) => p.id == item.productId);
+            
+            if (productIndex >= 0) {
+              // Jika produk ditemukan, gunakan data produk lengkap
+              final product = _apiProducts[productIndex];
+              _cart.add({
+                'id': item.productId,
+                'name': item.productName,
+                'price': item.price,
+                'category': item.category,
+                'icon': item.icon,
+                'quantity': item.quantity,
+                'stock': product.stock,
+                'product_ref': product,
+              });
+            } else {
+              // Jika produk tidak ditemukan di _apiProducts, gunakan data dari item order
+              _cart.add({
+                'id': item.productId,
+                'name': item.productName,
+                'price': item.price,
+                'category': item.category,
+                'icon': item.icon,
+                'quantity': item.quantity,
+                'stock': 999, // Default stock jika tidak diketahui
+                'product_ref': null,
+              });
+            }
+          }
+          
+          // Mengisi data customer jika ada
+          if (order.customerName != null && order.customerName!.isNotEmpty) {
+            _customerNameController.text = order.customerName!;
+          }
+        });
+      }
+    }
+  }
+  
+  @override
   void dispose() {
     // Membersihkan controller saat widget di-dispose
     _scrollController.removeListener(_scrollListener);
@@ -1159,16 +1213,32 @@ class _POSScreenState extends State<POSScreen> {
       // Konversi item keranjang ke OrderItem
       final List<OrderItem> orderItems = _cart.map((item) => OrderItem.fromCartItem(item)).toList();
       
-      // Buat objek Order baru
-      final Order order = Order(
-        orderNumber: orderProvider.generateOrderNumber(),
-        items: orderItems,
-        subtotal: _subtotal,
-        tax: _tax,
-        total: _totalAmount,
-        createdAt: DateTime.now(),
-        status: 'completed',
-      );
+      // Cek apakah ini mode edit
+      final args = ModalRoute.of(context)?.settings.arguments;
+      final bool isEditMode = args != null && args is Map<String, dynamic> && args['edit_mode'] == true;
+      final Order? existingOrder = isEditMode ? args['order'] as Order : null;
+      
+      // Buat objek Order baru atau update yang sudah ada
+      final Order order = existingOrder != null
+          ? existingOrder.copyWith(
+              items: orderItems,
+              subtotal: _subtotal,
+              tax: _tax,
+              total: _totalAmount,
+              // Pertahankan orderNumber dan createdAt yang sudah ada
+              status: 'completed',
+              customerName: customerName.isNotEmpty ? customerName : null,
+            )
+          : Order(
+              orderNumber: orderProvider.generateOrderNumber(),
+              items: orderItems,
+              subtotal: _subtotal,
+              tax: _tax,
+              total: _totalAmount,
+              createdAt: DateTime.now(),
+              status: 'completed',
+              customerName: customerName.isNotEmpty ? customerName : null,
+            );
       
       // Siapkan informasi pembayaran
       final List<Map<String, dynamic>> payments = [
@@ -1224,8 +1294,14 @@ class _POSScreenState extends State<POSScreen> {
           }
         });
         
-        // Tutup bottom sheet jika di mobile
-        if (MediaQuery.of(context).size.width < 650) {
+        // Cek apakah ini mode edit, jika ya, kembali ke halaman sebelumnya
+        final args = ModalRoute.of(context)?.settings.arguments;
+        final bool isEditMode = args != null && args is Map<String, dynamic> && args['edit_mode'] == true;
+        
+        if (isEditMode) {
+          Navigator.pop(context, true); // Kembali dengan hasil true untuk refresh daftar pesanan
+        } else if (MediaQuery.of(context).size.width < 650) {
+          // Tutup bottom sheet jika di mobile dan bukan mode edit
           Navigator.pop(context);
         }
       } else {
@@ -1263,16 +1339,32 @@ class _POSScreenState extends State<POSScreen> {
       // Konversi item keranjang ke OrderItem
       final List<OrderItem> orderItems = _cart.map((item) => OrderItem.fromCartItem(item)).toList();
       
-      // Buat objek Order baru
-      final Order order = Order(
-        orderNumber: orderProvider.generateOrderNumber(),
-        items: orderItems,
-        subtotal: _subtotal,
-        tax: _tax,
-        total: _totalAmount,
-        createdAt: DateTime.now(),
-        status: 'saved',
-      );
+      // Cek apakah ini mode edit
+      final args = ModalRoute.of(context)?.settings.arguments;
+      final bool isEditMode = args != null && args is Map<String, dynamic> && args['edit_mode'] == true;
+      final Order? existingOrder = isEditMode ? args['order'] as Order : null;
+      
+      // Buat objek Order baru atau update yang sudah ada
+      final Order order = existingOrder != null
+          ? existingOrder.copyWith(
+              items: orderItems,
+              subtotal: _subtotal,
+              tax: _tax,
+              total: _totalAmount,
+              // Pertahankan orderNumber dan createdAt yang sudah ada
+              status: 'saved',
+              customerName: customerName.isNotEmpty ? customerName : null,
+            )
+          : Order(
+              orderNumber: orderProvider.generateOrderNumber(),
+              items: orderItems,
+              subtotal: _subtotal,
+              tax: _tax,
+              total: _totalAmount,
+              createdAt: DateTime.now(),
+              status: 'saved',
+              customerName: customerName.isNotEmpty ? customerName : null,
+            );
       
       // Kirim transaksi ke API dengan status parked
       final apiResult = await transactionProvider.createTransaction(
@@ -1340,6 +1432,14 @@ class _POSScreenState extends State<POSScreen> {
           // Bersihkan voucher di provider
           final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
           voucherProvider.clearVoucher();
+          
+          // Cek apakah ini mode edit, jika ya, kembali ke halaman sebelumnya
+          final args = ModalRoute.of(context)?.settings.arguments;
+          final bool isEditMode = args != null && args is Map<String, dynamic> && args['edit_mode'] == true;
+          
+          if (isEditMode) {
+            Navigator.pop(context, true); // Kembali dengan hasil true untuk refresh daftar pesanan
+          }
         } else {
           // Tampilkan pesan error lokal
           ScaffoldMessenger.of(context).showSnackBar(

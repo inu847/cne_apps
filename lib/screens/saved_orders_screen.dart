@@ -267,6 +267,24 @@ class _SavedOrdersScreenState extends State<SavedOrdersScreen> {
                 ),
                 const SizedBox(width: 8),
                 
+                // Tombol edit jika status masih tersimpan
+                if (order.status == 'saved')
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        _editOrder(order, orderProvider);
+                      },
+                      icon: const Icon(Icons.edit, size: 16),
+                      label: const Text('Edit'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.orange,
+                        side: BorderSide(color: Colors.orange),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                
                 // Tombol checkout jika status masih tersimpan
                 if (order.status == 'saved')
                   Expanded(
@@ -274,8 +292,8 @@ class _SavedOrdersScreenState extends State<SavedOrdersScreen> {
                       onPressed: () {
                         _checkoutOrder(order, orderProvider);
                       },
-                      icon: const Icon(Icons.payment, size: 16),
-                      label: const Text('Checkout'),
+                      icon: const Icon(Icons.check, size: 16),
+                      label: const Text('Selesai'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _primaryColor,
                         foregroundColor: Colors.white,
@@ -432,5 +450,26 @@ class _SavedOrdersScreenState extends State<SavedOrdersScreen> {
   // Format tanggal
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+  
+  // Edit pesanan
+  void _editOrder(Order order, OrderProvider orderProvider) async {
+    // Navigasi ke halaman POS dengan membawa data order untuk diedit
+    final result = await Navigator.pushNamed(
+      context, 
+      '/pos',
+      arguments: {
+        'edit_mode': true,
+        'order': order,
+      },
+    );
+    
+    // Refresh daftar pesanan setelah kembali dari halaman POS
+    if (result == true) {
+      setState(() {
+        _isLoading = true;
+      });
+      _loadSavedOrders();
+    }
   }
 }
