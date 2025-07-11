@@ -1520,34 +1520,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               );
             }),
-            
-            // Chart placeholder - ukuran disesuaikan untuk mobile
-            Container(
-              height: isMobile ? 150 : 200,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.bar_chart,
-                      size: isMobile ? 36 : 48,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Sales Chart',
-                      style: TextStyle(color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ],
       ),

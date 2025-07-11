@@ -547,13 +547,118 @@ class _POSScreenState extends State<POSScreen> {
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {},
+          // Tombol filter kategori
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.filter_list),
+            tooltip: 'Filter Kategori',
+            onSelected: (String category) {
+              setState(() {
+                _selectedCategory = category;
+              });
+            },
+            itemBuilder: (BuildContext context) {
+              if (_isLoadingCategories) {
+                return [const PopupMenuItem<String>(
+                  value: '',
+                  enabled: false,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 10),
+                      Text('Memuat kategori...'),
+                    ],
+                  ),
+                )];
+              }
+              
+              if (_categoryError != null) {
+                return [PopupMenuItem<String>(
+                  value: '',
+                  enabled: false,
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red, size: 20),
+                      const SizedBox(width: 8),
+                      Text(_categoryError!, style: const TextStyle(color: Colors.red)),
+                      TextButton(
+                        onPressed: _fetchCategories,
+                        child: const Text('Coba Lagi'),
+                      ),
+                    ],
+                  ),
+                )];
+              }
+              
+              return _categories.map((category) {
+                final isSelected = category == _selectedCategory;
+                return PopupMenuItem<String>(
+                  value: category,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: isSelected 
+                            ? _primaryColor 
+                            : (category == 'Semua' ? Colors.grey.shade200 : _categoryColors[category]?.withOpacity(0.7) ?? Colors.grey.shade200),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        category,
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList();
+            },
           ),
+          // Tombol reload page
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Muat Ulang',
+            onPressed: () {
+              // Muat ulang data
+              setState(() {
+                _isLoadingCategories = true;
+                _isLoadingProducts = true;
+                _currentPage = 1;
+                _hasMoreProducts = true;
+              });
+              _fetchCategories();
+              _fetchProducts(refresh: true);
+            },
+          ),
+          // Tombol laporan
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.assessment_outlined),
+            tooltip: 'Laporan',
+            onSelected: (String value) {
+              if (value == 'daily-recap') {
+                Navigator.of(context).pushNamed('/reports/daily-recap');
+              } else if (value == 'sales') {
+                Navigator.of(context).pushNamed('/reports/sales');
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'daily-recap',
+                child: Text('Rekap Harian'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'sales',
+                child: Text('Laporan Penjualan'),
+              ),
+            ],
           ),
         ],
       ),
@@ -564,109 +669,8 @@ class _POSScreenState extends State<POSScreen> {
             flex: 2,
             child: Column(
               children: [
-                // Kategori produk (horizontal scrollable)
-                Container(
-                  height: 60,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: _lightColor,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 5,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: _isLoadingCategories
-                    ? Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Memuat kategori...',
-                              style: TextStyle(color: _primaryColor),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _categoryError != null
-                      ? Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.error_outline, color: Colors.red, size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _categoryError!,
-                                  style: const TextStyle(color: Colors.red, fontSize: 12),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: _fetchCategories,
-                                child: const Text('Coba Lagi'),
-                                style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _categories.length,
-                          itemBuilder: (context, index) {
-                            final category = _categories[index];
-                            final isSelected = category == _selectedCategory;
-                            
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _selectedCategory = category;
-                                });
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.only(right: 12),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: isSelected 
-                                      ? _primaryColor 
-                                      : (category == 'Semua' ? Colors.grey.shade200 : _categoryColors[category]?.withOpacity(0.15) ?? Colors.grey.shade200),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: isSelected ? [
-                                    BoxShadow(
-                                      color: _primaryColor.withOpacity(0.3),
-                                      blurRadius: 4,
-                                      spreadRadius: 1,
-                                    ),
-                                  ] : null,
-                                ),
-                                child: Text(
-                                  category,
-                                  style: TextStyle(
-                                    color: isSelected 
-                                        ? Colors.white 
-                                        : (category == 'Semua' ? Colors.black : _categoryColors[category] ?? Colors.black),
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                ),
+                // Kategori sudah dipindahkan ke header sebagai dropdown
+                const SizedBox(height: 16),
                 
                 // Daftar produk (grid)
                 Expanded(
@@ -827,14 +831,14 @@ class _POSScreenState extends State<POSScreen> {
                                                   ),
                                                 ),
                                               // Pesan ketika tidak ada lagi produk
-                                              if (!_hasMoreProducts && _currentPage > 1 && !_isLoadingProducts)
-                                                Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                                  child: Text(
-                                                    'Semua produk telah ditampilkan',
-                                                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                                                  ),
-                                                ),
+                                              // if (!_hasMoreProducts && _currentPage > 1 && !_isLoadingProducts)
+                                              //   Padding(
+                                              //     padding: const EdgeInsets.symmetric(vertical: 16),
+                                              //     child: Text(
+                                              //       'Semua produk telah ditampilkan',
+                                              //       style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                              //     ),
+                                              //   ),
                                             ],
                                           ),
                                         ),
@@ -908,7 +912,7 @@ class _POSScreenState extends State<POSScreen> {
                 ],
               ),
               label: Text(
-                'Rp ${FormatUtils.formatCurrency(_totalAmount.toInt())}',
+                FormatUtils.formatCurrency(_totalAmount.toInt()),
                 style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
               ),
               elevation: 4,
@@ -1081,7 +1085,8 @@ class _POSScreenState extends State<POSScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: product.stock > 0 ? () => _addToCart(product) : null,
+                      // onPressed: product.stock > 0 ? () => _addToCart(product) : null,
+                      onPressed: () => _addToCart(product),
                       icon: const Icon(Icons.add_shopping_cart, size: 16),
                       label: const Text('Tambah'),
                       // label: Text(product.stock > 0 ? 'Tambah' : 'Stok Habis'),
