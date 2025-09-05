@@ -729,7 +729,12 @@ class _POSScreenState extends State<POSScreen> {
                 // Daftar produk (grid)
                 Expanded(
                   child: Container(
-                    margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    margin: EdgeInsets.fromLTRB(
+                      isMobile ? 8 : 16, 
+                      8, 
+                      isMobile ? 8 : 16, 
+                      16
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
@@ -742,7 +747,7 @@ class _POSScreenState extends State<POSScreen> {
                       ],
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(isMobile ? 12 : 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -848,9 +853,9 @@ class _POSScreenState extends State<POSScreen> {
                                                     controller: _scrollController,
                                                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                       crossAxisCount: isMobile ? 2 : (isTablet ? 3 : 4),
-                                                      childAspectRatio: 0.85,
-                                                      crossAxisSpacing: 16,
-                                                      mainAxisSpacing: 16,
+                                                      childAspectRatio: isMobile ? 0.68 : 0.85,
+                                                      crossAxisSpacing: isMobile ? 8 : 16,
+                                                      mainAxisSpacing: isMobile ? 8 : 16,
                                                     ),
                                                     itemCount: _filteredProducts.length,
                                                     itemBuilder: (context, index) {
@@ -999,6 +1004,8 @@ class _POSScreenState extends State<POSScreen> {
   Widget _buildProductCard(Product product) {
     final productColors = getProductColors();
     final categoryColor = productColors[product.categoryName] ?? Colors.grey;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
     
     return InkWell(
       onTap: () => _addToCart(product),
@@ -1012,6 +1019,7 @@ class _POSScreenState extends State<POSScreen> {
           children: [
             // Area warna produk (menggantikan gambar)
             Expanded(
+              flex: isMobile ? 3 : 2,
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -1032,8 +1040,8 @@ class _POSScreenState extends State<POSScreen> {
                       top: -15,
                       right: -15,
                       child: Container(
-                        width: 60,
-                        height: 60,
+                        width: isMobile ? 40 : 60,
+                        height: isMobile ? 40 : 60,
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           shape: BoxShape.circle,
@@ -1045,8 +1053,8 @@ class _POSScreenState extends State<POSScreen> {
                       bottom: -10,
                       left: -10,
                       child: Container(
-                        width: 40,
-                        height: 40,
+                        width: isMobile ? 30 : 40,
+                        height: isMobile ? 30 : 40,
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.1),
                           shape: BoxShape.circle,
@@ -1057,25 +1065,28 @@ class _POSScreenState extends State<POSScreen> {
                     Center(
                       child: Icon(
                         product.icon,
-                        size: 48,
+                        size: isMobile ? 32 : 48,
                         color: Colors.white,
                       ),
                     ),
                     // Badge kategori
                     Positioned(
-                      top: 8,
-                      left: 8,
+                      top: 6,
+                      left: 6,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 6 : 8, 
+                          vertical: isMobile ? 2 : 4
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           product.categoryName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
+                            fontSize: isMobile ? 8 : 10,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1084,19 +1095,22 @@ class _POSScreenState extends State<POSScreen> {
                     // Badge stok
                     if (product.stock > 0)
                       Positioned(
-                        bottom: 8,
-                        right: 8,
+                        bottom: 6,
+                        right: 6,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 6 : 8, 
+                            vertical: isMobile ? 2 : 4
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             'Stok: ${product.stock}',
                             style: TextStyle(
                               color: categoryColor,
-                              fontSize: 10,
+                              fontSize: isMobile ? 8 : 10,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -1107,56 +1121,83 @@ class _POSScreenState extends State<POSScreen> {
               ),
             ),
             // Informasi produk
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (product.sku != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        'SKU: ${product.sku}',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
+            Expanded(
+              flex: isMobile ? 2 : 3,
+              child: Container(
+                padding: EdgeInsets.all(isMobile ? 6 : 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            product.name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold, 
+                              fontSize: isMobile ? 11 : 16
+                            ),
+                            maxLines: isMobile ? 2 : 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (product.sku != null && !isMobile)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                'SKU: ${product.sku}',
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
+                              ),
+                            ),
+                          SizedBox(height: isMobile ? 1 : 4),
+                          Text(
+                            'Rp ${FormatUtils.formatCurrency(product.price)}',
+                            style: TextStyle(
+                              color: categoryColor, 
+                              fontWeight: FontWeight.w500, 
+                              fontSize: isMobile ? 11 : 16
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Rp ${FormatUtils.formatCurrency(product.price)}',
-                    style: TextStyle(color: categoryColor, fontWeight: FontWeight.w500, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      // onPressed: product.stock > 0 ? () => _addToCart(product) : null,
-                      onPressed: () => _addToCart(product),
-                      icon: const Icon(Icons.add_shopping_cart, size: 16),
-                      label: const Text('Tambah'),
-                      // label: Text(product.stock > 0 ? 'Tambah' : 'Stok Habis'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        elevation: 0,
-                        disabledBackgroundColor: Colors.grey.shade300,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    SizedBox(height: isMobile ? 2 : 8),
+                    SizedBox(
+                      width: double.infinity,
+                      height: isMobile ? 28 : 40,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _addToCart(product),
+                        icon: Icon(Icons.add_shopping_cart, size: isMobile ? 12 : 16),
+                        label: Text(
+                          'Tambah',
+                          style: TextStyle(fontSize: isMobile ? 10 : 14),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            vertical: isMobile ? 4 : 8,
+                            horizontal: isMobile ? 6 : 12,
+                          ),
+                          elevation: 0,
+                          disabledBackgroundColor: Colors.grey.shade300,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          minimumSize: Size(double.infinity, isMobile ? 28 : 40),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -1801,11 +1842,11 @@ class _POSScreenState extends State<POSScreen> {
               Row(
                 children: [
                   if (_totalItems > 0)
-                    TextButton.icon(
+                    IconButton(
                       onPressed: _clearCart,
-                      icon: const Icon(Icons.delete_outline, size: 16),
-                      label: const Text('Bersihkan'),
-                      style: TextButton.styleFrom(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      tooltip: 'Bersihkan',
+                      style: IconButton.styleFrom(
                         foregroundColor: Colors.red,
                       ),
                     ),
