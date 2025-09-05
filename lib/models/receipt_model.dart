@@ -16,6 +16,7 @@ class Receipt {
   final String storeName;
   final String storeAddress;
   final String storePhone;
+  final String storeEmail;
 
   Receipt({
     required this.invoiceNumber,
@@ -32,6 +33,7 @@ class Receipt {
     required this.storeName,
     required this.storeAddress,
     required this.storePhone,
+    required this.storeEmail,
   }) : this.transactionId = transactionId ?? invoiceNumber;
 
   // Membuat Receipt dari data transaksi
@@ -43,6 +45,7 @@ class Receipt {
     required String storeName,
     required String storeAddress,
     required String storePhone,
+    required String storeEmail,
   }) {
     return Receipt(
       invoiceNumber: transaction['invoice_number'] ?? '',
@@ -59,6 +62,7 @@ class Receipt {
       storeName: storeName,
       storeAddress: storeAddress,
       storePhone: storePhone,
+      storeEmail: storeEmail,
     );
   }
 }

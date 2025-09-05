@@ -500,6 +500,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         storeName: settingsProvider.store.storeName ?? 'Toko',
         storeAddress: settingsProvider.store.storeAddress ?? 'Alamat Toko',
         storePhone: settingsProvider.store.storePhone ?? '-',
+        storeEmail: settingsProvider.general.storeEmail ?? '-',
       );
       
       // Navigasi ke receipt screen

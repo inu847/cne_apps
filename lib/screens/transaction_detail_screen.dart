@@ -248,6 +248,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         storeName: settingsProvider.store.storeName ?? 'Toko',
         storeAddress: settingsProvider.store.storeAddress ?? 'Alamat Toko',
         storePhone: settingsProvider.store.storePhone ?? '-',
+        storeEmail: settingsProvider.general.storeEmail ?? '-',
       );
       
       // Navigasi ke receipt screen
@@ -278,6 +279,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         storeName: settingsProvider.store.storeName ?? 'Toko',
         storeAddress: settingsProvider.store.storeAddress ?? 'Alamat Toko',
         storePhone: settingsProvider.store.storePhone ?? '-',
+        storeEmail: settingsProvider.general.storeEmail ?? '-',
       );
       // Panggil ReceiptService untuk cetak struk
       final receiptService = ReceiptService();

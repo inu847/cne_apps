@@ -63,22 +63,72 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
               : Container(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        'PDF preview is temporarily unavailable due to NDK issues.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 16),
+                      // Header dengan informasi toko
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              widget.receipt.storeName,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              widget.receipt.storeAddress,
+                              style: const TextStyle(fontSize: 14),
+                              textAlign: TextAlign.center,
+                            ),
+                            if (widget.receipt.storePhone.isNotEmpty && widget.receipt.storePhone != '-') ...[
+                               const SizedBox(height: 4),
+                               Text(
+                                 'Tel: ${widget.receipt.storePhone}',
+                                 style: const TextStyle(fontSize: 14),
+                                 textAlign: TextAlign.center,
+                               ),
+                             ],
+                             if (widget.receipt.storeEmail.isNotEmpty && widget.receipt.storeEmail != '-') ...[
+                               const SizedBox(height: 4),
+                               Text(
+                                 'Email: ${widget.receipt.storeEmail}',
+                                 style: const TextStyle(fontSize: 14),
+                                 textAlign: TextAlign.center,
+                               ),
+                             ],
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 20),
-                      Text(
-                        'PDF saved at: $_pdfFilePath',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Back'),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'PDF preview is temporarily unavailable due to NDK issues.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'PDF saved at: $_pdfFilePath',
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Back'),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
