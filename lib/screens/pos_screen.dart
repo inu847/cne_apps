@@ -39,6 +39,9 @@ class _POSScreenState extends State<POSScreen> {
   final TextEditingController _customerNameController = TextEditingController();
   final TextEditingController _voucherController = TextEditingController();
   
+  // State untuk mengontrol visibility input nama pelanggan dan voucher
+  bool _showCustomerVoucherInputs = false;
+  
   // ScrollController untuk infinite scroll
   final ScrollController _scrollController = ScrollController();
   
@@ -1186,7 +1189,7 @@ class _POSScreenState extends State<POSScreen> {
                             ),
                           SizedBox(height: isMobile ? 1 : (isTablet ? 2 : 4)),
                           Text(
-                            'Rp ${FormatUtils.formatCurrency(product.price)}',
+                            '${FormatUtils.formatCurrency(product.price)}',
                             style: TextStyle(
                               color: categoryColor, 
                               fontWeight: FontWeight.w500, 
@@ -1459,7 +1462,7 @@ class _POSScreenState extends State<POSScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 4),
-                  Text('${order.totalItems} item dengan total Rp ${FormatUtils.formatCurrency(order.total.toInt())}'),
+                  Text('${order.totalItems} item dengan total ${FormatUtils.formatCurrency(order.total.toInt())}'),
                   const SizedBox(height: 4),
                   Text('Nomor Pesanan: ${order.orderNumber}'),
                   if (customerName.isNotEmpty)
@@ -1617,7 +1620,7 @@ class _POSScreenState extends State<POSScreen> {
                             ),
                           ),
                           Text(
-                            'Rp ${FormatUtils.formatCurrency(totalAmount.toInt())}',
+                            '${FormatUtils.formatCurrency(totalAmount.toInt())}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -1992,7 +1995,7 @@ class _POSScreenState extends State<POSScreen> {
                                   Row(
                                     children: [
                                       Text(
-                                        'Rp ${FormatUtils.formatCurrency(item['price'])}',
+                                        '${FormatUtils.formatCurrency(item['price'])}',
                                         style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
                                       ),
                                       const SizedBox(width: 8),
@@ -2002,7 +2005,7 @@ class _POSScreenState extends State<POSScreen> {
                                       ),
                                       const Spacer(),
                                       Text(
-                                        'Rp ${FormatUtils.formatCurrency((item['price'] * item['quantity']).toInt())}',
+                                        '${FormatUtils.formatCurrency((item['price'] * item['quantity']).toInt())}',
                                         style: TextStyle(color: _primaryColor, fontSize: 12, fontWeight: FontWeight.bold),
                                       ),
                                     ],
@@ -2089,7 +2092,7 @@ class _POSScreenState extends State<POSScreen> {
                           style: TextStyle(color: _primaryColor, fontSize: 12),
                         ),
                         Text(
-                          'Rp ${FormatUtils.formatCurrency(_subtotal.toInt())}',
+                          '${FormatUtils.formatCurrency(_subtotal.toInt())}',
                           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
                         ),
                       ],
@@ -2111,7 +2114,7 @@ class _POSScreenState extends State<POSScreen> {
                           },
                         ),
                         Text(
-                          'Rp ${FormatUtils.formatCurrency(_tax.toInt())}',
+                          '${FormatUtils.formatCurrency(_tax.toInt())}',
                           style: const TextStyle(fontSize: 11),
                         ),
                       ],
@@ -2125,7 +2128,7 @@ class _POSScreenState extends State<POSScreen> {
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: _primaryColor),
                         ),
                         Text(
-                          'Rp ${FormatUtils.formatCurrency(_totalAmount.toInt())}',
+                          '${FormatUtils.formatCurrency(_totalAmount.toInt())}',
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: _primaryColor),
                         ),
                       ],
@@ -2239,7 +2242,7 @@ class _POSScreenState extends State<POSScreen> {
                                 Row(
                                   children: [
                                     Text(
-                                      '- Rp ${FormatUtils.formatCurrency(voucherProvider.discountValue.toInt())}',
+                                      '- ${FormatUtils.formatCurrency(voucherProvider.discountValue.toInt())}',
                                       style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
                                     ),
                                     InkWell(
@@ -2477,7 +2480,7 @@ class _POSScreenState extends State<POSScreen> {
                                   ),
                                   SizedBox(height: isTablet ? 2 : 4),
                                   Text(
-                                    'Rp ${FormatUtils.formatCurrency(item['price'])}',
+                                    '${FormatUtils.formatCurrency(item['price'])}',
                                     style: TextStyle(
                                       color: Colors.grey.shade700, 
                                       fontSize: isTablet ? 10 : 12
@@ -2588,7 +2591,7 @@ class _POSScreenState extends State<POSScreen> {
                           ],
                         ),
                         Text(
-                          'Rp ${FormatUtils.formatCurrency(_subtotal.toInt())}',
+                          '${FormatUtils.formatCurrency(_subtotal.toInt())}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: isTablet ? 13 : 14,
@@ -2616,7 +2619,7 @@ class _POSScreenState extends State<POSScreen> {
                           },
                         ),
                         Text(
-                          'Rp ${FormatUtils.formatCurrency(_tax.toInt())}',
+                          '${FormatUtils.formatCurrency(_tax.toInt())}',
                           style: TextStyle(
                             fontSize: isTablet ? 13 : 14,
                           ),
@@ -2640,7 +2643,7 @@ class _POSScreenState extends State<POSScreen> {
                           },
                         ),
                         Text(
-                          'Rp ${FormatUtils.formatCurrency(_totalAmount.toInt())}',
+                          '${FormatUtils.formatCurrency(_totalAmount.toInt())}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold, 
                             fontSize: isTablet ? 16 : 16, 
@@ -2650,122 +2653,221 @@ class _POSScreenState extends State<POSScreen> {
                       ],
                     ),
                     SizedBox(height: isTablet ? 12 : 16),
-                    // Input nama pelanggan
-                    TextField(
-                      controller: _customerNameController,
-                      style: TextStyle(fontSize: isTablet ? 13 : 14),
-                      decoration: InputDecoration(
-                        labelText: 'Nama Pelanggan (Opsional)',
-                        hintText: 'Masukkan nama pelanggan',
-                        labelStyle: TextStyle(fontSize: isTablet ? 13 : 14),
-                        hintStyle: TextStyle(fontSize: isTablet ? 13 : 14),
-                        prefixIcon: Icon(
-                          Icons.person, 
-                          color: _primaryColor,
-                          size: isTablet ? 18 : 20,
+                    
+                    // Tombol toggle untuk input customer dan voucher
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _showCustomerVoucherInputs = !_showCustomerVoucherInputs;
+                        });
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 12 : 16,
+                          vertical: isTablet ? 10 : 12,
                         ),
-                        border: OutlineInputBorder(
+                        decoration: BoxDecoration(
+                          color: _showCustomerVoucherInputs 
+                              ? _primaryColor.withOpacity(0.1) 
+                              : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                          border: Border.all(
+                            color: _showCustomerVoucherInputs 
+                                ? _primaryColor 
+                                : Colors.grey.shade300,
+                          ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: _primaryColor),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: isTablet ? 12 : 16, 
-                          vertical: isTablet ? 10 : 14
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  _showCustomerVoucherInputs 
+                                      ? Icons.person 
+                                      : Icons.person_add_outlined,
+                                  color: _primaryColor,
+                                  size: isTablet ? 16 : 18,
+                                ),
+                                SizedBox(width: isTablet ? 6 : 8),
+                                Text(
+                                  _showCustomerVoucherInputs 
+                                      ? 'Sembunyikan Detail' 
+                                      : 'Tambah Detail Pelanggan',
+                                  style: TextStyle(
+                                    fontSize: isTablet ? 12 : 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: _primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Icon(
+                              _showCustomerVoucherInputs 
+                                  ? Icons.keyboard_arrow_up 
+                                  : Icons.keyboard_arrow_down,
+                              color: _primaryColor,
+                              size: isTablet ? 16 : 18,
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    SizedBox(height: isTablet ? 12 : 16),
-                    // Input kode voucher
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _voucherController,
-                            style: TextStyle(fontSize: isTablet ? 13 : 14),
-                            decoration: InputDecoration(
-                              labelText: 'Kode Voucher',
-                              hintText: 'Masukkan kode voucher',
-                              labelStyle: TextStyle(fontSize: isTablet ? 13 : 14),
-                              hintStyle: TextStyle(fontSize: isTablet ? 13 : 14),
-                              prefixIcon: Icon(
-                                Icons.discount, 
-                                color: _primaryColor,
-                                size: isTablet ? 18 : 20,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: _primaryColor),
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: isTablet ? 12 : 16, 
-                                vertical: isTablet ? 10 : 14
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: isTablet ? 8 : 8),
-                        ElevatedButton(
-                          onPressed: _validateVoucher,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _primaryColor,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isTablet ? 12 : 16, 
-                              vertical: isTablet ? 10 : 10
-                            ),
-                          ),
-                          child: Text(
-                            'Terapkan',
-                            style: TextStyle(fontSize: isTablet ? 13 : 14),
-                          ),
-                        ),
-                      ],
+                    
+                    // Input customer dan voucher dengan animasi
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: _showCustomerVoucherInputs ? null : 0,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: _showCustomerVoucherInputs ? 1.0 : 0.0,
+                        child: _showCustomerVoucherInputs
+                            ? Container(
+                                margin: EdgeInsets.only(top: isTablet ? 8 : 12),
+                                padding: EdgeInsets.all(isTablet ? 12 : 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Input nama pelanggan
+                                    TextField(
+                                      controller: _customerNameController,
+                                      style: TextStyle(fontSize: isTablet ? 12 : 14),
+                                      decoration: InputDecoration(
+                                        labelText: 'Nama Pelanggan',
+                                        hintText: 'Opsional',
+                                        labelStyle: TextStyle(fontSize: isTablet ? 12 : 14),
+                                        hintStyle: TextStyle(fontSize: isTablet ? 12 : 14),
+                                        prefixIcon: Icon(
+                                          Icons.person,
+                                          color: _primaryColor,
+                                          size: isTablet ? 16 : 18,
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                          borderSide: BorderSide(color: _primaryColor),
+                                        ),
+                                        contentPadding: EdgeInsets.symmetric(
+                                          horizontal: isTablet ? 12 : 16,
+                                          vertical: isTablet ? 10 : 14,
+                                        ),
+                                        isDense: isTablet,
+                                      ),
+                                    ),
+                                    SizedBox(height: isTablet ? 10 : 12),
+                                    
+                                    // Input kode voucher
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: TextField(
+                                            controller: _voucherController,
+                                            style: TextStyle(fontSize: isTablet ? 12 : 14),
+                                            decoration: InputDecoration(
+                                              labelText: 'Kode Voucher',
+                                              hintText: 'Opsional',
+                                              labelStyle: TextStyle(fontSize: isTablet ? 12 : 14),
+                                              hintStyle: TextStyle(fontSize: isTablet ? 12 : 14),
+                                              prefixIcon: Icon(
+                                                Icons.discount,
+                                                color: _primaryColor,
+                                                size: isTablet ? 16 : 18,
+                                              ),
+                                              border: OutlineInputBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                              ),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                                borderSide: BorderSide(color: Colors.grey.shade300),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius: BorderRadius.circular(8),
+                                                borderSide: BorderSide(color: _primaryColor),
+                                              ),
+                                              contentPadding: EdgeInsets.symmetric(
+                                                horizontal: isTablet ? 12 : 16,
+                                                vertical: isTablet ? 10 : 14,
+                                              ),
+                                              isDense: isTablet,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(width: isTablet ? 8 : 12),
+                                        ElevatedButton(
+                                          onPressed: _validateVoucher,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: _primaryColor,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: isTablet ? 12 : 16,
+                                              vertical: isTablet ? 10 : 14,
+                                            ),
+                                            minimumSize: Size(isTablet ? 70 : 80, isTablet ? 40 : 48),
+                                          ),
+                                          child: Text(
+                                            'Terapkan',
+                                            style: TextStyle(fontSize: isTablet ? 11 : 12),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
                     ),
                     // Tampilkan informasi voucher jika ada
                     Consumer<VoucherProvider>(
                       builder: (context, voucherProvider, child) {
                         if (voucherProvider.activeVoucher != null) {
                           return Padding(
-                            padding: const EdgeInsets.only(top: 8),
+                            padding: EdgeInsets.only(top: isTablet ? 6 : 8),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.check_circle, color: Colors.green, size: 16),
-                                    const SizedBox(width: 4),
+                                    Icon(Icons.check_circle, color: Colors.green, size: isTablet ? 14 : 16),
+                                    SizedBox(width: isTablet ? 3 : 4),
                                     Text(
                                       'Voucher ${voucherProvider.voucherName}',
-                                      style: const TextStyle(color: Colors.green),
+                                      style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: isTablet ? 12 : 14,
+                                      ),
                                     ),
                                   ],
                                 ),
                                 Row(
                                   children: [
                                     Text(
-                                      '- Rp ${FormatUtils.formatCurrency(voucherProvider.discountValue.toInt())}',
-                                      style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                                      '- ${FormatUtils.formatCurrency(voucherProvider.discountValue.toInt())}',
+                                      style: TextStyle(
+                                        color: Colors.green, 
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: isTablet ? 12 : 14,
+                                      ),
                                     ),
                                     IconButton(
                                       onPressed: _clearVoucher,
-                                      icon: const Icon(Icons.close, size: 16),
+                                      icon: Icon(Icons.close, size: isTablet ? 14 : 16),
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
                                       color: Colors.red,
@@ -2782,7 +2884,7 @@ class _POSScreenState extends State<POSScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: isTablet ? 12 : 16),
               // Tombol simpan dan checkout
               Row(
                 children: [
@@ -2790,36 +2892,42 @@ class _POSScreenState extends State<POSScreen> {
                   Expanded(
                     flex: 1,
                     child: SizedBox(
-                      height: 50,
+                      height: isTablet ? 42 : 50,
                       child: OutlinedButton.icon(
                         onPressed: _totalItems == 0 ? null : _saveOrder,
-                        icon: const Icon(Icons.save),
-                        label: const Text('SIMPAN'),
+                        icon: Icon(Icons.save, size: isTablet ? 16 : 18),
+                        label: Text(
+                          'SIMPAN',
+                          style: TextStyle(fontSize: isTablet ? 12 : 14),
+                        ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: _primaryColor,
                           side: BorderSide(color: _primaryColor),
                           disabledForegroundColor: Colors.grey.shade400,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: isTablet ? 6 : 8),
                   // Tombol checkout
                   Expanded(
                     flex: 2,
                     child: SizedBox(
-                      height: 50,
+                      height: isTablet ? 42 : 50,
                       child: ElevatedButton.icon(
                         onPressed: _totalItems == 0 ? null : _checkout,
-                        icon: const Icon(Icons.payment),
-                        label: const Text('CHECKOUT'),
+                        icon: Icon(Icons.payment, size: isTablet ? 16 : 18),
+                        label: Text(
+                          'CHECKOUT',
+                          style: TextStyle(fontSize: isTablet ? 12 : 14),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _primaryColor,
                           foregroundColor: Colors.white,
                           disabledBackgroundColor: Colors.grey.shade300,
                           elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                     ),

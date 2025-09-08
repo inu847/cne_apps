@@ -23,10 +23,20 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
   final TextEditingController _amountController = TextEditingController();
   bool _isLoading = true;
   String? _error;
+  double _paidAmount = 0.0;
+  
+  // Getter untuk menghitung kembalian
+  double get _changeAmount {
+    return _paidAmount - widget.totalAmount;
+  }
+  
+  // Shortcut nominal untuk Cash
+  final List<int> _cashShortcuts = [10000, 20000, 50000, 100000];
 
   @override
   void initState() {
     super.initState();
+    _paidAmount = widget.totalAmount;
     _amountController.text = widget.totalAmount.toString();
     _loadPaymentMethods();
   }
@@ -356,7 +366,7 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
                                           style: TextStyle(fontSize: 13, color: Colors.grey),
                                         ),
                                         Text(
-                                          'Rp ${FormatUtils.formatCurrency(widget.totalAmount.toInt())}',
+                                          '${FormatUtils.formatCurrency(widget.totalAmount.toInt())}',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -366,35 +376,145 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
                                       ],
                                     ),
                                     const SizedBox(height: 12),
-                                    const Text(
-                                      'Jumlah Bayar',
-                                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    TextFormField(
-                                      controller: _amountController,
-                                      keyboardType: TextInputType.number,
-                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                      decoration: InputDecoration(
-                                        prefixText: 'Rp ',
-                                        prefixStyle: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.w600),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                          borderSide: BorderSide(color: primaryColor, width: 2),
-                                        ),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                        filled: true,
-                                        fillColor: Colors.white,
+                                    
+                                    // Tampilkan fitur Cash jika metode Cash dipilih
+                                    if (_selectedMethod?.code.toLowerCase() == 'cash') ...[
+                                      // Shortcut nominal untuk Cash
+                                      const Text(
+                                        'Pilih Nominal Uang',
+                                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                                       ),
-                                    ),
+                                      const SizedBox(height: 8),
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: _cashShortcuts.map((amount) {
+                                          final isSelected = _paidAmount == amount.toDouble();
+                                          return InkWell(
+                                            onTap: () {
+                                              setState(() {
+                                                _paidAmount = amount.toDouble();
+                                                _amountController.text = amount.toString();
+                                              });
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                              decoration: BoxDecoration(
+                                                color: isSelected ? primaryColor : Colors.white,
+                                                borderRadius: BorderRadius.circular(8),
+                                                border: Border.all(
+                                                  color: isSelected ? primaryColor : Colors.grey.shade300,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                '${FormatUtils.formatCurrency(amount)}',
+                                                style: TextStyle(
+                                                  color: isSelected ? Colors.white : Colors.black87,
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      
+                                      // Display jumlah bayar (read-only)
+                                      const Text(
+                                        'Jumlah Bayar',
+                                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade100,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.grey.shade300),
+                                        ),
+                                        child: Text(
+                                          '${FormatUtils.formatCurrency(_paidAmount.toInt())}',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: primaryColor,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      
+                                      // Display kembalian
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: _changeAmount >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: _changeAmount >= 0 ? Colors.green.shade200 : Colors.red.shade200,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              _changeAmount >= 0 ? 'Kembalian:' : 'Kurang:',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                                color: _changeAmount >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${FormatUtils.formatCurrency(_changeAmount.abs().toInt())}',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: _changeAmount >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ] else ...[
+                                      // Input biasa untuk metode pembayaran lain
+                                      const Text(
+                                        'Jumlah Bayar',
+                                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      TextFormField(
+                                        controller: _amountController,
+                                        keyboardType: TextInputType.number,
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _paidAmount = double.tryParse(value) ?? widget.totalAmount;
+                                          });
+                                        },
+                                        decoration: InputDecoration(
+                                          prefixText: 'Rp ',
+                                          prefixStyle: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.w600),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: BorderSide(color: Colors.grey.shade300),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: BorderSide(color: Colors.grey.shade300),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: BorderSide(color: primaryColor, width: 2),
+                                          ),
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -408,7 +528,18 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
                                   onPressed: _selectedMethod == null
                                       ? null
                                       : () {
-                                          final amount = double.tryParse(_amountController.text) ?? widget.totalAmount;
+                                          // Validasi untuk metode Cash
+                                          if (_selectedMethod!.code.toLowerCase() == 'cash' && _paidAmount < widget.totalAmount) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Jumlah pembayaran tidak boleh kurang dari total belanja'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                            return;
+                                          }
+                                          
+                                          final amount = _paidAmount;
                                           Navigator.pop(context); // Tutup dialog terlebih dahulu
                                           widget.onPaymentSelected(_selectedMethod!, amount); // Panggil callback setelah dialog ditutup
                                         },

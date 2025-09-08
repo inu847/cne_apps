@@ -209,7 +209,7 @@ class _SavedOrdersScreenState extends State<SavedOrdersScreen> {
                   children: [
                     const Text('Subtotal:'),
                     Text(
-                      'Rp ${FormatUtils.formatCurrency(order.subtotal.toInt())}',
+                      '${FormatUtils.formatCurrency(order.subtotal.toInt())}',
                     ),
                   ],
                 ),
@@ -221,7 +221,7 @@ class _SavedOrdersScreenState extends State<SavedOrdersScreen> {
                   children: [
                     const Text('Pajak:'),
                     Text(
-                      'Rp ${FormatUtils.formatCurrency(order.tax.toInt())}',
+                      '${FormatUtils.formatCurrency(order.tax.toInt())}',
                     ),
                   ],
                 ),
@@ -236,7 +236,7 @@ class _SavedOrdersScreenState extends State<SavedOrdersScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColor),
                     ),
                     Text(
-                      'Rp ${FormatUtils.formatCurrency(order.total.toInt())}',
+                      '${FormatUtils.formatCurrency(order.total.toInt())}',
                       style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColor),
                     ),
                   ],
@@ -345,8 +345,8 @@ class _SavedOrdersScreenState extends State<SavedOrdersScreen> {
               ),
               ...order.items.map((item) => ListTile(
                 title: Text(item.productName),
-                subtitle: Text('${item.quantity} x Rp ${FormatUtils.formatCurrency(item.price)}'),
-                trailing: Text('Rp ${FormatUtils.formatCurrency(item.total)}'),
+                subtitle: Text('${item.quantity} x ${FormatUtils.formatCurrency(item.price)}'),
+                trailing: Text('${FormatUtils.formatCurrency(item.total)}'),
                 leading: Container(
                   width: 32,
                   height: 32,
@@ -362,16 +362,16 @@ class _SavedOrdersScreenState extends State<SavedOrdersScreen> {
               // Informasi total
               ListTile(
                 title: const Text('Subtotal'),
-                trailing: Text('Rp ${FormatUtils.formatCurrency(order.subtotal.toInt())}'),
+                trailing: Text('${FormatUtils.formatCurrency(order.subtotal.toInt())}'),
               ),
               ListTile(
                 title: const Text('Pajak'),
-                trailing: Text('Rp ${FormatUtils.formatCurrency(order.tax.toInt())}'),
+                trailing: Text('${FormatUtils.formatCurrency(order.tax.toInt())}'),
               ),
               ListTile(
                 title: Text('Total', style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColor)),
                 trailing: Text(
-                  'Rp ${FormatUtils.formatCurrency(order.total.toInt())}',
+                  '${FormatUtils.formatCurrency(order.total.toInt())}',
                   style: TextStyle(fontWeight: FontWeight.bold, color: _primaryColor),
                 ),
               ),
