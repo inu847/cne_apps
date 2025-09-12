@@ -16,6 +16,11 @@ class CreateInventoryScreen extends StatefulWidget {
 }
 
 class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
+  // Color palette baru untuk aplikasi
+  static const Color primaryGreen = Color(0xFF03D26F);
+  static const Color lightBlue = Color(0xFFEAF4F4);
+  static const Color darkBlack = Color(0xFF161514);
+  
   final _formKey = GlobalKey<FormState>();
   final _dateFormat = DateFormat('yyyy-MM-dd');
   final _notesController = TextEditingController();
@@ -27,6 +32,22 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
   List<Map<String, dynamic>> _inventoryItems = [];
   bool _isLoading = false;
   String? _errorMessage;
+  
+  // State untuk quick input dan bulk operations
+  bool _isBulkInputMode = false;
+  bool _isQuickAddMode = false;
+  
+  // State untuk templates dan presets
+  List<Map<String, dynamic>> _itemTemplates = [];
+  String _selectedTemplate = '';
+  
+  // Controllers untuk quick add
+  final TextEditingController _quickQuantityController = TextEditingController();
+  final TextEditingController _quickNotesController = TextEditingController();
+  final TextEditingController _searchItemController = TextEditingController();
+  
+  // State untuk keyboard shortcuts
+  final FocusNode _mainFocusNode = FocusNode();
   
   // Scroll controller untuk infinite scroll
   final ScrollController _scrollController = ScrollController();
@@ -43,6 +64,10 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
   @override
   void dispose() {
     _notesController.dispose();
+    _quickQuantityController.dispose();
+    _quickNotesController.dispose();
+    _searchItemController.dispose();
+    _mainFocusNode.dispose();
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
@@ -69,8 +94,8 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
       // Muat daftar item persediaan
       await _loadInventoryItems();
       
-      // Tambahkan item pertama
-      _addNewItem();
+      // Load semua item inventory sebagai form yang siap diisi
+      _loadAllInventoryItems();
     } catch (e) {
       setState(() {
         _errorMessage = 'Terjadi kesalahan: $e';
@@ -80,6 +105,25 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
         _isLoading = false;
       });
     }
+  }
+  
+  // Fungsi untuk memuat semua item inventory sebagai form
+  void _loadAllInventoryItems() {
+    setState(() {
+      _inventoryItems.clear();
+      for (var item in _inventoryItemList) {
+        _inventoryItems.add({
+          'inventory_item_id': item['id'],
+          'inventory_uom_id': item['uom_id'],
+          'inventory_item_name': item['name'],
+          'inventory_uom_name': item['uom_name'],
+          'quantity_in': 0.0,
+          'quantity_out': 0.0,
+          'notes': '',
+          'is_enabled': false, // Flag untuk menandai item yang akan disimpan
+        });
+      }
+    });
   }
 
   // Fungsi untuk memuat daftar gudang
@@ -210,6 +254,118 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
       _inventoryItems.removeAt(index);
     });
   }
+  
+  // Fungsi untuk toggle bulk input mode
+  void _toggleBulkInputMode() {
+    setState(() {
+      _isBulkInputMode = !_isBulkInputMode;
+      if (_isBulkInputMode) {
+        _isQuickAddMode = false;
+      }
+    });
+  }
+  
+  // Fungsi untuk toggle quick add mode
+  void _toggleQuickAddMode() {
+    setState(() {
+      _isQuickAddMode = !_isQuickAddMode;
+      if (_isQuickAddMode) {
+        _isBulkInputMode = false;
+      }
+    });
+  }
+  
+  // Fungsi untuk quick add item
+  void _quickAddItem(Map<String, dynamic> item) {
+    final quantity = double.tryParse(_quickQuantityController.text) ?? 0.0;
+    final notes = _quickNotesController.text;
+    
+    setState(() {
+      _inventoryItems.add({
+        'inventory_item_id': item['id'],
+        'inventory_uom_id': item['uom_id'],
+        'inventory_item_name': item['name'],
+        'inventory_uom_name': item['uom_name'],
+        'quantity_in': quantity,
+        'quantity_out': 0.0,
+        'notes': notes,
+      });
+    });
+    
+    // Clear controllers untuk input berikutnya
+    _quickQuantityController.clear();
+    _quickNotesController.clear();
+    _searchItemController.clear();
+  }
+  
+  // Fungsi untuk load template
+  void _loadTemplate(String templateName) {
+    switch (templateName) {
+      case 'daily_stock':
+        _loadDailyStockTemplate();
+        break;
+      case 'weekly_stock':
+        _loadWeeklyStockTemplate();
+        break;
+      case 'monthly_stock':
+        _loadMonthlyStockTemplate();
+        break;
+    }
+  }
+  
+  // Template untuk stock harian
+  void _loadDailyStockTemplate() {
+    setState(() {
+      _inventoryItems.clear();
+      for (var item in _inventoryItemList.take(5)) {
+        _inventoryItems.add({
+          'inventory_item_id': item['id'],
+          'inventory_uom_id': item['uom_id'],
+          'inventory_item_name': item['name'],
+          'inventory_uom_name': item['uom_name'],
+          'quantity_in': 0.0,
+          'quantity_out': 0.0,
+          'notes': 'Stock harian',
+        });
+      }
+    });
+  }
+  
+  // Template untuk stock mingguan
+  void _loadWeeklyStockTemplate() {
+    setState(() {
+      _inventoryItems.clear();
+      for (var item in _inventoryItemList.take(10)) {
+        _inventoryItems.add({
+          'inventory_item_id': item['id'],
+          'inventory_uom_id': item['uom_id'],
+          'inventory_item_name': item['name'],
+          'inventory_uom_name': item['uom_name'],
+          'quantity_in': 0.0,
+          'quantity_out': 0.0,
+          'notes': 'Stock mingguan',
+        });
+      }
+    });
+  }
+  
+  // Template untuk stock bulanan
+  void _loadMonthlyStockTemplate() {
+    setState(() {
+      _inventoryItems.clear();
+      for (var item in _inventoryItemList) {
+        _inventoryItems.add({
+          'inventory_item_id': item['id'],
+          'inventory_uom_id': item['uom_id'],
+          'inventory_item_name': item['name'],
+          'inventory_uom_name': item['uom_name'],
+          'quantity_in': 0.0,
+          'quantity_out': 0.0,
+          'notes': 'Stock bulanan',
+        });
+      }
+    });
+  }
 
   // Fungsi untuk memilih tanggal
   Future<void> _selectDate(BuildContext context) async {
@@ -230,18 +386,28 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
   Future<void> _saveInventory() async {
     if (!_formKey.currentState!.validate()) return;
     
-    // Validasi apakah ada item yang dipilih
-    bool hasValidItems = false;
-    for (var item in _inventoryItems) {
-      if (item['inventory_item_id'] != null) {
-        hasValidItems = true;
+    // Validasi apakah ada item yang dipilih dan dicentang
+    final enabledItems = _inventoryItems.where((item) => item['is_enabled'] == true).toList();
+    
+    if (enabledItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih minimal satu item persediaan')),
+      );
+      return;
+    }
+    
+    // Validasi apakah item yang dipilih memiliki quantity
+    bool hasValidQuantity = false;
+    for (var item in enabledItems) {
+      if ((item['quantity_in'] ?? 0.0) > 0 || (item['quantity_out'] ?? 0.0) > 0) {
+        hasValidQuantity = true;
         break;
       }
     }
     
-    if (!hasValidItems) {
+    if (!hasValidQuantity) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tambahkan minimal satu item persediaan')),
+        const SnackBar(content: Text('Masukkan quantity untuk item yang dipilih')),
       );
       return;
     }
@@ -251,15 +417,14 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
     });
     
     try {
-      // Persiapkan data item untuk dikirim ke API
-      final items = _inventoryItems
-          .where((item) => item['inventory_item_id'] != null)
+      // Persiapkan data item untuk dikirim ke API (hanya item yang dicentang)
+      final items = enabledItems
           .map((item) => {
                 'inventory_item_id': item['inventory_item_id'],
                 'inventory_uom_id': item['inventory_uom_id'],
-                'quantity_in': item['quantity_in'],
-                'quantity_out': item['quantity_out'],
-                'notes': item['notes'],
+                'quantity_in': item['quantity_in'] ?? 0.0,
+                'quantity_out': item['quantity_out'] ?? 0.0,
+                'notes': item['notes'] ?? '',
               })
           .toList();
       
@@ -350,7 +515,249 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
       });
     }
   }
-
+  
+  // Widget untuk menampilkan daftar item inventory dengan checkbox
+  Widget _buildInventoryItemsList() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    
+    // Filter items berdasarkan search
+    final filteredItems = _inventoryItems.where((item) {
+      if (_searchItemController.text.isEmpty) return true;
+      return item['inventory_item_name']
+          .toString()
+          .toLowerCase()
+          .contains(_searchItemController.text.toLowerCase());
+    }).toList();
+    
+    return Padding(
+      padding: EdgeInsets.all(isMobile ? 8 : 12),
+      child: Column(
+        children: filteredItems.map((item) {
+          final isEnabled = item['is_enabled'] ?? false;
+          
+          return Container(
+            margin: EdgeInsets.only(
+              bottom: isMobile ? 8 : 12,
+            ),
+            decoration: BoxDecoration(
+              color: isEnabled ? primaryGreen.withOpacity(0.05) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isEnabled ? primaryGreen.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+                width: isEnabled ? 2 : 1,
+              ),
+              boxShadow: isEnabled ? [
+                BoxShadow(
+                  color: primaryGreen.withOpacity(0.1),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 2),
+                ),
+              ] : [],
+            ),
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 12 : 16,
+                vertical: isMobile ? 4 : 8,
+              ),
+              childrenPadding: EdgeInsets.zero,
+              leading: Checkbox(
+                value: isEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    item['is_enabled'] = value ?? false;
+                    if (!value!) {
+                      item['quantity_in'] = 0.0;
+                      item['quantity_out'] = 0.0;
+                      item['notes'] = '';
+                    }
+                  });
+                },
+                activeColor: primaryGreen,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              title: Text(
+                item['inventory_item_name'] ?? '',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: isMobile ? 14 : 16,
+                  color: isEnabled ? primaryGreen : darkBlack,
+                ),
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'UOM: ${item['inventory_uom_name'] ?? ''}',
+                  style: TextStyle(
+                    fontSize: isMobile ? 12 : 14,
+                    color: darkBlack.withOpacity(0.7),
+                  ),
+                ),
+              ),
+              trailing: isEnabled
+                  ? Icon(
+                      Icons.keyboard_arrow_down,
+                      color: primaryGreen,
+                    )
+                  : Icon(
+                      Icons.keyboard_arrow_right,
+                      color: Colors.grey,
+                    ),
+              children: isEnabled
+                  ? [
+                      Container(
+                        padding: EdgeInsets.all(isMobile ? 12 : 16),
+                        margin: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 8 : 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: lightBlue.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    initialValue: item['quantity_in'].toString(),
+                                    decoration: InputDecoration(
+                                      labelText: 'Quantity In',
+                                      hintText: '0',
+                                      labelStyle: TextStyle(
+                                        fontSize: isMobile ? 12 : 14,
+                                        color: darkBlack.withOpacity(0.7),
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(
+                                          color: primaryGreen,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.add_circle_outline,
+                                        color: primaryGreen,
+                                        size: isMobile ? 20 : 24,
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: isMobile ? 12 : 16,
+                                      ),
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 14 : 16,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) {
+                                      item['quantity_in'] = double.tryParse(value) ?? 0.0;
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    initialValue: item['quantity_out'].toString(),
+                                    decoration: InputDecoration(
+                                      labelText: 'Quantity Out',
+                                      hintText: '0',
+                                      labelStyle: TextStyle(
+                                        fontSize: isMobile ? 12 : 14,
+                                        color: darkBlack.withOpacity(0.7),
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide(
+                                          color: Colors.red,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.remove_circle_outline,
+                                        color: Colors.red,
+                                        size: isMobile ? 20 : 24,
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: isMobile ? 12 : 16,
+                                      ),
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 14 : 16,
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) {
+                                      item['quantity_out'] = double.tryParse(value) ?? 0.0;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              initialValue: item['notes'] ?? '',
+                              decoration: InputDecoration(
+                                labelText: 'Catatan (Opsional)',
+                                hintText: 'Tambahkan catatan untuk item ini...',
+                                labelStyle: TextStyle(
+                                  fontSize: isMobile ? 12 : 14,
+                                  color: darkBlack.withOpacity(0.7),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: primaryGreen,
+                                    width: 2,
+                                  ),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.note_outlined,
+                                  color: primaryGreen,
+                                  size: isMobile ? 20 : 24,
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: isMobile ? 12 : 16,
+                                ),
+                              ),
+                              style: TextStyle(
+                                fontSize: isMobile ? 14 : 16,
+                              ),
+                              maxLines: 2,
+                              onChanged: (value) {
+                                item['notes'] = value;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ]
+                  : [],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
     // Mendapatkan ukuran layar untuk responsivitas
@@ -361,25 +768,109 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buat Persediaan Baru'),
-        backgroundColor: const Color(0xFF1E2A78),
-        foregroundColor: Colors.white,
+        title: Text(
+          'Buat Persediaan Baru',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: lightBlue,
+            fontSize: isMobile ? 18 : 20,
+          ),
+        ),
+        backgroundColor: primaryGreen,
+        foregroundColor: lightBlue,
+        elevation: 4,
+        shadowColor: primaryGreen.withOpacity(0.3),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Panduan Penggunaan'),
+                  content: const Text(
+                    'Centang item yang ingin dimasukkan ke persediaan, lalu isi quantity dan catatan sesuai kebutuhan.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Mengerti'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            tooltip: 'Bantuan',
+          ),
+        ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                    strokeWidth: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Memuat data...',
+                    style: TextStyle(
+                      color: darkBlack.withOpacity(0.7),
+                      fontSize: isMobile ? 14 : 16,
+                    ),
+                  ),
+                ],
+              ),
+            )
           : _errorMessage != null
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Error: $_errorMessage',
-                        style: const TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red.shade400,
                       ),
                       const SizedBox(height: 16),
+                      Text(
+                        'Gagal memuat data',
+                        style: TextStyle(
+                          fontSize: isMobile ? 16 : 18,
+                          fontWeight: FontWeight.bold,
+                          color: darkBlack,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        style: TextStyle(
+                          color: darkBlack.withOpacity(0.7),
+                          fontSize: isMobile ? 14 : 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
                       ElevatedButton(
                         onPressed: _loadInitialData,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryGreen,
+                          foregroundColor: lightBlue,
+                          elevation: 2,
+                          shadowColor: primaryGreen.withOpacity(0.3),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 20 : 24,
+                            vertical: isMobile ? 12 : 14,
+                          ),
+                        ),
                         child: const Text('Coba Lagi'),
                       ),
                     ],
@@ -387,47 +878,129 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                 )
               : Form(
                   key: _formKey,
-                  child: Column(
-                    children: [
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      children: [
                       // Header section
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        margin: EdgeInsets.all(isMobile ? 12 : 16),
+                        padding: EdgeInsets.all(isMobile ? 16 : 20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              lightBlue,
+                              lightBlue.withOpacity(0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: [
+                            BoxShadow(
+                              color: primaryGreen.withOpacity(0.1),
+                              blurRadius: 15,
+                              spreadRadius: 0,
+                              offset: const Offset(0, 8),
+                            ),
                             BoxShadow(
                               color: Colors.black.withOpacity(0.05),
                               blurRadius: 10,
+                              spreadRadius: 0,
                               offset: const Offset(0, 2),
                             ),
                           ],
+                          border: Border.all(
+                            color: primaryGreen.withOpacity(0.2),
+                            width: 1,
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Informasi Persediaan',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        primaryGreen,
+                                        primaryGreen.withOpacity(0.8),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.inventory_2,
+                                    color: lightBlue,
+                                    size: isMobile ? 20 : 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Informasi Persediaan',
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 16 : 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: darkBlack,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
                             Row(
                               children: [
                                 Expanded(
                                   child: InkWell(
                                     onTap: () => _selectDate(context),
+                                    borderRadius: BorderRadius.circular(12),
                                     child: InputDecorator(
                                       decoration: InputDecoration(
                                         labelText: 'Tanggal Stok',
-                                        border: OutlineInputBorder(),
+                                        labelStyle: TextStyle(
+                                          color: darkBlack.withOpacity(0.7),
+                                          fontSize: isMobile ? 14 : 16,
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: primaryGreen.withOpacity(0.3),
+                                          ),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: primaryGreen.withOpacity(0.3),
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: primaryGreen,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        filled: true,
+                                        fillColor: Colors.white,
                                       ),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text(_dateFormat.format(_selectedDate)),
-                                          Icon(Icons.calendar_today),
+                                          Text(
+                                            _dateFormat.format(_selectedDate),
+                                            style: TextStyle(
+                                              color: darkBlack,
+                                              fontSize: isMobile ? 14 : 16,
+                                            ),
+                                          ),
+                                          Icon(
+                                            Icons.calendar_today,
+                                            color: primaryGreen,
+                                            size: isMobile ? 20 : 24,
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -438,7 +1011,31 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                   child: DropdownButtonFormField<int>(
                                     decoration: InputDecoration(
                                       labelText: 'Gudang',
-                                      border: OutlineInputBorder(),
+                                      labelStyle: TextStyle(
+                                        color: darkBlack.withOpacity(0.7),
+                                        fontSize: isMobile ? 14 : 16,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: primaryGreen.withOpacity(0.3),
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: primaryGreen.withOpacity(0.3),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide(
+                                          color: primaryGreen,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.white,
                                     ),
                                     value: _selectedWarehouseId,
                                     items: _warehouseList.map((warehouse) {
@@ -467,7 +1064,35 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                               controller: _notesController,
                               decoration: InputDecoration(
                                 labelText: 'Catatan',
-                                border: OutlineInputBorder(),
+                                labelStyle: TextStyle(
+                                  color: darkBlack.withOpacity(0.7),
+                                  fontSize: isMobile ? 14 : 16,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: primaryGreen.withOpacity(0.3),
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: primaryGreen.withOpacity(0.3),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: primaryGreen,
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              style: TextStyle(
+                                color: darkBlack,
+                                fontSize: isMobile ? 14 : 16,
                               ),
                               maxLines: 3,
                             ),
@@ -475,88 +1100,338 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                         ),
                       ),
                       
-                      // Item list section
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Daftar Item',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  ElevatedButton.icon(
-                                    onPressed: _addNewItem,
-                                    icon: Icon(Icons.add),
-                                    label: Text('Tambah Item'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF1E2A78),
-                                      foregroundColor: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Expanded(
-                                child: _inventoryItems.isEmpty
-                                    ? Center(
-                                        child: Text('Belum ada item. Tambahkan item baru.'),
-                                      )
-                                    : isMobile || isTablet
-                                        ? _buildMobileItemList()
-                                        : _buildDesktopItemTable(),
-                              ),
+                      // Search and Filter Panel
+                      Container(
+                        margin: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 12 : 16,
+                          vertical: 8,
+                        ),
+                        padding: EdgeInsets.all(isMobile ? 12 : 16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              lightBlue,
+                              lightBlue.withOpacity(0.8),
                             ],
                           ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: primaryGreen.withOpacity(0.2),
+                            width: 1,
+                          ),
                         ),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _searchItemController,
+                              decoration: InputDecoration(
+                                labelText: 'Cari Item Persediaan',
+                                hintText: 'Ketik nama item untuk mencari...',
+                                prefixIcon: Icon(Icons.search, color: primaryGreen),
+                                suffixIcon: _searchItemController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(Icons.clear, color: darkBlack.withOpacity(0.6)),
+                                        onPressed: () {
+                                          _searchItemController.clear();
+                                          setState(() {});
+                                        },
+                                      )
+                                    : null,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              onChanged: (value) {
+                                setState(() {});
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        for (var item in _inventoryItems) {
+                                          item['is_enabled'] = true;
+                                        }
+                                      });
+                                    },
+                                    icon: Icon(Icons.select_all, size: isMobile ? 16 : 18),
+                                    label: Text(
+                                      'Pilih Semua',
+                                      style: TextStyle(fontSize: isMobile ? 12 : 14),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: primaryGreen,
+                                      foregroundColor: lightBlue,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        for (var item in _inventoryItems) {
+                                          item['is_enabled'] = false;
+                                          item['quantity_in'] = 0.0;
+                                          item['quantity_out'] = 0.0;
+                                          item['notes'] = '';
+                                        }
+                                      });
+                                    },
+                                    icon: Icon(Icons.deselect, size: isMobile ? 16 : 18),
+                                    label: Text(
+                                      'Batal Semua',
+                                      style: TextStyle(fontSize: isMobile ? 12 : 14),
+                                    ),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: primaryGreen,
+                                      side: BorderSide(color: primaryGreen),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Item list section
+                      Column(
+                        children: [
+                          // Header section dengan informasi
+                          Container(
+                            margin: EdgeInsets.symmetric(
+                              horizontal: isMobile ? 12 : 16,
+                              vertical: 8,
+                            ),
+                            padding: EdgeInsets.all(isMobile ? 12 : 16),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  lightBlue,
+                                  lightBlue.withOpacity(0.8),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: primaryGreen.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        primaryGreen,
+                                        primaryGreen.withOpacity(0.8),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.inventory_2,
+                                    color: lightBlue,
+                                    size: isMobile ? 18 : 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Daftar Item Persediaan',
+                                        style: TextStyle(
+                                          fontSize: isMobile ? 16 : 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: darkBlack,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Centang item yang ingin dimasukkan ke persediaan',
+                                        style: TextStyle(
+                                          fontSize: isMobile ? 12 : 14,
+                                          color: darkBlack.withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: isMobile ? 8 : 12,
+                                    vertical: isMobile ? 4 : 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: primaryGreen.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: primaryGreen.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${_inventoryItems.where((item) => item['is_enabled'] == true).length} dipilih',
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 11 : 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: primaryGreen,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Item list area dengan tinggi yang sesuai
+                          Container(
+                            margin: EdgeInsets.symmetric(
+                              horizontal: isMobile ? 12 : 16,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryGreen.withOpacity(0.1),
+                                  blurRadius: 15,
+                                  spreadRadius: 0,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                              border: Border.all(
+                                color: primaryGreen.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: _inventoryItems.isEmpty
+                                ? Container(
+                                    height: 200,
+                                    child: Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          CircularProgressIndicator(
+                                            valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'Memuat item persediaan...',
+                                            style: TextStyle(
+                                              fontSize: isMobile ? 14 : 16,
+                                              color: darkBlack.withOpacity(0.7),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: _buildInventoryItemsList(),
+                                  ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                       ),
                       
                       // Bottom action buttons
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(isMobile ? 16 : 20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              lightBlue,
+                              lightBlue.withOpacity(0.8),
+                            ],
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, -2),
+                              color: primaryGreen.withOpacity(0.1),
+                              blurRadius: 15,
+                              spreadRadius: 0,
+                              offset: const Offset(0, -8),
                             ),
                           ],
+                          border: Border(
+                            top: BorderSide(
+                              color: primaryGreen.withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             OutlinedButton(
                               onPressed: () => Navigator.pop(context),
-                              child: Text('Batal'),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF1E2A78),
-                                side: BorderSide(color: const Color(0xFF1E2A78)),
-                                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                side: BorderSide(color: primaryGreen, width: 2),
+                                foregroundColor: primaryGreen,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 20 : 24,
+                                  vertical: isMobile ? 12 : 14,
+                                ),
+                              ),
+                              child: Text(
+                                'Batal',
+                                style: TextStyle(
+                                  fontSize: isMobile ? 14 : 16,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
                             ElevatedButton(
                               onPressed: _saveInventory,
-                              child: Text('Simpan'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1E2A78),
-                                foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                backgroundColor: primaryGreen,
+                                foregroundColor: lightBlue,
+                                elevation: 2,
+                                shadowColor: primaryGreen.withOpacity(0.3),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 20 : 24,
+                                  vertical: isMobile ? 12 : 14,
+                                ),
+                              ),
+                              child: Text(
+                                'Simpan',
+                                style: TextStyle(
+                                  fontSize: isMobile ? 14 : 16,
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
     );

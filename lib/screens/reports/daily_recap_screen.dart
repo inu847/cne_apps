@@ -6,6 +6,11 @@ import '../../providers/transaction_provider.dart';
 import '../../utils/format_utils.dart';
 import '../../widgets/loading_indicator.dart';
 
+// Tema warna aplikasi
+const Color primaryGreen = Color(0xFF03D26F);
+const Color lightBlue = Color(0xFFEAF4F4);
+const Color darkBlack = Color(0xFF161514);
+
 class DailyRecapScreen extends StatefulWidget {
   static const String routeName = '/reports/daily-recap';
 
@@ -93,9 +98,19 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isShowingDetails ? 'Detail Rekapitulasi Harian' : 'Rekapitulasi Harian'),
+        title: Text(
+          _isShowingDetails ? 'Detail Rekapitulasi Harian' : 'Rekapitulasi Harian',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: lightBlue,
+            fontSize: isMobile ? 18 : 20,
+          ),
+        ),
         leading: _isShowingDetails
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -107,8 +122,13 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
                 },
               )
             : null,
-        backgroundColor: const Color(0xFF1E2A78),
-        foregroundColor: Colors.white,
+        backgroundColor: primaryGreen,
+        foregroundColor: lightBlue,
+        elevation: 4,
+        shadowColor: primaryGreen.withOpacity(0.3),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -122,11 +142,47 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
           // Tampilkan loading indicator jika sedang memuat data
           if (_isShowingDetails) {
             if (provider.isLoadingDailyRecapDetails) {
-              return const Center(child: LoadingIndicator());
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                      strokeWidth: 3,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Memuat detail rekapitulasi...',
+                      style: TextStyle(
+                        color: darkBlack.withOpacity(0.7),
+                        fontSize: isMobile ? 14 : 16,
+                      ),
+                    ),
+                  ],
+                ),
+              );
             }
           } else {
             if (provider.isLoadingDailyRecap) {
-              return const Center(child: LoadingIndicator());
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                      strokeWidth: 3,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Memuat rekapitulasi harian...',
+                      style: TextStyle(
+                        color: darkBlack.withOpacity(0.7),
+                        fontSize: isMobile ? 14 : 16,
+                      ),
+                    ),
+                  ],
+                ),
+              );
             }
           }
 
@@ -136,13 +192,45 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Error: ${provider.error}',
-                    style: const TextStyle(color: Colors.red),
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red.shade400,
                   ),
                   const SizedBox(height: 16),
+                  Text(
+                    'Gagal memuat data',
+                    style: TextStyle(
+                      fontSize: isMobile ? 16 : 18,
+                      fontWeight: FontWeight.bold,
+                      color: darkBlack,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Error: ${provider.error}',
+                    style: TextStyle(
+                      color: darkBlack.withOpacity(0.7),
+                      fontSize: isMobile ? 14 : 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: _isShowingDetails ? () => _fetchDailyRecapDetails(pettyCashId: _selectedPettyCashId) : _fetchDailyRecap,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryGreen,
+                      foregroundColor: lightBlue,
+                      elevation: 2,
+                      shadowColor: primaryGreen.withOpacity(0.3),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 20 : 24,
+                        vertical: isMobile ? 12 : 14,
+                      ),
+                    ),
                     child: const Text('Coba Lagi'),
                   ),
                 ],

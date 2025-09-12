@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/sales_dashboard_model.dart';
-import 'sales_stat_card_widget.dart';
+import '../utils/currency_formatter.dart';
 
 class SalesChartWidget extends StatelessWidget {
   final DailySalesData dailySalesData;
@@ -174,7 +174,7 @@ class SalesChartWidget extends StatelessWidget {
                           const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                           children: [
                             TextSpan(
-                              text: SalesStatCardWidget.formatCurrency(barSpot.y),
+                              text: CurrencyFormatter.formatCurrency(barSpot.y),
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.normal),
                             ),
                           ],

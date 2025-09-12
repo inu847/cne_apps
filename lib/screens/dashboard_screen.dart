@@ -14,6 +14,7 @@ import '../screens/inventory_screen.dart';
 import '../screens/transaction_detail_screen.dart';
 import '../widgets/sales_chart_widget.dart';
 import '../widgets/sales_stat_card_widget.dart';
+import '../utils/currency_formatter.dart';
 import '../config/api_config.dart'; // Import untuk ApiConfig
 
 class DashboardScreen extends StatefulWidget {
@@ -30,6 +31,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final SalesDashboardService _salesDashboardService = SalesDashboardService();
   final TransactionService _transactionService = TransactionService();
   int _selectedIndex = 0;
+  
+  // Color palette baru
+  static const Color primaryGreen = Color(0xFF03D26F);
+  static const Color lightBlue = Color(0xFFEAF4F4);
+  static const Color darkBlack = Color(0xFF161514);
   
   // Data dashboard penjualan
   SalesDashboardData? _salesDashboardData;
@@ -253,6 +259,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
   @override
+  @override
   Widget build(BuildContext context) {
     // Mendapatkan ukuran layar untuk responsivitas
     final screenWidth = MediaQuery.of(context).size.width;
@@ -264,32 +271,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
       key: _scaffoldKey,
       // AppBar hanya ditampilkan pada tablet dan mobile
       appBar: (isTablet || isMobile) ? AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: lightBlue,
         elevation: 0,
         title: Text(
           _getPageTitle(),
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: darkBlack),
         ),
         leading: isTablet ? IconButton(
-          icon: const Icon(Icons.menu, color: Colors.black),
+          icon: Icon(Icons.menu, color: primaryGreen),
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ) : null,
         actions: [
           // Help icon
           IconButton(
-            icon: const Icon(Icons.help_outline, color: Colors.black),
+            icon: Icon(Icons.help_outline, color: primaryGreen),
             onPressed: () {},
             tooltip: 'Help',
           ),
           // Notification icon
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.black),
+            icon: Icon(Icons.notifications_outlined, color: primaryGreen),
             onPressed: () {},
             tooltip: 'Notifications',
           ),
           // Logout icon
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black),
+            icon: Icon(Icons.logout, color: primaryGreen),
             onPressed: _logout,
             tooltip: 'Logout',
           ),
@@ -304,9 +311,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF1E2A78),
-        unselectedItemColor: Colors.grey,
+        backgroundColor: lightBlue,
+        selectedItemColor: primaryGreen,
+        unselectedItemColor: darkBlack.withOpacity(0.6),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
@@ -350,10 +357,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   height: 64,
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: lightBlue,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: darkBlack.withOpacity(0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -364,7 +371,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       // Page title based on selected index
                       Text(
                         _getPageTitle(),
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: darkBlack),
                       ),
                       const Spacer(),
                       // Search bar
@@ -372,35 +379,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         width: 300,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: primaryGreen.withOpacity(0.3)),
                         ),
                         child: TextField(
                           decoration: InputDecoration(
                             hintText: 'Search...',
-                            prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                            prefixIcon: Icon(Icons.search, color: primaryGreen),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                            hintStyle: TextStyle(color: Colors.grey.shade500),
+                            hintStyle: TextStyle(color: darkBlack.withOpacity(0.5)),
                           ),
+                          style: TextStyle(color: darkBlack),
                         ),
                       ),
                       const SizedBox(width: 16),
                       // Help icon
                       IconButton(
-                        icon: const Icon(Icons.help_outline),
+                        icon: Icon(Icons.help_outline, color: primaryGreen),
                         onPressed: () {},
                         tooltip: 'Help',
                       ),
                       // Notification icon
                       IconButton(
-                        icon: const Icon(Icons.notifications_outlined),
+                        icon: Icon(Icons.notifications_outlined, color: primaryGreen),
                         onPressed: () {},
                         tooltip: 'Notifications',
                       ),
                       // Logout icon
                       IconButton(
-                        icon: const Icon(Icons.logout),
+                        icon: Icon(Icons.logout, color: primaryGreen),
                         onPressed: _logout,
                         tooltip: 'Logout',
                       ),
@@ -424,7 +433,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildSidebar() {
     return Container(
       width: 250,
-      color: const Color(0xFF1E2A78), // Dark blue color for sidebar
+      color: darkBlack, // Dark black color for sidebar
       child: Column(
         children: [
           // Logo and app name
@@ -437,13 +446,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: primaryGreen,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(
                     'CNE',
                     style: TextStyle(
-                      color: Color(0xFF1E2A78),
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -461,7 +470,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          const Divider(color: Color(0xFF2D3990), height: 1),
+          Divider(color: primaryGreen.withOpacity(0.3), height: 1),
           
           // User profile section
           Container(
@@ -469,11 +478,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: Colors.white,
+                  backgroundColor: primaryGreen,
                   radius: 24,
                   child: Text(
                     widget.user.name.isNotEmpty ? widget.user.name[0].toUpperCase() : 'U',
-                    style: const TextStyle(color: Color(0xFF1E2A78), fontWeight: FontWeight.bold, fontSize: 18),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -497,7 +506,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          const Divider(color: Color(0xFF2D3990), height: 1),
+          Divider(color: primaryGreen.withOpacity(0.3), height: 1),
           
           // Navigation menu
           Expanded(
@@ -519,11 +528,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.all(16),
             child: ElevatedButton.icon(
               onPressed: _logout,
-              icon: const Icon(Icons.logout, color: Color(0xFF1E2A78)),
-              label: const Text('Logout', style: TextStyle(color: Color(0xFF1E2A78))),
+              icon: const Icon(Icons.logout, color: Colors.white),
+              label: const Text('Logout', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF1E2A78),
+                backgroundColor: primaryGreen,
+                foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
@@ -587,7 +596,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF2D3990) : Colors.transparent,
+            color: isSelected ? primaryGreen.withOpacity(0.2) : Colors.transparent,
             borderRadius: BorderRadius.circular(0),
           ),
           child: Row(
@@ -611,7 +620,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: 4,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: primaryGreen,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -636,6 +645,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildMainContent() {
     // Mendapatkan ukuran layar untuk responsivitas
     final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 650 && screenWidth < 1100;
     final isMobile = screenWidth < 650;
     
     // Switch content based on selected index
@@ -674,7 +684,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     
     // Dashboard content
     return Container(
-      color: const Color(0xFFF5F7FA),
+      color: lightBlue,
       child: SingleChildScrollView(
         padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Column(
@@ -687,9 +697,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Text(
                         'Welcome back, ${widget.user.name}!',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                          color: darkBlack,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -697,7 +708,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         'Here\'s what\'s happening with your store today',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey.shade600,
+                          color: darkBlack.withOpacity(0.7),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -708,7 +719,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(color: primaryGreen.withOpacity(0.3)),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<int>(
@@ -759,34 +770,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   )
                 : Row(
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Welcome back, ${widget.user.name}!',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Welcome back, ${widget.user.name}!',
+                              style: TextStyle(
+                                fontSize: isTablet ? 22 : 24,
+                                fontWeight: FontWeight.bold,
+                                color: darkBlack,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Here\'s what\'s happening with your store today',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade600,
+                            const SizedBox(height: 8),
+                            Text(
+                              'Here\'s what\'s happening with your store today',
+                              style: TextStyle(
+                                fontSize: isTablet ? 15 : 16,
+                                color: darkBlack.withOpacity(0.7),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 16),
                       // Date range picker
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade300),
+                          border: Border.all(color: primaryGreen.withOpacity(0.3)),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<int>(
@@ -841,7 +855,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ? const Center(
                     child: Padding(
                       padding: EdgeInsets.all(20.0),
-                      child: CircularProgressIndicator(color: Color(0xFF1E2A78)),
+                      child: CircularProgressIndicator(color: primaryGreen),
                     ),
                   )
                 : _salesDataError != null
@@ -862,8 +876,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ElevatedButton(
                                 onPressed: _fetchSalesDashboardData,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1E2A78),
+                                  backgroundColor: primaryGreen,
                                   foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 2,
                                 ),
                                 child: const Text('Coba Lagi'),
                               ),
@@ -883,35 +901,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   SalesStatCardWidget(
                                     title: 'Total Penjualan',
-                                    value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.totalSales),
+                                    value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.totalSales),
                                     icon: Icons.attach_money,
-                                    color: const Color(0xFF1E2A78),
+                                    color: primaryGreen,
                                     changePercentage: _salesDashboardData!.comparison.totalSalesChange,
                                     isCurrency: true,
                                   ),
                                   const SizedBox(height: 16),
                                   SalesStatCardWidget(
                                     title: 'Jumlah Transaksi',
-                                    value: SalesStatCardWidget.formatNumber(_salesDashboardData!.currentPeriod.transactionCount.toDouble()),
+                                    value: CurrencyFormatter.formatNumber(_salesDashboardData!.currentPeriod.transactionCount.toDouble()),
                                     icon: Icons.receipt_long,
-                                    color: const Color(0xFF1E2A78),
+                                    color: primaryGreen,
                                     changePercentage: _salesDashboardData!.comparison.transactionCountChange,
                                   ),
                                   const SizedBox(height: 16),
                                   SalesStatCardWidget(
                                     title: 'Rata-rata Transaksi',
-                                    value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.averageTransactionValue),
+                                    value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.averageTransactionValue),
                                     icon: Icons.trending_up,
-                                    color: const Color(0xFF1E2A78),
+                                    color: primaryGreen,
                                     changePercentage: _salesDashboardData!.comparison.averageTransactionValueChange,
                                     isCurrency: true,
                                   ),
                                   const SizedBox(height: 16),
                                   SalesStatCardWidget(
                                     title: 'Total Profit',
-                                    value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.totalProfit),
+                                    value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.totalProfit),
                                     icon: Icons.account_balance_wallet,
-                                    color: const Color(0xFF1E2A78),
+                                    color: primaryGreen,
                                     changePercentage: _salesDashboardData!.comparison.profitChange,
                                     isCurrency: true,
                                   ),
@@ -922,9 +940,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Expanded(
                                     child: SalesStatCardWidget(
                                       title: 'Total Penjualan',
-                                      value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.totalSales),
+                                      value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.totalSales),
                                       icon: Icons.attach_money,
-                                      color: const Color(0xFF1E2A78),
+                                      color: primaryGreen,
                                       changePercentage: _salesDashboardData!.comparison.totalSalesChange,
                                       isCurrency: true,
                                     ),
@@ -933,9 +951,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Expanded(
                                     child: SalesStatCardWidget(
                                       title: 'Jumlah Transaksi',
-                                      value: SalesStatCardWidget.formatNumber(_salesDashboardData!.currentPeriod.transactionCount.toDouble()),
+                                      value: CurrencyFormatter.formatNumber(_salesDashboardData!.currentPeriod.transactionCount.toDouble()),
                                       icon: Icons.receipt_long,
-                                      color: const Color(0xFF1E2A78),
+                                      color: primaryGreen,
                                       changePercentage: _salesDashboardData!.comparison.transactionCountChange,
                                     ),
                                   ),
@@ -943,9 +961,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Expanded(
                                     child: SalesStatCardWidget(
                                       title: 'Rata-rata Transaksi',
-                                      value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.averageTransactionValue),
+                                      value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.averageTransactionValue),
                                       icon: Icons.trending_up,
-                                      color: const Color(0xFF1E2A78),
+                                      color: primaryGreen,
                                       changePercentage: _salesDashboardData!.comparison.averageTransactionValueChange,
                                       isCurrency: true,
                                     ),
@@ -954,9 +972,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Expanded(
                                     child: SalesStatCardWidget(
                                       title: 'Total Profit',
-                                      value: SalesStatCardWidget.formatCurrency(_salesDashboardData!.currentPeriod.totalProfit),
+                                      value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.totalProfit),
                                       icon: Icons.account_balance_wallet,
-                                      color: const Color(0xFF1E2A78),
+                                      color: primaryGreen,
                                       changePercentage: _salesDashboardData!.comparison.profitChange,
                                       isCurrency: true,
                                     ),
@@ -1360,6 +1378,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Mendapatkan ukuran layar untuk responsivitas
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 650;
+    final isTablet = screenWidth >= 650 && screenWidth < 1100;
     
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
@@ -1380,19 +1399,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Top Selling Products This Month',
-                style: TextStyle(
-                  fontSize: isMobile ? 16 : 18,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  isMobile ? 'Top Products' : 'Top Selling Products This Month',
+                  style: TextStyle(
+                    fontSize: isMobile ? 16 : (isTablet ? 17 : 18),
+                    fontWeight: FontWeight.bold,
+                    color: darkBlack,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               TextButton(
                 onPressed: () {},
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF1E2A78),
+                  foregroundColor: primaryGreen,
                 ),
-                child: const Text('View All'),
+                child: Text(
+                  isMobile ? 'All' : 'View All',
+                  style: TextStyle(
+                    fontSize: isMobile ? 12 : 14,
+                  ),
+                ),
               ),
             ],
           ),
@@ -1441,83 +1469,199 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ...List.generate(_topProducts.length, (index) {
               final product = _topProducts[index];
               return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
+                margin: EdgeInsets.only(bottom: isMobile ? 12 : 16),
+                padding: EdgeInsets.all(isMobile ? 12 : 16),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: lightBlue.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: primaryGreen.withOpacity(0.2)),
                 ),
-                child: Row(
-                  children: [
-                    // Product rank
-                    Container(
-                      width: 32,
-                      height: 32,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1E2A78),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        '${index + 1}',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Product details
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            product['name'],
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                child: isMobile 
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header row with rank and name
+                        Row(
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: primaryGreen,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Text(
+                                '${index + 1}',
+                                style: const TextStyle(
+                                  color: Colors.white, 
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                product['name'],
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: 14,
+                                  color: darkBlack,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // Details row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${product['sold']} units',
+                                    style: TextStyle(
+                                      color: darkBlack.withOpacity(0.7), 
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  if (product['profit_margin'] != null)
+                                    Text(
+                                      'Margin: ${product['profit_margin']}%',
+                                      style: TextStyle(
+                                        color: darkBlack.withOpacity(0.7), 
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  product['revenue'],
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold, 
+                                    fontSize: 14,
+                                    color: primaryGreen,
+                                  ),
+                                ),
+                                if (product['profit'] != null)
+                                  Text(
+                                    'Profit: Rp ${NumberFormat('#,###', 'id_ID').format(product['profit'])}',
+                                    style: TextStyle(
+                                      color: darkBlack.withOpacity(0.7), 
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        // Product rank
+                        Container(
+                          width: isTablet ? 30 : 32,
+                          height: isTablet ? 30 : 32,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: primaryGreen,
+                            borderRadius: BorderRadius.circular(isTablet ? 15 : 16),
                           ),
-                          const SizedBox(height: 4),
-                          Row(
+                          child: Text(
+                            '${index + 1}',
+                            style: const TextStyle(
+                              color: Colors.white, 
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: isTablet ? 12 : 16),
+                        // Product details
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${product['sold']} units sold',
-                                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                                product['name'],
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: isTablet ? 15 : 16,
+                                  color: darkBlack,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              if (product['sku'] != null) ...[  
+                              const SizedBox(height: 4),
+                              Wrap(
+                                children: [
+                                  Text(
+                                    '${product['sold']} units sold',
+                                    style: TextStyle(
+                                      color: darkBlack.withOpacity(0.7), 
+                                      fontSize: isTablet ? 13 : 14,
+                                    ),
+                                  ),
+                                  if (product['sku'] != null && !isTablet) ...[  
+                                    Text(
+                                      ' • SKU: ${product['sku']}',
+                                      style: TextStyle(
+                                        color: darkBlack.withOpacity(0.7), 
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              if (product['profit_margin'] != null) ...[  
+                                const SizedBox(height: 4),
                                 Text(
-                                  ' • SKU: ${product['sku']}',
-                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                                  'Profit Margin: ${product['profit_margin']}%',
+                                  style: TextStyle(
+                                    color: darkBlack.withOpacity(0.7), 
+                                    fontSize: isTablet ? 13 : 14,
+                                  ),
                                 ),
                               ],
                             ],
                           ),
-                          if (product['profit_margin'] != null) ...[  
-                            const SizedBox(height: 4),
-                            Text(
-                              'Profit Margin: ${product['profit_margin']}%',
-                              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    // Revenue
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          product['revenue'],
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
-                        if (product['profit'] != null) ...[  
-                          const SizedBox(height: 4),
-                          Text(
-                            'Profit: Rp ${NumberFormat('#,###', 'id_ID').format(product['profit'])}',
-                            style: TextStyle(color: Colors.green.shade700, fontSize: 14),
-                          ),
-                        ],
+                        // Revenue
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              product['revenue'],
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold, 
+                                fontSize: isTablet ? 15 : 16,
+                                color: primaryGreen,
+                              ),
+                            ),
+                            if (product['profit'] != null) ...[  
+                              const SizedBox(height: 4),
+                              Text(
+                                'Profit: Rp ${NumberFormat('#,###', 'id_ID').format(product['profit'])}',
+                                style: TextStyle(
+                                  color: darkBlack.withOpacity(0.7), 
+                                  fontSize: isTablet ? 12 : 14,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
               );
             }),
           ],

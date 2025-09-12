@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class SalesStatCardWidget extends StatelessWidget {
+class SalesStatCardWidget extends StatefulWidget {
   final String title;
   final String value;
   final IconData icon;
@@ -19,103 +19,202 @@ class SalesStatCardWidget extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final trend = changePercentage > 0 ? 'up' : (changePercentage < 0 ? 'down' : 'neutral');
-    final displayPercentage = changePercentage.abs().toStringAsFixed(1);
-    
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 1,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 22,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: color.withOpacity(0.9),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: _getTrendColor(trend).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  trend == 'up' ? Icons.arrow_upward : (trend == 'down' ? Icons.arrow_downward : Icons.remove),
-                  color: _getTrendColor(trend),
-                  size: 14,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '$displayPercentage%',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: _getTrendColor(trend),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Dibanding periode sebelumnya',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ],
-      ),
+  State<SalesStatCardWidget> createState() => _SalesStatCardWidgetState();
+}
+
+class _SalesStatCardWidgetState extends State<SalesStatCardWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+  
+  // Color palette
+  static const Color primaryGreen = Color(0xFF03D26F);
+  static const Color lightBlue = Color(0xFFEAF4F4);
+  static const Color darkBlack = Color(0xFF161514);
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
     );
+    
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    ));
+    
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final trend = widget.changePercentage > 0 ? 'up' : (widget.changePercentage < 0 ? 'down' : 'neutral');
+    final displayPercentage = widget.changePercentage.abs().toStringAsFixed(1);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Opacity(
+            opacity: _fadeAnimation.value,
+            child: Container(
+              padding: EdgeInsets.all(isMobile ? 16 : 20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    lightBlue,
+                    lightBlue.withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryGreen.withOpacity(0.1),
+                    blurRadius: 20,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 8),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+                border: Border.all(
+                  color: primaryGreen.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.title,
+                          style: TextStyle(
+                            fontSize: isMobile ? 14 : 16,
+                            color: darkBlack.withOpacity(0.8),
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.all(isMobile ? 8 : 10),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              primaryGreen,
+                              primaryGreen.withOpacity(0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryGreen.withOpacity(0.3),
+                              blurRadius: 8,
+                              spreadRadius: 0,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          widget.icon,
+                          color: Colors.white,
+                          size: isMobile ? 20 : 22,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: isMobile ? 16 : 20),
+                  Text(
+                    widget.value,
+                    style: TextStyle(
+                      fontSize: isMobile ? 24 : 28,
+                      fontWeight: FontWeight.bold,
+                      color: primaryGreen,
+                    ),
+                  ),
+                   SizedBox(height: isMobile ? 10 : 12),
+                   Container(
+                     padding: EdgeInsets.symmetric(
+                       horizontal: isMobile ? 8 : 10, 
+                       vertical: isMobile ? 4 : 6,
+                     ),
+                     decoration: BoxDecoration(
+                       color: _getTrendColor(trend).withOpacity(0.15),
+                       borderRadius: BorderRadius.circular(20),
+                       border: Border.all(
+                         color: _getTrendColor(trend).withOpacity(0.3),
+                         width: 1,
+                       ),
+                     ),
+                     child: Row(
+                       mainAxisSize: MainAxisSize.min,
+                       children: [
+                         Icon(
+                           trend == 'up' ? Icons.trending_up : (trend == 'down' ? Icons.trending_down : Icons.remove),
+                           color: _getTrendColor(trend),
+                           size: isMobile ? 12 : 14,
+                         ),
+                         const SizedBox(width: 4),
+                         Text(
+                           '$displayPercentage%',
+                           style: TextStyle(
+                             fontSize: isMobile ? 12 : 14,
+                             fontWeight: FontWeight.bold,
+                             color: _getTrendColor(trend),
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+                   SizedBox(height: isMobile ? 2 : 4),
+                   Text(
+                     'Dibanding periode sebelumnya',
+                     style: TextStyle(
+                       fontSize: isMobile ? 10 : 12,
+                       color: darkBlack.withOpacity(0.6),
+                     ),
+                   ),
+                 ],
+               ),
+             ),
+           ),
+         );
+       },
+     );
   }
 
   Color _getTrendColor(String trend) {
@@ -125,23 +224,8 @@ class SalesStatCardWidget extends StatelessWidget {
       case 'down':
         return Colors.red.shade700;
       default:
-        return Colors.grey.shade600;
+        return darkBlack.withOpacity(0.6);
     }
   }
 
-  // Helper untuk format angka dengan pemisah ribuan
-  static String formatCurrency(double value) {
-    return 'Rp ${value.toInt().toString().replaceAllMapped(
-          RegExp(r'\d{1,3}(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[0]}.',
-        )}';
-  }
-
-  // Helper untuk format angka biasa dengan pemisah ribuan
-  static String formatNumber(double value) {
-    return value.toInt().toString().replaceAllMapped(
-          RegExp(r'\d{1,3}(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[0]}.',
-        );
-  }
 }

@@ -5,6 +5,12 @@ import '../../providers/transaction_provider.dart';
 import '../../utils/format_utils.dart';
 import '../../utils/responsive_helper.dart';
 import '../../widgets/loading_indicator.dart';
+import '../transaction_detail_screen.dart';
+
+// Tema warna aplikasi
+const Color primaryGreen = Color(0xFF03D26F);
+const Color lightBlue = Color(0xFFEAF4F4);
+const Color darkBlack = Color(0xFF161514);
 
 class SalesReportScreen extends StatefulWidget {
   static const String routeName = '/reports/sales';
@@ -63,11 +69,26 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Laporan Penjualan'),
-        backgroundColor: const Color(0xFF1E2A78),
-        foregroundColor: Colors.white,
+        title: Text(
+          'Laporan Penjualan',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: lightBlue,
+            fontSize: isMobile ? 18 : 20,
+          ),
+        ),
+        backgroundColor: primaryGreen,
+        foregroundColor: lightBlue,
+        elevation: 4,
+        shadowColor: primaryGreen.withOpacity(0.3),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -86,10 +107,31 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
   }
 
   Widget _buildBody() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    
     return Consumer<TransactionProvider>(
       builder: (context, provider, child) {
         if (_isLoading || provider.isLoading) {
-          return const Center(child: LoadingIndicator());
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                  strokeWidth: 3,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Memuat laporan penjualan...',
+                  style: TextStyle(
+                    color: darkBlack.withOpacity(0.7),
+                    fontSize: isMobile ? 14 : 16,
+                  ),
+                ),
+              ],
+            ),
+          );
         }
 
         if (provider.error != null) {
@@ -97,13 +139,45 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'Error: ${provider.error}',
-                  style: const TextStyle(color: Colors.red),
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.red.shade400,
                 ),
                 const SizedBox(height: 16),
+                Text(
+                  'Gagal memuat data',
+                  style: TextStyle(
+                    fontSize: isMobile ? 16 : 18,
+                    fontWeight: FontWeight.bold,
+                    color: darkBlack,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Error: ${provider.error}',
+                  style: TextStyle(
+                    color: darkBlack.withOpacity(0.7),
+                    fontSize: isMobile ? 14 : 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _fetchSalesReport,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryGreen,
+                    foregroundColor: lightBlue,
+                    elevation: 2,
+                    shadowColor: primaryGreen.withOpacity(0.3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 20 : 24,
+                      vertical: isMobile ? 12 : 14,
+                    ),
+                  ),
                   child: const Text('Coba Lagi'),
                 ),
               ],
@@ -113,7 +187,36 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
 
         final transactions = provider.transactions;
         if (transactions.isEmpty) {
-          return const Center(child: Text('Tidak ada data transaksi'));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.assessment_outlined,
+                  size: 80,
+                  color: darkBlack.withOpacity(0.4),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Tidak ada data transaksi',
+                  style: TextStyle(
+                    fontSize: isMobile ? 16 : 18,
+                    fontWeight: FontWeight.bold,
+                    color: darkBlack,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Belum ada transaksi pada periode yang dipilih',
+                  style: TextStyle(
+                    color: darkBlack.withOpacity(0.7),
+                    fontSize: isMobile ? 14 : 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
         }
 
         // Menggunakan SingleChildScrollView untuk memungkinkan scrolling
@@ -131,88 +234,185 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
   }
 
   Widget _buildDateRangeInfo() {
-    final isMobile = ResponsiveHelper.isMobile(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
     
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      margin: EdgeInsets.all(isMobile ? 12 : 16),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            lightBlue,
+            lightBlue.withOpacity(0.8),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
+            color: primaryGreen.withOpacity(0.1),
+            blurRadius: 15,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
           ),
         ],
+        border: Border.all(
+          color: primaryGreen.withOpacity(0.2),
+          width: 1,
+        ),
       ),
-      child: isMobile
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header dengan icon dan title
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      primaryGreen,
+                      primaryGreen.withOpacity(0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.date_range,
+                  color: lightBlue,
+                  size: isMobile ? 18 : 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Periode Laporan',
+                  style: TextStyle(
+                    fontSize: isMobile ? 16 : 18,
+                    fontWeight: FontWeight.bold,
+                    color: darkBlack,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          
+          // Date range display
+          Container(
+            padding: EdgeInsets.all(isMobile ? 12 : 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: primaryGreen.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.date_range, size: 18, color: Colors.blue),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Periode: ${DateFormat('dd MMM yyyy').format(_startDate)} - ${DateFormat('dd MMM yyyy').format(_endDate)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
+                Icon(
+                  Icons.calendar_month,
+                  color: primaryGreen,
+                  size: isMobile ? 20 : 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Dari: ${DateFormat('dd MMM yyyy').format(_startDate)}',
+                        style: TextStyle(
+                          fontSize: isMobile ? 14 : 16,
+                          color: darkBlack,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                if (_selectedStatus != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Chip(
-                      label: Text(_selectedStatus!),
-                      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                      labelStyle: TextStyle(color: Theme.of(context).primaryColor),
-                      onDeleted: () {
-                        // Use Future.microtask to avoid setState during build
-                        Future.microtask(() {
-                          setState(() {
-                            _selectedStatus = null;
-                          });
-                          _fetchSalesReport();
-                        });
-                      },
-                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Sampai: ${DateFormat('dd MMM yyyy').format(_endDate)}',
+                        style: TextStyle(
+                          fontSize: isMobile ? 14 : 16,
+                          color: darkBlack,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-              ],
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.date_range, size: 18, color: Colors.blue),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Periode: ${DateFormat('dd MMM yyyy').format(_startDate)} - ${DateFormat('dd MMM yyyy').format(_endDate)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
                 ),
-                if (_selectedStatus != null)
-                  Chip(
-                    label: Text(_selectedStatus!),
-                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                    labelStyle: TextStyle(color: Theme.of(context).primaryColor),
-                    onDeleted: () {
-                      // Use Future.microtask to avoid setState during build
-                      Future.microtask(() {
-                        setState(() {
-                          _selectedStatus = null;
-                        });
-                        _fetchSalesReport();
-                      });
-                    },
+                Container(
+                  decoration: BoxDecoration(
+                    color: primaryGreen.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.edit_calendar,
+                      color: primaryGreen,
+                      size: isMobile ? 20 : 24,
+                    ),
+                    onPressed: () => _selectDateRange(context),
+                    tooltip: 'Ubah Periode',
+                  ),
+                ),
               ],
             ),
+          ),
+          
+          // Status filter chip
+          if (_selectedStatus != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 12 : 16,
+                vertical: isMobile ? 8 : 10,
+              ),
+              decoration: BoxDecoration(
+                color: primaryGreen,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.filter_alt,
+                    size: isMobile ? 14 : 16,
+                    color: lightBlue,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Status: $_selectedStatus',
+                    style: TextStyle(
+                      color: lightBlue,
+                      fontSize: isMobile ? 12 : 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedStatus = null;
+                      });
+                      _fetchSalesReport();
+                    },
+                    child: Icon(
+                      Icons.close,
+                      size: isMobile ? 14 : 16,
+                      color: lightBlue,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -517,10 +717,13 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
         return InkWell(
           onTap: () {
             // Navigate to transaction detail
-            Navigator.pushNamed(
+            Navigator.push(
               context,
-              '/transactions/${transaction['id']}',
-              arguments: transaction['id'],
+              MaterialPageRoute(
+                builder: (context) => TransactionDetailScreen(
+                  transactionId: transaction['id'] ?? 0,
+                ),
+              ),
             );
           },
           child: Padding(
@@ -643,10 +846,13 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
           ),
           onTap: () {
             // Navigate to transaction detail
-            Navigator.pushNamed(
+            Navigator.push(
               context,
-              '/transactions/${transaction['id']}',
-              arguments: transaction['id'],
+              MaterialPageRoute(
+                builder: (context) => TransactionDetailScreen(
+                  transactionId: transaction['id'] ?? 0,
+                ),
+              ),
             );
           },
         );

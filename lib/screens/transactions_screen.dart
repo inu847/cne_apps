@@ -10,6 +10,11 @@ import '../screens/transaction_detail_screen.dart';
 import '../utils/format_utils.dart';
 // import '../utils/responsive_helper.dart';
 
+// Tema warna aplikasi
+const Color primaryGreen = Color(0xFF03D26F);
+const Color lightBlue = Color(0xFFEAF4F4);
+const Color darkBlack = Color(0xFF161514);
+
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({Key? key}) : super(key: key);
 
@@ -309,21 +314,77 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   
   // Membangun widget filter
   Widget _buildFilterSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       height: _isFilterExpanded ? null : 0,
-      child: Card(
-        margin: const EdgeInsets.all(0),
+      child: Container(
+        margin: EdgeInsets.symmetric(
+          horizontal: isMobile ? 12 : 16,
+        ),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              lightBlue,
+              lightBlue.withOpacity(0.8),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: primaryGreen.withOpacity(0.1),
+              blurRadius: 15,
+              spreadRadius: 0,
+              offset: const Offset(0, 8),
+            ),
+          ],
+          border: Border.all(
+            color: primaryGreen.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Filter Transaksi',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          primaryGreen,
+                          primaryGreen.withOpacity(0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.filter_alt,
+                      color: lightBlue,
+                      size: isMobile ? 18 : 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Filter Transaksi',
+                    style: TextStyle(
+                      fontSize: isMobile ? 16 : 18,
+                      fontWeight: FontWeight.bold,
+                      color: darkBlack,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               _buildDateFilter(),
               const SizedBox(height: 16),
               _buildStatusFilter(),
@@ -337,12 +398,46 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 children: [
                   OutlinedButton(
                     onPressed: _resetFilters,
-                    child: const Text('Reset'),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: primaryGreen, width: 2),
+                      foregroundColor: primaryGreen,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 16 : 20,
+                        vertical: isMobile ? 12 : 14,
+                      ),
+                    ),
+                    child: Text(
+                      'Reset',
+                      style: TextStyle(
+                        fontSize: isMobile ? 14 : 16,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton(
                     onPressed: _applyFilters,
-                    child: const Text('Terapkan'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryGreen,
+                      foregroundColor: lightBlue,
+                      elevation: 2,
+                      shadowColor: primaryGreen.withOpacity(0.3),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 16 : 20,
+                        vertical: isMobile ? 12 : 14,
+                      ),
+                    ),
+                    child: Text(
+                      'Terapkan',
+                      style: TextStyle(
+                        fontSize: isMobile ? 14 : 16,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -360,53 +455,137 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Transaksi'),
-        backgroundColor: const Color(0xFF1E2A78),
-        foregroundColor: Colors.white,
+        title: Text(
+          'Daftar Transaksi',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: lightBlue,
+            fontSize: isMobile ? 18 : 20,
+          ),
+        ),
+        backgroundColor: primaryGreen,
+        foregroundColor: lightBlue,
+        elevation: 4,
+        shadowColor: primaryGreen.withOpacity(0.3),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshTransactions,
+            tooltip: 'Refresh Data',
           ),
         ],
       ),
       body: Column(
         children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16),
+          // Search bar dengan desain yang lebih menarik
+          Container(
+            margin: EdgeInsets.all(isMobile ? 12 : 16),
+            padding: EdgeInsets.all(isMobile ? 12 : 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  lightBlue,
+                  lightBlue.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryGreen.withOpacity(0.1),
+                  blurRadius: 15,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+              border: Border.all(
+                color: primaryGreen.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _searchController,
+                    style: TextStyle(
+                      color: darkBlack,
+                      fontSize: isMobile ? 14 : 16,
+                    ),
                     decoration: InputDecoration(
-                      hintText: 'Cari transaksi...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      hintText: 'Cari transaksi berdasarkan invoice, pelanggan...',
+                      hintStyle: TextStyle(
+                        color: darkBlack.withOpacity(0.6),
+                        fontSize: isMobile ? 14 : 16,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: primaryGreen,
+                        size: isMobile ? 20 : 24,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: darkBlack.withOpacity(0.6),
+                                size: isMobile ? 20 : 24,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+                                transactionProvider.setFilters(search: null);
+                                _loadTransactions();
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: isMobile ? 12 : 16,
+                      ),
                     ),
                     onSubmitted: (value) {
                       final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
                       transactionProvider.setFilters(search: value.isNotEmpty ? value : null);
                       _loadTransactions();
                     },
+                    onChanged: (value) {
+                      setState(() {});
+                    },
                   ),
                 ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(
-                    _isFilterExpanded ? Icons.filter_list_off : Icons.filter_list,
-                    color: _isFilterExpanded ? Colors.blue : null,
+                const SizedBox(width: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: _isFilterExpanded ? primaryGreen : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: primaryGreen.withOpacity(0.3),
+                      width: 2,
+                    ),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isFilterExpanded = !_isFilterExpanded;
-                    });
-                  },
-                  tooltip: 'Filter',
+                  child: IconButton(
+                    icon: Icon(
+                      _isFilterExpanded ? Icons.filter_list_off : Icons.filter_list,
+                      color: _isFilterExpanded ? lightBlue : primaryGreen,
+                      size: isMobile ? 20 : 24,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isFilterExpanded = !_isFilterExpanded;
+                      });
+                    },
+                    tooltip: _isFilterExpanded ? 'Tutup Filter' : 'Buka Filter',
+                  ),
                 ),
               ],
             ),
@@ -420,15 +599,109 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             child: Consumer<TransactionProvider>(
               builder: (context, transactionProvider, child) {
                 if (transactionProvider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                          strokeWidth: 3,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Memuat transaksi...',
+                          style: TextStyle(
+                            color: darkBlack.withOpacity(0.7),
+                            fontSize: isMobile ? 14 : 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
                 if (transactionProvider.error != null) {
-                  return Center(child: Text(transactionProvider.error!));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Gagal memuat data',
+                          style: TextStyle(
+                            fontSize: isMobile ? 16 : 18,
+                            fontWeight: FontWeight.bold,
+                            color: darkBlack,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          transactionProvider.error!,
+                          style: TextStyle(
+                            color: darkBlack.withOpacity(0.7),
+                            fontSize: isMobile ? 14 : 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _refreshTransactions,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryGreen,
+                            foregroundColor: lightBlue,
+                            elevation: 2,
+                            shadowColor: primaryGreen.withOpacity(0.3),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isMobile ? 20 : 24,
+                              vertical: isMobile ? 12 : 14,
+                            ),
+                          ),
+                          child: const Text('Coba Lagi'),
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
                 if (transactionProvider.transactions.isEmpty) {
-                  return const Center(child: Text('Tidak ada transaksi'));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.receipt_long_outlined,
+                          size: 80,
+                          color: darkBlack.withOpacity(0.4),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Belum ada transaksi',
+                          style: TextStyle(
+                            fontSize: isMobile ? 16 : 18,
+                            fontWeight: FontWeight.bold,
+                            color: darkBlack,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Transaksi yang dibuat akan muncul di sini',
+                          style: TextStyle(
+                            color: darkBlack.withOpacity(0.7),
+                            fontSize: isMobile ? 14 : 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
                 return RefreshIndicator(
@@ -438,10 +711,25 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     itemCount: transactionProvider.transactions.length + (transactionProvider.isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == transactionProvider.transactions.length) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: CircularProgressIndicator(),
+                        return Container(
+                          padding: const EdgeInsets.all(20),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                                  strokeWidth: 2,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Memuat lebih banyak...',
+                                  style: TextStyle(
+                                    color: darkBlack.withOpacity(0.6),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       }
@@ -518,6 +806,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   Widget _buildTransactionItem(Map<String, dynamic> transaction) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    
     final status = transaction['status'] ?? 'pending';
     final paymentStatus = transaction['payment_status'] ?? 'pending';
     final createdAt = transaction['created_at'] ?? DateTime.now().toString();
@@ -527,98 +818,235 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final id = transaction['id'] ?? 0;
     
     Color statusColor;
+    String statusText;
     if (status == 'completed') {
-      statusColor = Colors.green;
+      statusColor = primaryGreen;
+      statusText = 'Selesai';
     } else if (status == 'cancelled') {
       statusColor = Colors.red;
+      statusText = 'Dibatalkan';
     } else {
       statusColor = Colors.orange;
+      statusText = 'Pending';
+    }
+    
+    Color paymentColor;
+    String paymentText;
+    if (paymentStatus == 'paid') {
+      paymentColor = primaryGreen;
+      paymentText = 'Lunas';
+    } else {
+      paymentColor = Colors.orange;
+      paymentText = 'Belum Lunas';
     }
     
     String formattedDate;
     try {
-      formattedDate = createdAt.toString().substring(0, 10);
+      final date = DateTime.parse(createdAt);
+      formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(date);
     } catch (e) {
       formattedDate = DateTime.now().toString().substring(0, 10);
     }
     
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children: [
-          ListTile(
-            title: Text(
-              invoiceNumber,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white,
+            lightBlue.withOpacity(0.3),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: primaryGreen.withOpacity(0.1),
+            blurRadius: 15,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(
+          color: primaryGreen.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TransactionDetailScreen(transactionId: id),
+              ),
+            );
+          },
+          child: Padding(
+            padding: EdgeInsets.all(isMobile ? 16 : 20),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Tanggal: $formattedDate'),
-                Text('Pelanggan: $customerName'),
+                // Header dengan invoice dan tanggal
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        status,
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            invoiceNumber,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: isMobile ? 16 : 18,
+                              color: darkBlack,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                size: isMobile ? 14 : 16,
+                                color: darkBlack.withOpacity(0.6),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                formattedDate,
+                                style: TextStyle(
+                                  fontSize: isMobile ? 12 : 14,
+                                  color: darkBlack.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 8 : 12,
+                        vertical: isMobile ? 4 : 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: paymentStatus == 'paid' ? Colors.green : Colors.orange,
-                        borderRadius: BorderRadius.circular(4),
+                        color: primaryGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: primaryGreen.withOpacity(0.3),
+                        ),
                       ),
                       child: Text(
-                        paymentStatus,
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        FormatUtils.formatCurrency(totalAmount),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: isMobile ? 14 : 16,
+                          color: primaryGreen,
+                        ),
                       ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                
+                // Customer info
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person_outline,
+                      size: isMobile ? 16 : 18,
+                      color: primaryGreen,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        customerName,
+                        style: TextStyle(
+                          fontSize: isMobile ? 14 : 16,
+                          color: darkBlack,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                
+                // Status badges dan action
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 8 : 10,
+                            vertical: isMobile ? 4 : 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            statusText,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isMobile ? 11 : 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 8 : 10,
+                            vertical: isMobile ? 4 : 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: paymentColor,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            paymentText,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isMobile ? 11 : 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          'Lihat Detail',
+                          style: TextStyle(
+                            color: primaryGreen,
+                            fontSize: isMobile ? 12 : 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: isMobile ? 12 : 14,
+                          color: primaryGreen,
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ],
             ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  FormatUtils.formatCurrency(totalAmount),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const Text('Lihat Detail', style: TextStyle(color: Colors.blue, fontSize: 12)),
-              ],
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TransactionDetailScreen(transactionId: id),
-                ),
-              );
-            },
           ),
-          // Padding(
-          //   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.end,
-          //     children: [
-          //       TextButton.icon(
-          //         icon: const Icon(Icons.receipt, size: 16),
-          //         label: const Text('Lihat Struk'),
-          //         onPressed: () => _showReceipt(transaction),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-        ],
+        ),
       ),
     );
   }

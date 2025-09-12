@@ -14,6 +14,11 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
+  // Color palette baru untuk aplikasi
+  static const Color primaryGreen = Color(0xFF03D26F);
+  static const Color lightBlue = Color(0xFFEAF4F4);
+  static const Color darkBlack = Color(0xFF161514);
+  
   final _dateFormat = DateFormat('yyyy-MM-dd');
   final _displayDateFormat = DateFormat('dd MMM yyyy');
   
@@ -27,6 +32,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
   int? _warehouseId;
   bool? _isLocked;
   bool _isFilterExpanded = false;
+  
+  // State untuk search dan bulk operations
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  List<int> _selectedItems = [];
+  bool _isSelectionMode = false;
+  
+  // State untuk quick filters
+  String _quickFilter = 'all'; // all, locked, unlocked, today, week
   
   // Scroll controller untuk infinite scroll
   final ScrollController _scrollController = ScrollController();
@@ -48,6 +62,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   void dispose() {
     _dateFromController.dispose();
     _dateToController.dispose();
+    _searchController.dispose();
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
@@ -120,6 +135,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
       _isLocked = null;
       _dateFromController.clear();
       _dateToController.clear();
+      _searchController.clear();
+      _searchQuery = '';
+      _quickFilter = 'all';
     });
     
     final provider = Provider.of<DailyInventoryStockProvider>(context, listen: false);
@@ -127,80 +145,407 @@ class _InventoryScreenState extends State<InventoryScreen> {
     provider.fetchDailyInventoryStocks();
   }
   
-  @override
-  Widget build(BuildContext context) {
+  // Fungsi untuk melakukan pencarian
+  void _performSearch() {
+    final provider = Provider.of<DailyInventoryStockProvider>(context, listen: false);
+    // Implementasi search logic di sini
+    provider.fetchDailyInventoryStocks();
+  }
+  
+  // Fungsi untuk toggle selection mode
+  void _toggleSelectionMode() {
+    setState(() {
+      _isSelectionMode = !_isSelectionMode;
+      if (!_isSelectionMode) {
+        _selectedItems.clear();
+      }
+    });
+  }
+  
+  // Fungsi untuk select/deselect item
+  void _toggleItemSelection(int stockId) {
+    setState(() {
+      if (_selectedItems.contains(stockId)) {
+        _selectedItems.remove(stockId);
+      } else {
+        _selectedItems.add(stockId);
+      }
+    });
+  }
+  
+  // Fungsi untuk select all items
+  void _selectAllItems() {
+    final provider = Provider.of<DailyInventoryStockProvider>(context, listen: false);
+    setState(() {
+      _selectedItems = provider.dailyInventoryStocks.map((stock) => stock.id).toList();
+    });
+  }
+  
+  // Fungsi untuk bulk delete
+  void _bulkDelete() {
+    if (_selectedItems.isEmpty) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Item Terpilih'),
+        content: Text('Apakah Anda yakin ingin menghapus ${_selectedItems.length} item?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Implementasi bulk delete
+              Navigator.pop(context);
+              _toggleSelectionMode();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+   
+   // Widget untuk quick filter chip
+   Widget _buildQuickFilterChip(String value, String label, IconData icon) {
+     final isSelected = _quickFilter == value;
+     return FilterChip(
+       selected: isSelected,
+       label: Row(
+         mainAxisSize: MainAxisSize.min,
+         children: [
+           Icon(
+             icon,
+             size: 16,
+             color: isSelected ? lightBlue : primaryGreen,
+           ),
+           const SizedBox(width: 4),
+           Text(
+             label,
+             style: TextStyle(
+               color: isSelected ? lightBlue : primaryGreen,
+               fontSize: 12,
+               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+             ),
+           ),
+         ],
+       ),
+       selectedColor: primaryGreen,
+       backgroundColor: lightBlue,
+       checkmarkColor: lightBlue,
+       onSelected: (selected) {
+         setState(() {
+           _quickFilter = value;
+         });
+         _applyQuickFilter(value);
+       },
+     );
+   }
+   
+   // Fungsi untuk menerapkan quick filter
+   void _applyQuickFilter(String filter) {
+     final provider = Provider.of<DailyInventoryStockProvider>(context, listen: false);
+     final now = DateTime.now();
+     
+     switch (filter) {
+       case 'today':
+         setState(() {
+           _dateFrom = DateFormat('yyyy-MM-dd').format(now);
+           _dateTo = DateFormat('yyyy-MM-dd').format(now);
+         });
+         break;
+       case 'week':
+         final weekStart = now.subtract(Duration(days: now.weekday - 1));
+         setState(() {
+           _dateFrom = DateFormat('yyyy-MM-dd').format(weekStart);
+           _dateTo = DateFormat('yyyy-MM-dd').format(now);
+         });
+         break;
+       case 'locked':
+         setState(() {
+           _isLocked = true;
+         });
+         break;
+       case 'unlocked':
+         setState(() {
+           _isLocked = false;
+         });
+         break;
+       default:
+         setState(() {
+           _dateFrom = null;
+           _dateTo = null;
+           _isLocked = null;
+         });
+     }
+     
+     provider.setFilters(
+       dateFrom: _dateFrom,
+       dateTo: _dateTo,
+       warehouseId: _warehouseId,
+       isLocked: _isLocked,
+     );
+     provider.fetchDailyInventoryStocks();
+   }
+   
+   @override
+   Widget build(BuildContext context) {
     // Mendapatkan ukuran layar untuk responsivitas
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 650;
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manajemen Persediaan'),
-        backgroundColor: const Color(0xFF1E2A78),
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              Provider.of<DailyInventoryStockProvider>(context, listen: false).fetchDailyInventoryStocks();
-            },
+        title: Text(
+          'Manajemen Persediaan',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: lightBlue,
+            fontSize: isMobile ? 18 : 20,
           ),
-        ],
+        ),
+        backgroundColor: primaryGreen,
+        foregroundColor: lightBlue,
+        elevation: 4,
+        shadowColor: primaryGreen.withOpacity(0.3),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+        ),
+        actions: [
+           if (_isSelectionMode) ...[
+             IconButton(
+               icon: Icon(
+                 _selectedItems.length == Provider.of<DailyInventoryStockProvider>(context).dailyInventoryStocks.length
+                     ? Icons.deselect
+                     : Icons.select_all,
+                 color: lightBlue,
+               ),
+               onPressed: () {
+                 if (_selectedItems.length == Provider.of<DailyInventoryStockProvider>(context, listen: false).dailyInventoryStocks.length) {
+                   setState(() {
+                     _selectedItems.clear();
+                   });
+                 } else {
+                   _selectAllItems();
+                 }
+               },
+               tooltip: 'Select All',
+             ),
+             IconButton(
+               icon: Icon(Icons.delete, color: lightBlue),
+               onPressed: _selectedItems.isNotEmpty ? _bulkDelete : null,
+               tooltip: 'Delete Selected',
+             ),
+             IconButton(
+               icon: Icon(Icons.close, color: lightBlue),
+               onPressed: _toggleSelectionMode,
+               tooltip: 'Cancel Selection',
+             ),
+           ] else ...[
+             IconButton(
+               icon: Icon(
+                 Icons.checklist,
+                 color: lightBlue,
+               ),
+               onPressed: _toggleSelectionMode,
+               tooltip: 'Bulk Actions',
+             ),
+             IconButton(
+               icon: const Icon(Icons.refresh),
+               onPressed: () {
+                 Provider.of<DailyInventoryStockProvider>(context, listen: false).fetchDailyInventoryStocks();
+               },
+               tooltip: 'Refresh Data',
+             ),
+           ],
+         ],
       ),
       // FloatingActionButton dipindahkan ke bagian bawah
       body: Column(
         children: [
           // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16),
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  lightBlue,
+                  lightBlue.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryGreen.withOpacity(0.1),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
+                    controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: 'Cari persediaan...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      hintText: 'Cari ID, gudang, atau tanggal...',
+                      hintStyle: TextStyle(
+                        color: darkBlack.withOpacity(0.6),
+                        fontSize: isMobile ? 14 : 16,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: primaryGreen,
+                        size: isMobile ? 20 : 24,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: darkBlack.withOpacity(0.6),
+                                size: isMobile ? 18 : 20,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                                _performSearch();
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: isMobile ? 12 : 16,
+                        horizontal: 16,
+                      ),
                     ),
+                    style: TextStyle(
+                      color: darkBlack,
+                      fontSize: isMobile ? 14 : 16,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                      // Debounce search untuk performa yang lebih baik
+                      Future.delayed(const Duration(milliseconds: 500), () {
+                        if (_searchQuery == value) {
+                          _performSearch();
+                        }
+                      });
+                    },
                     onSubmitted: (value) {
-                      // Implementasi pencarian dapat ditambahkan di sini
+                      _performSearch();
                     },
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(
-                    _isFilterExpanded ? Icons.filter_list_off : Icons.filter_list,
-                    color: _isFilterExpanded ? Colors.blue : null,
+                Container(
+                  decoration: BoxDecoration(
+                    color: _isFilterExpanded ? primaryGreen : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryGreen.withOpacity(0.2),
+                        blurRadius: 6,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isFilterExpanded = !_isFilterExpanded;
-                    });
-                  },
-                  tooltip: 'Filter',
+                  child: IconButton(
+                    icon: Icon(
+                      _isFilterExpanded ? Icons.filter_list_off : Icons.filter_list,
+                      color: _isFilterExpanded ? lightBlue : primaryGreen,
+                      size: isMobile ? 20 : 24,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isFilterExpanded = !_isFilterExpanded;
+                      });
+                    },
+                    tooltip: 'Filter',
+                  ),
                 ),
               ],
             ),
           ),
           
+          // Quick filters untuk stock opname
+          if (!_isSelectionMode)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              height: 50,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _buildQuickFilterChip('all', 'Semua', Icons.list_alt),
+                  const SizedBox(width: 8),
+                  _buildQuickFilterChip('today', 'Hari Ini', Icons.today),
+                  const SizedBox(width: 8),
+                  _buildQuickFilterChip('week', 'Minggu Ini', Icons.date_range),
+                  const SizedBox(width: 8),
+                  _buildQuickFilterChip('locked', 'Terkunci', Icons.lock),
+                  const SizedBox(width: 8),
+                  _buildQuickFilterChip('unlocked', 'Belum Terkunci', Icons.lock_open),
+                ],
+              ),
+            ),
+          
           // Filter section
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             height: _isFilterExpanded ? null : 0,
-            child: Card(
-              margin: const EdgeInsets.all(0),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    lightBlue,
+                    lightBlue.withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryGreen.withOpacity(0.1),
+                    blurRadius: 12,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+                border: Border.all(
+                  color: primaryGreen.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(isMobile ? 16 : 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Filter Persediaan',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: isMobile ? 16 : 18,
+                        fontWeight: FontWeight.bold,
+                        color: darkBlack,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     _buildDateFilter(context),
@@ -212,14 +557,34 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       children: [
                         OutlinedButton(
                           onPressed: _resetFilters,
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: primaryGreen, width: 2),
+                            foregroundColor: primaryGreen,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isMobile ? 16 : 20,
+                              vertical: isMobile ? 12 : 14,
+                            ),
+                          ),
                           child: const Text('Reset'),
                         ),
                         const SizedBox(width: 16),
                         ElevatedButton(
                           onPressed: _applyFilters,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1E2A78),
-                            foregroundColor: Colors.white,
+                            backgroundColor: primaryGreen,
+                            foregroundColor: lightBlue,
+                            elevation: 2,
+                            shadowColor: primaryGreen.withOpacity(0.3),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isMobile ? 16 : 20,
+                              vertical: isMobile ? 12 : 14,
+                            ),
                           ),
                           child: const Text('Terapkan'),
                         ),
@@ -236,7 +601,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
             child: Consumer<DailyInventoryStockProvider>(
               builder: (context, provider, child) {
                 if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                          strokeWidth: 3,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Memuat data persediaan...',
+                          style: TextStyle(
+                            color: darkBlack.withOpacity(0.7),
+                            fontSize: isMobile ? 14 : 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 }
                 
                 if (provider.error != null) {
@@ -244,17 +627,48 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'Error: ${provider.error}',
-                          style: const TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red.shade400,
                         ),
                         const SizedBox(height: 16),
+                        Text(
+                          'Gagal memuat data',
+                          style: TextStyle(
+                            fontSize: isMobile ? 16 : 18,
+                            fontWeight: FontWeight.bold,
+                            color: darkBlack,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          provider.error!,
+                          style: TextStyle(
+                            color: darkBlack.withOpacity(0.7),
+                            fontSize: isMobile ? 14 : 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
                         ElevatedButton(
                           onPressed: () {
                             provider.clearError();
                             provider.fetchDailyInventoryStocks();
                           },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryGreen,
+                            foregroundColor: lightBlue,
+                            elevation: 2,
+                            shadowColor: primaryGreen.withOpacity(0.3),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isMobile ? 20 : 24,
+                              vertical: isMobile ? 12 : 14,
+                            ),
+                          ),
                           child: const Text('Coba Lagi'),
                         ),
                       ],
@@ -263,8 +677,35 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 }
                 
                 if (provider.dailyInventoryStocks.isEmpty) {
-                  return const Center(
-                    child: Text('Tidak ada data persediaan harian'),
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 64,
+                          color: darkBlack.withOpacity(0.4),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Tidak ada data persediaan',
+                          style: TextStyle(
+                            fontSize: isMobile ? 16 : 18,
+                            fontWeight: FontWeight.bold,
+                            color: darkBlack,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Belum ada data persediaan harian yang tersedia',
+                          style: TextStyle(
+                            color: darkBlack.withOpacity(0.7),
+                            fontSize: isMobile ? 14 : 16,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   );
                 }
                 
@@ -277,69 +718,271 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     itemCount: provider.dailyInventoryStocks.length + (_isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == provider.dailyInventoryStocks.length && _isLoadingMore) {
-                        return const Center(
+                        return Center(
                           child: Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: CircularProgressIndicator(),
+                            padding: const EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                              strokeWidth: 2.5,
+                            ),
                           ),
                         );
                       }
                       
                       final stock = provider.dailyInventoryStocks[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Column(
-                          children: [
-                            ListTile(
-                              title: Text(
-                                'Stok #${stock.id}',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Tanggal: ${stock.stockDate}'),
-                                  Text('Gudang: ${stock.warehouseName}'),
-                                  Text('Jumlah Item: ${stock.itemsCount}'),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: stock.statusColor,
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          stock.statusText,
-                                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              trailing: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Dibuat oleh: ${stock.createdBy}',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  const Text('Lihat Detail', style: TextStyle(color: Colors.blue, fontSize: 12)),
-                                ],
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => InventoryDetailScreen(stockId: stock.id),
-                                  ),
-                                );
-                              },
+                      return Container(
+                        margin: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 12 : 16, 
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white,
+                              lightBlue.withOpacity(0.3),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryGreen.withOpacity(0.1),
+                              blurRadius: 12,
+                              spreadRadius: 0,
+                              offset: const Offset(0, 6),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              spreadRadius: 0,
+                              offset: const Offset(0, 2),
                             ),
                           ],
+                          border: Border.all(
+                            color: primaryGreen.withOpacity(0.15),
+                            width: 1,
+                          ),
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            if (_isSelectionMode) {
+                              _toggleItemSelection(stock.id);
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => InventoryDetailScreen(stockId: stock.id),
+                                ),
+                              );
+                            }
+                          },
+                          onLongPress: () {
+                            if (!_isSelectionMode) {
+                              _toggleSelectionMode();
+                              _toggleItemSelection(stock.id);
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: EdgeInsets.all(isMobile ? 12 : 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Header row
+                                Row(
+                                  children: [
+                                    if (_isSelectionMode)
+                                      Container(
+                                        margin: const EdgeInsets.only(right: 12),
+                                        child: Checkbox(
+                                          value: _selectedItems.contains(stock.id),
+                                          onChanged: (value) {
+                                            _toggleItemSelection(stock.id);
+                                          },
+                                          activeColor: primaryGreen,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      ),
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            primaryGreen,
+                                            primaryGreen.withOpacity(0.8),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.inventory_2,
+                                        color: lightBlue,
+                                        size: isMobile ? 20 : 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  'Stok #${stock.id}',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: isMobile ? 16 : 18,
+                                                    color: darkBlack,
+                                                  ),
+                                                ),
+                                              ),
+                                              if (!_isSelectionMode)
+                                                Icon(
+                                                  Icons.more_vert,
+                                                  color: darkBlack.withOpacity(0.5),
+                                                  size: 16,
+                                                ),
+                                            ],
+                                          ),
+                                          Text(
+                                            stock.stockDate,
+                                            style: TextStyle(
+                                              color: darkBlack.withOpacity(0.7),
+                                              fontSize: isMobile ? 12 : 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, 
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: stock.statusColor,
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: stock.statusColor.withOpacity(0.3),
+                                            blurRadius: 4,
+                                            spreadRadius: 0,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        stock.statusText,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: isMobile ? 10 : 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                // Info row
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: lightBlue.withOpacity(0.3),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.warehouse,
+                                              size: isMobile ? 14 : 16,
+                                              color: primaryGreen,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                stock.warehouseName,
+                                                style: TextStyle(
+                                                  fontSize: isMobile ? 11 : 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: darkBlack,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: lightBlue.withOpacity(0.3),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.inventory,
+                                              size: isMobile ? 14 : 16,
+                                              color: primaryGreen,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                '${stock.itemsCount} item',
+                                                style: TextStyle(
+                                                  fontSize: isMobile ? 11 : 12,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: darkBlack,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                // Creator info
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.person,
+                                      size: isMobile ? 14 : 16,
+                                      color: darkBlack.withOpacity(0.6),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Dibuat oleh: ${stock.createdBy}',
+                                      style: TextStyle(
+                                        fontSize: isMobile ? 11 : 12,
+                                        color: darkBlack.withOpacity(0.6),
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: isMobile ? 12 : 14,
+                                      color: primaryGreen,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -350,23 +993,96 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CreateInventoryScreen(),
-            ),
-          ).then((result) {
-            // Refresh data jika ada perubahan
-            if (result == true) {
-              Provider.of<DailyInventoryStockProvider>(context, listen: false).fetchDailyInventoryStocks();
-            }
-          });
-        },
-        backgroundColor: const Color(0xFF1E2A78),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      bottomNavigationBar: _isSelectionMode || Provider.of<DailyInventoryStockProvider>(context).dailyInventoryStocks.isNotEmpty
+          ? Container(
+              padding: EdgeInsets.all(isMobile ? 12 : 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    lightBlue,
+                    lightBlue.withOpacity(0.8),
+                  ],
+                ),
+                border: Border(
+                  top: BorderSide(
+                    color: primaryGreen.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: _isSelectionMode
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${_selectedItems.length} item dipilih',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: darkBlack,
+                            fontSize: isMobile ? 14 : 16,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: _selectedItems.isNotEmpty ? _bulkDelete : null,
+                              icon: Icon(Icons.delete, size: isMobile ? 16 : 18),
+                              label: Text(
+                                'Hapus',
+                                style: TextStyle(fontSize: isMobile ? 12 : 14),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  : Consumer<DailyInventoryStockProvider>(
+                      builder: (context, provider, child) {
+                        final totalItems = provider.dailyInventoryStocks.length;
+                        final lockedItems = provider.dailyInventoryStocks.where((stock) => stock.isLocked ?? false).length;
+                        final unlockedItems = totalItems - lockedItems;
+                        
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildSummaryItem('Total', totalItems.toString(), Icons.inventory_2, primaryGreen),
+                            _buildSummaryItem('Terkunci', lockedItems.toString(), Icons.lock, Colors.orange),
+                            _buildSummaryItem('Belum Terkunci', unlockedItems.toString(), Icons.lock_open, Colors.blue),
+                          ],
+                        );
+                      },
+                    ),
+            )
+          : null,
+      floatingActionButton: !_isSelectionMode
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreateInventoryScreen(),
+                  ),
+                ).then((result) {
+                  // Refresh data jika ada perubahan
+                  if (result == true) {
+                    Provider.of<DailyInventoryStockProvider>(context, listen: false).fetchDailyInventoryStocks();
+                  }
+                });
+              },
+              backgroundColor: primaryGreen,
+              foregroundColor: lightBlue,
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
   
@@ -519,6 +1235,50 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
   
   // Widget untuk tombol filter telah dihapus karena sudah digantikan dengan tombol di filter section
+  
+  // Widget untuk summary item di bottom navigation
+  Widget _buildSummaryItem(String label, String value, IconData icon, Color color) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: EdgeInsets.all(isMobile ? 8 : 10),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: color.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: isMobile ? 20 : 24,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: isMobile ? 16 : 18,
+            color: darkBlack,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isMobile ? 10 : 12,
+            color: darkBlack.withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
   
   // Fungsi-fungsi yang tidak lagi digunakan telah dihapus
 }

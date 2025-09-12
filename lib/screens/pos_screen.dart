@@ -63,11 +63,16 @@ class _POSScreenState extends State<POSScreen> {
     return ['Semua', ..._apiCategories.map((c) => c.name)];
   }
   
-  // Color palette untuk aplikasi
-  final Color _primaryColor = const Color(0xFF1E2A78);
-  final Color _secondaryColor = const Color(0xFF4B56D2);
-  final Color _accentColor = const Color(0xFF82C3EC);
-  final Color _lightColor = const Color(0xFFEBF3FB);
+  // Color palette baru untuk aplikasi
+  static const Color primaryGreen = Color(0xFF03D26F);
+  static const Color lightBlue = Color(0xFFEAF4F4);
+  static const Color darkBlack = Color(0xFF161514);
+  
+  // Legacy colors (akan diganti bertahap)
+  final Color _primaryColor = primaryGreen;
+  final Color _secondaryColor = primaryGreen.withOpacity(0.8);
+  final Color _accentColor = lightBlue;
+  final Color _lightColor = lightBlue;
   
   // Warna untuk kategori produk
   final Map<String, Color> _categoryColors = {
@@ -593,15 +598,20 @@ class _POSScreenState extends State<POSScreen> {
               settingsProvider.store.storeName.isNotEmpty 
                 ? '${settingsProvider.store.storeName} - POS'
                 : 'Point of Sale', 
-              style: const TextStyle(fontWeight: FontWeight.bold)
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: lightBlue,
+                fontSize: isMobile ? 18 : 20,
+              ),
             );
           },
         ),
-        backgroundColor: _primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 2,
+        backgroundColor: primaryGreen,
+        foregroundColor: lightBlue,
+        elevation: 4,
+        shadowColor: primaryGreen.withOpacity(0.3),
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
         actions: [
           // Tombol filter kategori
@@ -739,15 +749,33 @@ class _POSScreenState extends State<POSScreen> {
                       16
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          lightBlue,
+                          lightBlue.withOpacity(0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
-                          blurRadius: 5,
-                          spreadRadius: 1,
+                          color: primaryGreen.withOpacity(0.1),
+                          blurRadius: 15,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 8),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 2),
                         ),
                       ],
+                      border: Border.all(
+                        color: primaryGreen.withOpacity(0.2),
+                        width: 1,
+                      ),
                     ),
                     child: Padding(
                       padding: EdgeInsets.all(isMobile ? 12 : 16),
@@ -759,9 +787,9 @@ class _POSScreenState extends State<POSScreen> {
                             child: Text(
                               _selectedCategory == 'Semua' ? 'Semua Produk' : 'Kategori: $_selectedCategory',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: isMobile ? 14 : 16,
                                 fontWeight: FontWeight.bold,
-                                color: _selectedCategory == 'Semua' ? _primaryColor : _categoryColors[_selectedCategory],
+                                color: darkBlack,
                               ),
                             ),
                           ),
@@ -771,9 +799,18 @@ class _POSScreenState extends State<POSScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(_primaryColor)),
+                                      CircularProgressIndicator(
+                                        valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                                        strokeWidth: 3,
+                                      ),
                                       const SizedBox(height: 16),
-                                      Text('Memuat produk...', style: TextStyle(color: _primaryColor)),
+                                      Text(
+                                        'Memuat produk...', 
+                                        style: TextStyle(
+                                          color: darkBlack.withOpacity(0.7),
+                                          fontSize: isMobile ? 14 : 16,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 )
@@ -855,10 +892,10 @@ class _POSScreenState extends State<POSScreen> {
                                                   child: GridView.builder(
                                                     controller: _scrollController,
                                                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                                      crossAxisCount: isMobile ? 2 : (isTablet ? 4 : 4),
-                                                      childAspectRatio: isMobile ? 0.68 : (isTablet ? 0.75 : 0.85),
-                                                      crossAxisSpacing: isMobile ? 8 : (isTablet ? 12 : 16),
-                                                      mainAxisSpacing: isMobile ? 8 : (isTablet ? 12 : 16),
+                                                      crossAxisCount: isMobile ? 2 : (isTablet ? 3 : 4),
+                                                      childAspectRatio: isMobile ? 0.68 : (isTablet ? 0.8 : 0.85),
+                                                      crossAxisSpacing: isMobile ? 8 : (isTablet ? 16 : 16),
+                                                      mainAxisSpacing: isMobile ? 8 : (isTablet ? 16 : 16),
                                                     ),
                                                     itemCount: _filteredProducts.length,
                                                     itemBuilder: (context, index) {
@@ -919,23 +956,41 @@ class _POSScreenState extends State<POSScreen> {
           // Area keranjang (kanan)
           if (!isMobile) // Sembunyikan keranjang di mobile
             Container(
-              width: isTablet ? 360 : 350, // Optimal untuk tablet vertikal
+              width: isTablet ? 320 : 350, // Lebih proporsional untuk tablet
               margin: EdgeInsets.only(
-                left: isTablet ? 6 : 8, 
-                right: isTablet ? 12 : 16, 
+                left: isTablet ? 8 : 8, 
+                right: isTablet ? 16 : 16, 
                 top: 16, 
                 bottom: 16
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    lightBlue,
+                    lightBlue.withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
+                  BoxShadow(
+                    color: primaryGreen.withOpacity(0.1),
+                    blurRadius: 15,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 8),
+                  ),
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
                     blurRadius: 10,
-                    spreadRadius: 1,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 2),
                   ),
                 ],
+                border: Border.all(
+                  color: primaryGreen.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
               child: _buildCartSection(isTablet: isTablet),
             ),
@@ -1040,28 +1095,54 @@ class _POSScreenState extends State<POSScreen> {
     
     return InkWell(
       onTap: () => _addToCart(product),
-      borderRadius: BorderRadius.circular(12),
-      child: Card(
-        elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              lightBlue.withOpacity(0.3),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: primaryGreen.withOpacity(0.1),
+              blurRadius: 12,
+              spreadRadius: 0,
+              offset: const Offset(0, 6),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              spreadRadius: 0,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: Border.all(
+            color: primaryGreen.withOpacity(0.15),
+            width: 1,
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Area warna produk (menggantikan gambar)
             Expanded(
-              flex: isMobile ? 3 : (isTablet ? 2 : 2),
+              flex: isMobile ? 3 : (isTablet ? 3 : 2),
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      categoryColor.withOpacity(0.7),
-                      categoryColor.withOpacity(0.3),
+                      primaryGreen,
+                      primaryGreen.withOpacity(0.7),
                     ],
                   ),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 ),
                 width: double.infinity,
                 child: Stack(
@@ -1153,12 +1234,12 @@ class _POSScreenState extends State<POSScreen> {
             ),
             // Informasi produk
             Expanded(
-              flex: isMobile ? 2 : (isTablet ? 3 : 3),
+              flex: isMobile ? 2 : (isTablet ? 2 : 3),
               child: Container(
-                padding: EdgeInsets.all(isMobile ? 6 : (isTablet ? 8 : 12)),
+                padding: EdgeInsets.all(isMobile ? 8 : (isTablet ? 10 : 12)),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                  color: Colors.white.withOpacity(0.9),
+                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1174,7 +1255,8 @@ class _POSScreenState extends State<POSScreen> {
                             product.name,
                             style: TextStyle(
                               fontWeight: FontWeight.bold, 
-                              fontSize: isMobile ? 11 : (isTablet ? 12 : 16)
+                              fontSize: isMobile ? 12 : (isTablet ? 13 : 16),
+                              color: darkBlack,
                             ),
                             maxLines: isMobile ? 2 : (isTablet ? 2 : 1),
                             overflow: TextOverflow.ellipsis,
@@ -1191,9 +1273,9 @@ class _POSScreenState extends State<POSScreen> {
                           Text(
                             '${FormatUtils.formatCurrency(product.price)}',
                             style: TextStyle(
-                              color: categoryColor, 
-                              fontWeight: FontWeight.w500, 
-                              fontSize: isMobile ? 11 : (isTablet ? 12 : 16)
+                              color: primaryGreen, 
+                              fontWeight: FontWeight.bold, 
+                              fontSize: isMobile ? 12 : (isTablet ? 13 : 16)
                             ),
                           ),
                         ],
@@ -1211,18 +1293,19 @@ class _POSScreenState extends State<POSScreen> {
                           style: TextStyle(fontSize: isMobile ? 10 : (isTablet ? 11 : 14)),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _primaryColor,
-                          foregroundColor: Colors.white,
+                          backgroundColor: primaryGreen,
+                          foregroundColor: lightBlue,
                           padding: EdgeInsets.symmetric(
-                            vertical: isMobile ? 4 : (isTablet ? 6 : 8),
-                            horizontal: isMobile ? 6 : (isTablet ? 8 : 12),
+                            vertical: isMobile ? 6 : (isTablet ? 8 : 10),
+                            horizontal: isMobile ? 8 : (isTablet ? 10 : 12),
                           ),
-                          elevation: 0,
+                          elevation: 2,
+                          shadowColor: primaryGreen.withOpacity(0.3),
                           disabledBackgroundColor: Colors.grey.shade300,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          minimumSize: Size(double.infinity, isMobile ? 28 : (isTablet ? 32 : 40)),
+                          minimumSize: Size(double.infinity, isMobile ? 32 : (isTablet ? 36 : 40)),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
