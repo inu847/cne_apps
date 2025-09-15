@@ -16,7 +16,9 @@ import '../providers/settings_provider.dart';
 import '../providers/order_provider.dart';
 import '../providers/payment_method_provider.dart';
 import '../providers/voucher_provider.dart';
+import '../providers/petty_cash_provider.dart';
 import '../widgets/payment_method_dialog.dart';
+import '../widgets/petty_cash_dialog.dart';
 import '../services/receipt_service.dart';
 import 'saved_orders_screen.dart';
 import 'receipt_screen.dart';
@@ -449,9 +451,9 @@ class _POSScreenState extends State<POSScreen> {
     // Menambahkan listener untuk infinite scroll
     _scrollController.addListener(_scrollListener);
     
-    // Inisialisasi settings
+    // Inisialisasi settings dan petty cash validation
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<SettingsProvider>(context, listen: false).initSettings();
+      _initializeSettingsAndPettyCash();
     });
   }
   
@@ -582,6 +584,244 @@ class _POSScreenState extends State<POSScreen> {
       _fetchProducts();
     }
   }
+
+  // Inisialisasi settings dan petty cash secara berurutan
+  Future<void> _initializeSettingsAndPettyCash() async {
+    try {
+      print('Starting settings and petty cash initialization...');
+      
+      // Tunggu settings selesai dimuat terlebih dahulu
+      await Provider.of<SettingsProvider>(context, listen: false).initSettings();
+      print('Settings initialized successfully');
+      
+      // Baru kemudian inisialisasi petty cash
+      await _initializePettyCash();
+      print('Petty cash initialization completed');
+    } catch (e) {
+      print('Error during initialization: $e');
+    }
+  }
+
+  // Inisialisasi dan validasi petty cash
+  Future<void> _initializePettyCash() async {
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final pettyCashProvider = Provider.of<PettyCashProvider>(context, listen: false);
+    
+    print('=== PETTY CASH INITIALIZATION START ===');
+    print('Settings object: ${settingsProvider.settings}');
+    print('System settings: ${settingsProvider.system}');
+    print('petty_cash_enabled: ${settingsProvider.system.pettyCashEnabled}');
+    
+    // Cek apakah petty cash diaktifkan di settings
+    if (settingsProvider.system.pettyCashEnabled) {
+      print('✓ Petty cash is enabled, checking status...');
+      
+      // Step 1: Cek status petty cash menggunakan /petty-cash/active-opening
+      print('Fetching active petty cash...');
+      final fetchResult = await pettyCashProvider.fetchActivePettyCash();
+      print('Fetch result: $fetchResult');
+      
+      print('Active petty cash: ${pettyCashProvider.activePettyCash}');
+      print('Has active petty cash: ${pettyCashProvider.hasActivePettyCash}');
+      print('Can make transaction: ${pettyCashProvider.canMakeTransaction}');
+      print('Petty cash status: ${pettyCashProvider.pettyCashStatus}');
+      
+      // Step 2: Jika status 'closing' atau data tidak ditemukan, tampilkan popup untuk Buka Kasir
+      if (!pettyCashProvider.canMakeTransaction) {
+        print('✗ Cannot make transaction - showing popup...');
+        
+        // Tampilkan popup untuk melakukan opening petty cash
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            print('✓ Widget mounted - showing petty cash dialog...');
+            _showPettyCashDialog();
+          } else {
+            print('✗ Widget not mounted, cannot show dialog');
+          }
+        });
+      } else {
+        // Jika sudah dalam status 'opening', transaksi dapat dilakukan
+        print('✓ Petty cash sudah dalam status opening, transaksi dapat dilakukan');
+      }
+    } else {
+      print('✗ Petty cash is disabled in settings');
+    }
+    print('=== PETTY CASH INITIALIZATION END ===');
+  }
+
+  // Menampilkan dialog petty cash
+  Future<void> _showPettyCashDialog() async {
+    final pettyCashProvider = Provider.of<PettyCashProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    
+    // Tentukan type dialog berdasarkan status petty cash
+    String dialogType = 'opening';
+    if (pettyCashProvider.activePettyCash != null && 
+        pettyCashProvider.activePettyCash!.isOpening) {
+      dialogType = 'closing';
+    }
+    
+    final result = await showPettyCashDialog(
+      context: context,
+      type: dialogType,
+      activePettyCash: pettyCashProvider.activePettyCash,
+      warehouseId: 1, // Default warehouse ID, sesuaikan dengan kebutuhan
+    );
+    
+    if (result == true) {
+      // Step 3: Setelah opening, lakukan pengecekan ulang ke /petty-cash/active-opening
+      await pettyCashProvider.fetchActivePettyCash();
+      
+      // Step 4: Jika status menunjukkan 'opening', transaksi dapat dilakukan
+      if (pettyCashProvider.canMakeTransaction) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Petty cash berhasil dibuka, transaksi dapat dilakukan'),
+            backgroundColor: primaryGreen,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  // Validasi petty cash sebelum melakukan transaksi
+  bool _validatePettyCashForTransaction() {
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final pettyCashProvider = Provider.of<PettyCashProvider>(context, listen: false);
+    
+    // Jika petty cash tidak diaktifkan, izinkan transaksi
+    if (!settingsProvider.system.pettyCashEnabled) {
+      return true;
+    }
+    
+    // Jika petty cash diaktifkan, cek apakah bisa melakukan transaksi
+    if (!pettyCashProvider.canMakeTransaction) {
+      _showPettyCashRequiredDialog();
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Menampilkan dialog bahwa petty cash diperlukan
+   void _showPettyCashRequiredDialog() {
+     showDialog(
+       context: context,
+       builder: (context) => AlertDialog(
+         title: const Text('Petty Cash Diperlukan'),
+         content: const Text(
+           'Anda harus membuka petty cash terlebih dahulu sebelum melakukan transaksi.',
+         ),
+         actions: [
+           TextButton(
+             onPressed: () => Navigator.of(context).pop(),
+             child: const Text('Batal'),
+           ),
+           ElevatedButton(
+             onPressed: () {
+               Navigator.of(context).pop();
+               _showPettyCashDialog();
+             },
+             child: const Text('Buka Petty Cash'),
+           ),
+         ],
+       ),
+     );
+   }
+
+   // Menampilkan dialog status petty cash
+    void _showPettyCashStatusDialog() {
+      final pettyCashProvider = Provider.of<PettyCashProvider>(context, listen: false);
+      
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Status Petty Cash'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+               if (pettyCashProvider.activePettyCash != null) ...[
+                 Text('Nama: ${pettyCashProvider.activePettyCash!.name}'),
+                 const SizedBox(height: 8),
+                 Text('Jumlah: ${FormatUtils.formatCurrency(pettyCashProvider.activePettyCash!.amount)}'),
+                 const SizedBox(height: 8),
+                 Text('Status: ${pettyCashProvider.activePettyCash!.isActive ? 'Aktif' : 'Tidak Aktif'}'),
+                 const SizedBox(height: 8),
+                 Text('Tipe: ${pettyCashProvider.activePettyCash!.isOpening ? 'Opening' : 'Closing'}'),
+                 if (pettyCashProvider.activePettyCash!.userName != null) ...[
+                   const SizedBox(height: 8),
+                   Text('Penanggung Jawab: ${pettyCashProvider.activePettyCash!.userName}'),
+                 ],
+               ] else ...[
+                 const Text('Tidak ada petty cash yang aktif'),
+               ],
+             ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Tutup'),
+            ),
+            if (pettyCashProvider.activePettyCash == null)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _showPettyCashDialog();
+                },
+                child: const Text('Buka Petty Cash'),
+              ),
+          ],
+        ),
+      );
+    }
+
+    // Menampilkan dialog opening petty cash
+    Future<void> _showPettyCashOpeningDialog() async {
+      final pettyCashProvider = Provider.of<PettyCashProvider>(context, listen: false);
+      
+      final result = await showPettyCashDialog(
+        context: context,
+        type: 'opening',
+        activePettyCash: pettyCashProvider.activePettyCash,
+        warehouseId: 1,
+      );
+      
+      if (result == true) {
+        // Refresh status petty cash setelah dialog ditutup
+        await pettyCashProvider.fetchActivePettyCash();
+      }
+    }
+
+    // Menampilkan dialog closing petty cash (Tutup Kasir)
+    Future<void> _showPettyCashClosingDialog() async {
+      final pettyCashProvider = Provider.of<PettyCashProvider>(context, listen: false);
+      
+      final result = await showPettyCashDialog(
+        context: context,
+        type: 'closing',
+        activePettyCash: pettyCashProvider.activePettyCash,
+        warehouseId: 1,
+      );
+      
+      if (result == true) {
+        // Refresh status petty cash setelah dialog ditutup
+        await pettyCashProvider.fetchActivePettyCash();
+        
+        // Tampilkan notifikasi bahwa kasir telah ditutup
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Kasir berhasil ditutup'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+
+        // TUTUP POPUP
+        Navigator.of(context).pop();
+      }
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -726,6 +966,94 @@ class _POSScreenState extends State<POSScreen> {
                 child: Text('Laporan Penjualan'),
               ),
             ],
+          ),
+          // Tombol petty cash
+          Consumer2<SettingsProvider, PettyCashProvider>(
+            builder: (context, settingsProvider, pettyCashProvider, child) {
+              // Hanya tampilkan jika petty cash diaktifkan
+              if (!settingsProvider.system.pettyCashEnabled) {
+                return const SizedBox.shrink();
+              }
+              
+              return PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.account_balance_wallet,
+                  color: pettyCashProvider.canMakeTransaction 
+                      ? primaryGreen 
+                      : Colors.red.shade400,
+                ),
+                tooltip: 'Petty Cash',
+                onSelected: (String value) {
+                   if (value == 'status') {
+                     _showPettyCashStatusDialog();
+                   } else if (value == 'open') {
+                     _showPettyCashOpeningDialog();
+                   } else if (value == 'close') {
+                     _showPettyCashClosingDialog();
+                   }
+                 },
+                itemBuilder: (BuildContext context) {
+                  final List<PopupMenuEntry<String>> items = [];
+                  
+                  // Status petty cash
+                  items.add(
+                    PopupMenuItem<String>(
+                      value: 'status',
+                      child: Row(
+                        children: [
+                          Icon(
+                            pettyCashProvider.canMakeTransaction 
+                                ? Icons.check_circle 
+                                : Icons.cancel,
+                            color: pettyCashProvider.canMakeTransaction 
+                                ? primaryGreen 
+                                : Colors.red.shade400,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Status: ${pettyCashProvider.pettyCashStatus == 'open' ? 'Terbuka' : 'Tertutup'}',
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                  
+                  items.add(const PopupMenuDivider());
+                  
+                  // Tombol buka/tutup petty cash
+                   if (pettyCashProvider.canMakeTransaction) {
+                     items.add(
+                       const PopupMenuItem<String>(
+                         value: 'close',
+                         child: Row(
+                           children: [
+                             Icon(Icons.lock, size: 16),
+                             SizedBox(width: 8),
+                             Text('Tutup Kasir'),
+                           ],
+                         ),
+                       ),
+                     );
+                   } else {
+                     items.add(
+                       const PopupMenuItem<String>(
+                         value: 'open',
+                         child: Row(
+                           children: [
+                             Icon(Icons.lock_open, size: 16),
+                             SizedBox(width: 8),
+                             Text('Buka Petty Cash'),
+                           ],
+                         ),
+                       ),
+                     );
+                   }
+                  
+                  return items;
+                },
+              );
+            },
           ),
         ],
       ),
@@ -1586,6 +1914,11 @@ class _POSScreenState extends State<POSScreen> {
   void _checkout() async {
     // Jika keranjang kosong, tidak perlu melakukan apa-apa
     if (_cart.isEmpty) return;
+    
+    // Validasi petty cash sebelum melakukan transaksi
+    if (!_validatePettyCashForTransaction()) {
+      return;
+    }
     
     // Tambahkan log untuk debugging
     print('Menampilkan dialog pemilihan metode pembayaran');

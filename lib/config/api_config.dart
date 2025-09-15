@@ -18,6 +18,10 @@ class ApiConfig {
   static const String dailyInventoryStocksEndpoint = '$baseUrl/daily-inventory-stocks';
   static const String warehousesEndpoint = '$baseUrl/warehouses';
   static const String inventoryItemsEndpoint = '$baseUrl/inventory-items';
+  static const String pettyCashEndpoint = '$baseUrl/petty-cash';
+  static const String pettyCashOpeningEndpoint = '$baseUrl/petty-cash/opening';
+  static const String pettyCashActiveOpeningEndpoint = '$baseUrl/petty-cash/active-opening';
+  static const String pettyCashClosingEndpoint = '$baseUrl/petty-cash/closing';
   
   // Token Key for SharedPreferences
   static const String tokenKey = 'auth_token';
@@ -37,5 +41,9 @@ class ApiConfig {
     print('ApiConfig: Daily Inventory Stocks Endpoint - $dailyInventoryStocksEndpoint');
     print('ApiConfig: Warehouses Endpoint - $warehousesEndpoint');
     print('ApiConfig: Inventory Items Endpoint - $inventoryItemsEndpoint');
+    print('ApiConfig: Petty Cash Endpoint - $pettyCashEndpoint');
+    print('ApiConfig: Petty Cash Opening Endpoint - $pettyCashOpeningEndpoint');
+    print('ApiConfig: Petty Cash Active Opening Endpoint - $pettyCashActiveOpeningEndpoint');
+    print('ApiConfig: Petty Cash Closing Endpoint - $pettyCashClosingEndpoint');
   }
 }
