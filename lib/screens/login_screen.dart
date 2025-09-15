@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
 import 'dashboard_screen.dart';
@@ -54,31 +53,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Logo
-                    Container(
-                      height: 120,
-                      width: 120,
-                      decoration: BoxDecoration(
-                        color: lightBlue,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: darkBlack.withOpacity(0.1),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/images/cne_logo.svg',
-                          height: 100,
-                          width: 100,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    
                     // Login Card
                     Container(
                       width: 400,
@@ -95,8 +69,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Logo
+                          Image.asset(
+                            'assets/images/logo-landscape.png',
+                            height: 60,
+                            width: 120,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(height: 24),
+                          
+                          // Login Title
                           Text(
                             'Login',
                             style: TextStyle(
@@ -115,6 +98,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 32),
                           
+                          // Form Fields
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                           // Email Field
                           TextField(
                             controller: _emailController,
@@ -256,6 +243,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                             ),
                           ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -263,7 +252,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
                     // Footer
                     Text(
-                      '© 2023 CashNEntry POS System',
+                      '© 2023 DompetKasir POS System',
                       style: TextStyle(
                         color: lightBlue,
                         fontSize: 14,

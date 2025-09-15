@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines best practices for error handling in the CNE POS Apps Flutter application. Implementing these practices will improve application stability, user experience, and maintainability.
+This document outlines best practices for error handling in the DompetKasir Flutter application. Implementing these practices will improve application stability, user experience, and maintainability.
 
 ## Current Error Handling Approach
 
@@ -582,7 +582,7 @@ To complete your error handling strategy, consider implementing error monitoring
 
 ## Conclusion
 
-Implementing these error handling best practices will significantly improve the robustness and user experience of the CNE POS Apps. The key principles to follow are:
+Implementing these error handling best practices will significantly improve the robustness and user experience of the DompetKasir. The key principles to follow are:
 
 1. Use custom exception classes for different error types
 2. Implement a centralized error handler

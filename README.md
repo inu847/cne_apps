@@ -1,7 +1,7 @@
-# CashNEntry POS Application
+# DompetKasir POS Application
 
-## Overview
-CashNEntry POS adalah aplikasi point of sale modern yang dirancang untuk memudahkan transaksi bisnis.
+## Deskripsi
+DompetKasir adalah aplikasi point of sale modern yang dirancang untuk memudahkan transaksi bisnis.
 
 ## Fitur
 - Login sistem yang aman

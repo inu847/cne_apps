@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines best practices for handling platform-specific code in Flutter applications, with a focus on ensuring robust cross-platform compatibility. These recommendations are particularly relevant for the CNE POS Apps project, which needs to run on multiple platforms including web, Windows, Linux, Android, and iOS.
+This document outlines best practices for handling platform-specific code in Flutter applications, with a focus on ensuring robust cross-platform compatibility. These recommendations are particularly relevant for the DompetKasir project, which needs to run on multiple platforms including web, Windows, Linux, Android, and iOS.
 
 ## Platform Detection
 

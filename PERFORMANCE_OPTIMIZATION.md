@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides recommendations for optimizing the performance of the CNE POS Apps Flutter application, with a particular focus on PDF generation, file operations, and cross-platform compatibility.
+This document provides recommendations for optimizing the performance of the DompetKasir Flutter application, with a particular focus on PDF generation, file operations, and cross-platform compatibility.
 
 ## PDF Generation Optimizations
 
@@ -420,7 +420,7 @@ class MemoryMonitor {
 
 ## Conclusion
 
-Implementing these performance optimizations will significantly improve the responsiveness and efficiency of the CNE POS Apps, particularly for resource-intensive operations like PDF generation and image processing. The key principles to follow are:
+Implementing these performance optimizations will significantly improve the responsiveness and efficiency of the DompetKasir, particularly for resource-intensive operations like PDF generation and image processing. The key principles to follow are:
 
 1. Move heavy computations off the main thread using isolates
 2. Implement efficient caching strategies

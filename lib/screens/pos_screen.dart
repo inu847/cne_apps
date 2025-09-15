@@ -891,6 +891,12 @@ class _POSScreenState extends State<POSScreen> {
                                                   color: _primaryColor,
                                                   child: GridView.builder(
                                                     controller: _scrollController,
+                                                    // Optimasi physics untuk scrolling yang lebih smooth
+                                                    physics: const BouncingScrollPhysics(
+                                                      parent: AlwaysScrollableScrollPhysics(),
+                                                    ),
+                                                    // Optimasi caching untuk performa yang lebih baik
+                                                    cacheExtent: 500.0,
                                                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                                       crossAxisCount: isMobile ? 2 : (isTablet ? 3 : 4),
                                                       childAspectRatio: isMobile ? 0.68 : (isTablet ? 0.8 : 0.85),
@@ -900,7 +906,8 @@ class _POSScreenState extends State<POSScreen> {
                                                     itemCount: _filteredProducts.length,
                                                     itemBuilder: (context, index) {
                                                       final product = _filteredProducts[index];
-                                                      return _buildProductCard(product);
+                                                      // Optimasi dengan key untuk widget recycling yang lebih baik
+                                                      return _buildOptimizedProductCard(product, index);
                                                     },
                                                   ),
                                                 ),
@@ -1315,6 +1322,261 @@ class _POSScreenState extends State<POSScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // Optimized product card dengan caching dan const widgets
+  Widget _buildOptimizedProductCard(Product product, int index) {
+    final productColors = getProductColors();
+    final categoryColor = productColors[product.categoryName] ?? Colors.grey;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    final isTablet = screenWidth >= 650 && screenWidth < 1100;
+    
+    return RepaintBoundary(
+      key: ValueKey('product_${product.id}_$index'),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: InkWell(
+          onTap: () => _addToCart(product),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white,
+                  Color(0xFFE3F2FD),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A4CAF50),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                  offset: Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: Color(0x0D000000),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                  offset: Offset(0, 2),
+                ),
+              ],
+              border: const Border.fromBorderSide(
+                BorderSide(
+                  color: Color(0x264CAF50),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Area warna produk (menggantikan gambar)
+                Expanded(
+                  flex: isMobile ? 3 : (isTablet ? 3 : 2),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF4CAF50),
+                          Color(0xB34CAF50),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
+                    width: double.infinity,
+                    child: Stack(
+                      children: [
+                        // Lingkaran dekoratif di pojok kanan atas
+                        Positioned(
+                          top: -15,
+                          right: -15,
+                          child: Container(
+                            width: isMobile ? 40 : (isTablet ? 45 : 60),
+                            height: isMobile ? 40 : (isTablet ? 45 : 60),
+                            decoration: const BoxDecoration(
+                              color: Color(0x33FFFFFF),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                        // Lingkaran dekoratif di pojok kiri bawah
+                        Positioned(
+                          bottom: -10,
+                          left: -10,
+                          child: Container(
+                            width: isMobile ? 30 : (isTablet ? 35 : 40),
+                            height: isMobile ? 30 : (isTablet ? 35 : 40),
+                            decoration: const BoxDecoration(
+                              color: Color(0x1AFFFFFF),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                        // Icon produk
+                        Center(
+                          child: Icon(
+                            product.icon,
+                            size: isMobile ? 32 : (isTablet ? 36 : 48),
+                            color: Colors.white,
+                          ),
+                        ),
+                        // Badge kategori
+                        Positioned(
+                          top: 6,
+                          left: 6,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isMobile ? 6 : (isTablet ? 6 : 8), 
+                              vertical: isMobile ? 2 : (isTablet ? 2 : 4)
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0x99000000),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              product.categoryName,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isMobile ? 8 : (isTablet ? 8 : 10),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Badge stok
+                        if (product.stock > 0)
+                          Positioned(
+                            bottom: 6,
+                            right: 6,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isMobile ? 6 : (isTablet ? 6 : 8), 
+                                vertical: isMobile ? 2 : (isTablet ? 2 : 4)
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xCCFFFFFF),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'Stok: ${product.stock}',
+                                style: TextStyle(
+                                  color: categoryColor,
+                                  fontSize: isMobile ? 8 : (isTablet ? 8 : 10),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Informasi produk
+                Expanded(
+                  flex: isMobile ? 2 : (isTablet ? 2 : 3),
+                  child: Container(
+                    padding: EdgeInsets.all(isMobile ? 8 : (isTablet ? 10 : 12)),
+                    decoration: const BoxDecoration(
+                      color: Color(0xE6FFFFFF),
+                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                product.name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: isMobile ? 12 : (isTablet ? 13 : 16),
+                                  color: const Color(0xFF212121),
+                                ),
+                                maxLines: isMobile ? 2 : (isTablet ? 2 : 1),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (product.sku != null && !isMobile && !isTablet)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    'SKU: ${product.sku}',
+                                    style: const TextStyle(
+                                      color: Color(0xFF757575), 
+                                      fontSize: 10
+                                    ),
+                                  ),
+                                ),
+                              SizedBox(height: isMobile ? 1 : (isTablet ? 2 : 4)),
+                              Text(
+                                '${FormatUtils.formatCurrency(product.price)}',
+                                style: TextStyle(
+                                  color: const Color(0xFF4CAF50), 
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: isMobile ? 12 : (isTablet ? 13 : 16)
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: isMobile ? 2 : (isTablet ? 4 : 8)),
+                        SizedBox(
+                          width: double.infinity,
+                          height: isMobile ? 28 : (isTablet ? 32 : 40),
+                          child: ElevatedButton.icon(
+                            onPressed: () => _addToCart(product),
+                            icon: Icon(
+                              Icons.add_shopping_cart, 
+                              size: isMobile ? 12 : (isTablet ? 14 : 16)
+                            ),
+                            label: Text(
+                              'Tambah',
+                              style: TextStyle(
+                                fontSize: isMobile ? 10 : (isTablet ? 11 : 14)
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4CAF50),
+                              foregroundColor: const Color(0xFFE3F2FD),
+                              padding: EdgeInsets.symmetric(
+                                vertical: isMobile ? 6 : (isTablet ? 8 : 10),
+                                horizontal: isMobile ? 8 : (isTablet ? 10 : 12),
+                              ),
+                              elevation: 2,
+                              shadowColor: const Color(0x4D4CAF50),
+                              disabledBackgroundColor: const Color(0xFFE0E0E0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              minimumSize: Size(
+                                double.infinity, 
+                                isMobile ? 32 : (isTablet ? 36 : 40)
+                              ),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -2021,6 +2283,12 @@ class _POSScreenState extends State<POSScreen> {
                 )
               : ListView.builder(
                   controller: scrollController,
+                  // Optimasi physics untuk scrolling yang lebih smooth
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  // Optimasi caching untuk performa yang lebih baik
+                  cacheExtent: 300.0,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   itemCount: _cart.length,
                   itemBuilder: (context, index) {
@@ -2511,6 +2779,12 @@ class _POSScreenState extends State<POSScreen> {
                   ),
                 )
               : ListView.builder(
+                  // Optimasi physics untuk scrolling yang lebih smooth
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  // Optimasi caching untuk performa yang lebih baik
+                  cacheExtent: 300.0,
                   itemCount: _cart.length,
                   itemBuilder: (context, index) {
                     final item = _cart[index];

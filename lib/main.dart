@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/pos_screen.dart';
@@ -51,32 +52,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final AuthService _authService = AuthService();
-  bool _isLoading = true;
-  bool _isLoggedIn = false;
-  User? _user;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
-
-  Future<void> _checkLoginStatus() async {
-    final isLoggedIn = await _authService.isLoggedIn();
-    if (isLoggedIn) {
-      final user = await _authService.getCurrentUser();
-      setState(() {
-        _isLoggedIn = true;
-        _user = user;
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
+  // Removed auth checking logic as it's now handled in SplashScreen
 
   @override
   Widget build(BuildContext context) {
@@ -91,20 +67,16 @@ class _MyAppState extends State<MyApp> {
       ],
       child: MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'CashNEntry POS',
+      title: 'DompetKasir',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade800),
         useMaterial3: true,
       ),
-      home: _isLoading
-          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-          : _isLoggedIn && _user != null
-              ? DashboardScreen(user: _user!)
-              : const LoginScreen(),
+      home: const SplashScreen(),
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        '/dashboard': (context) => _user != null ? DashboardScreen(user: _user!) : const LoginScreen(),
         '/pos': (context) => const POSScreen(),
         '/transactions': (context) => const TransactionsScreen(),
         '/inventory': (context) => const InventoryScreen(),

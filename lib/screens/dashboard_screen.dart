@@ -436,38 +436,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       color: darkBlack, // Dark black color for sidebar
       child: Column(
         children: [
-          // Logo and app name
+          // Logo
           Container(
             padding: const EdgeInsets.symmetric(vertical: 24),
             alignment: Alignment.center,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: primaryGreen,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'CNE',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'CashNEntry',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-              ],
+            child: Image.asset(
+              'assets/images/logo.png',
+              height: 60,
+              width: 120,
+              fit: BoxFit.contain,
             ),
           ),
           Divider(color: primaryGreen.withOpacity(0.3), height: 1),

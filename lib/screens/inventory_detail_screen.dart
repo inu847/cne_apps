@@ -22,6 +22,11 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
   final _notesController = TextEditingController();
   String _searchQuery = '';
   
+  // Color palette sesuai tema aplikasi
+  static const Color primaryGreen = Color(0xFF03D26F);
+  static const Color lightBlue = Color(0xFFEAF4F4);
+  static const Color darkBlack = Color(0xFF161514);
+  
   // Controller untuk form edit
   List<TextEditingController> _quantityInControllers = [];
   List<TextEditingController> _quantityOutControllers = [];
@@ -488,9 +493,17 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail Persediaan'),
-        backgroundColor: const Color(0xFF1E2A78),
+        title: const Text(
+          'Detail Persediaan',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        backgroundColor: primaryGreen,
         foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
       ),
       body: Consumer<DailyInventoryStockProvider>(
         builder: (context, provider, child) {
@@ -535,16 +548,30 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
             children: [
               // Header section
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      lightBlue,
+                      lightBlue.withOpacity(0.8),
+                    ],
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
+                      color: primaryGreen.withOpacity(0.1),
+                      blurRadius: 15,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 4),
                     ),
                   ],
+                  border: Border(
+                    bottom: BorderSide(
+                      color: primaryGreen.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -560,19 +587,21 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
                             children: [
                               Text(
                                 'Stok Tanggal: ${stockDetail.stockDate}',
-                                style: const TextStyle(
-                                  fontSize: 18,
+                                style: TextStyle(
+                                  fontSize: 22,
                                   fontWeight: FontWeight.bold,
+                                  color: darkBlack,
                                 ),
                               ),
+                              const SizedBox(height: 12),
+                              _buildInfoRow(Icons.warehouse, 'Gudang', stockDetail.warehouseName),
                               const SizedBox(height: 8),
-                              Text('Gudang: ${stockDetail.warehouseName}'),
                               if (stockDetail.notes != null && stockDetail.notes!.isNotEmpty)
-                                Text('Catatan: ${stockDetail.notes}'),
-                              Text('Dibuat oleh: ${stockDetail.createdBy}'),
-                              Text(
-                                'Dibuat pada: ${_dateFormat.format(stockDetail.createdAt)}',
-                              ),
+                                _buildInfoRow(Icons.note, 'Catatan', stockDetail.notes!),
+                              const SizedBox(height: 8),
+                              _buildInfoRow(Icons.person, 'Dibuat oleh', stockDetail.createdBy),
+                              const SizedBox(height: 8),
+                              _buildInfoRow(Icons.schedule, 'Dibuat pada', _dateFormat.format(stockDetail.createdAt)),
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -608,26 +637,23 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
                                 ),
                               ),
                               if (!stockDetail.isLocked) ...[  
-                                CustomButton(
+                                _buildActionButton(
                                   onPressed: () => _showEditDialog(stockDetail),
                                   text: 'Edit',
-                                  icon: Icons.edit,
-                                  backgroundColor: const Color(0xFF1E2A78),
-                                  textColor: Colors.white,
+                                  icon: Icons.edit_outlined,
+                                  backgroundColor: primaryGreen,
                                 ),
-                                CustomButton(
+                                _buildActionButton(
                                   onPressed: () => _showLockConfirmationDialog(stockDetail),
                                   text: 'Kunci',
-                                  icon: Icons.lock,
-                                  backgroundColor: const Color(0xFF1E2A78),
-                                  textColor: Colors.white,
+                                  icon: Icons.lock_outline,
+                                  backgroundColor: Colors.orange,
                                 ),
-                                CustomButton(
+                                _buildActionButton(
                                   onPressed: () => _showDeleteConfirmationDialog(stockDetail),
                                   text: 'Hapus',
-                                  icon: Icons.delete,
+                                  icon: Icons.delete_outline,
                                   backgroundColor: Colors.red,
-                                  textColor: Colors.white,
                                 ),
                               ],
                             ],
@@ -806,24 +832,79 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveHelper.isMobile(context) ? 0 : 0,
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryGreen.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: TextField(
                         controller: _searchController,
+                        style: TextStyle(
+                          color: darkBlack,
+                          fontSize: 16,
+                        ),
                         decoration: InputDecoration(
-                          labelText: 'Cari Item',
-                          hintText: 'Masukkan nama item',
-                          prefixIcon: const Icon(Icons.search),
+                          labelText: 'Cari Item Persediaan',
+                          hintText: 'Masukkan nama item untuk mencari...',
+                          labelStyle: TextStyle(
+                            color: primaryGreen,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          hintStyle: TextStyle(
+                            color: darkBlack.withOpacity(0.5),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            color: primaryGreen,
+                            size: 22,
+                          ),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.clear_rounded,
+                                    color: darkBlack.withOpacity(0.6),
+                                  ),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      _searchQuery = '';
+                                    });
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: primaryGreen.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: primaryGreen.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: primaryGreen,
+                              width: 2,
+                            ),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 16,
+                            vertical: 16,
+                            horizontal: 20,
                           ),
-                          isDense: ResponsiveHelper.isMobile(context),
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -862,12 +943,39 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return Card(
+        return Container(
           margin: const EdgeInsets.only(bottom: 16),
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                lightBlue.withOpacity(0.3),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: primaryGreen.withOpacity(0.1),
+                blurRadius: 12,
+                spreadRadius: 0,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                spreadRadius: 0,
+                offset: const Offset(0, 2),
+              ),
+            ],
+            border: Border.all(
+              color: primaryGreen.withOpacity(0.15),
+              width: 1,
+            ),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -970,15 +1078,33 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
       padding: const EdgeInsets.all(16),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              lightBlue.withOpacity(0.2),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
+            BoxShadow(
+              color: primaryGreen.withOpacity(0.1),
+              blurRadius: 15,
+              spreadRadius: 0,
+              offset: const Offset(0, 4),
+            ),
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
+              spreadRadius: 0,
               offset: const Offset(0, 2),
             ),
           ],
+          border: Border.all(
+            color: primaryGreen.withOpacity(0.2),
+            width: 1,
+          ),
         ),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -1081,6 +1207,79 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
           ),
         ),
       ),
+    );
+  }
+  
+  // Helper widget untuk tombol aksi dengan desain modern
+  Widget _buildActionButton({
+    required VoidCallback onPressed,
+    required String text,
+    required IconData icon,
+    required Color backgroundColor,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: backgroundColor.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        label: Text(
+          text,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 0,
+        ),
+      ),
+    );
+  }
+  
+  // Helper widget untuk menampilkan informasi dengan icon
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: primaryGreen,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: darkBlack.withOpacity(0.7),
+            fontSize: 14,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: darkBlack,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
