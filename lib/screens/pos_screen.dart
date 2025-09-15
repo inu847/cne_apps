@@ -831,6 +831,7 @@ class _POSScreenState extends State<POSScreen> {
     final isTablet = screenWidth >= 650 && screenWidth < 1100;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Consumer<SettingsProvider>(
           builder: (context, settingsProvider, child) {

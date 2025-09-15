@@ -76,8 +76,22 @@ class _PettyCashDialogState extends State<PettyCashDialog> {
     return widget.type == 'opening' ? primaryGreen : Colors.red.shade600;
   }
 
-  IconData get _dialogIcon {
+  IconData _getIcon() {
     return widget.type == 'opening' ? Icons.account_balance_wallet : Icons.lock;
+  }
+  
+  String get _title {
+    return widget.type == 'opening' ? 'Buka Kas Kecil' : 'Tutup Kas Kecil';
+  }
+  
+  String get _subtitle {
+    return widget.type == 'opening'
+        ? 'Masukkan jumlah kas awal untuk membuka kas'
+        : 'Masukkan jumlah kas akhir untuk menutup kas';
+  }
+  
+  Color get _iconBackgroundColor {
+    return widget.type == 'opening' ? primaryGreen : Colors.red.shade600;
   }
 
   void _handleSubmit() async {
@@ -151,6 +165,11 @@ class _PettyCashDialogState extends State<PettyCashDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 600;
+    final dialogWidth = isSmallScreen ? screenSize.width * 0.95 : screenSize.width * 0.9;
+    final maxDialogWidth = isSmallScreen ? 400.0 : 500.0;
+    
     return Consumer<PettyCashProvider>(
       builder: (context, provider, child) {
         return Dialog(
@@ -158,17 +177,43 @@ class _PettyCashDialogState extends State<PettyCashDialog> {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            constraints: const BoxConstraints(maxWidth: 500),
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
+            width: dialogWidth,
+            constraints: BoxConstraints(
+              maxWidth: maxDialogWidth,
+              maxHeight: screenSize.height * 0.85,
+            ),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white,
+                  Color(0xFFE3F2FD),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A4CAF50),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                  offset: Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: Color(0x0D000000),
+                  blurRadius: 24,
+                  spreadRadius: 0,
+                  offset: Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header yang tidak scroll
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24, 24, 24, isSmallScreen ? 16 : 20),
+                  child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -177,20 +222,20 @@ class _PettyCashDialogState extends State<PettyCashDialog> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          _dialogIcon,
-                          color: _submitButtonColor,
-                          size: 24,
+                          _getIcon(),
+                          color: Colors.white,
+                          size: isSmallScreen ? 20 : 24,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: isSmallScreen ? 12 : 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               _dialogTitle,
-                              style: const TextStyle(
-                                fontSize: 20,
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 18 : 20,
                                 fontWeight: FontWeight.bold,
                                 color: darkBlack,
                               ),
@@ -201,8 +246,8 @@ class _PettyCashDialogState extends State<PettyCashDialog> {
                                   ? 'Masukkan jumlah kas awal untuk memulai transaksi'
                                   : 'Masukkan jumlah kas akhir untuk menutup kas',
                               style: TextStyle(
-                                fontSize: 14,
-                                color: darkBlack.withOpacity(0.7),
+                                fontSize: isSmallScreen ? 12 : 14,
+                                color: Colors.grey.shade600,
                               ),
                             ),
                           ],
@@ -210,7 +255,19 @@ class _PettyCashDialogState extends State<PettyCashDialog> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                ),
+                
+                // Content yang bisa scroll
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(24, 0, 24, isSmallScreen ? 16 : 20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+
 
                   // Status kas aktif (jika ada)
                   if (widget.activePettyCash != null) ...[
@@ -310,8 +367,16 @@ class _PettyCashDialogState extends State<PettyCashDialog> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Action button
-                  SizedBox(
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // Action button yang tidak scroll
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24, isSmallScreen ? 16 : 20, 24, 24),
+                  child: SizedBox(
                     width: double.infinity,
                     child: CustomButton(
                       text: _submitButtonText,
@@ -320,8 +385,8 @@ class _PettyCashDialogState extends State<PettyCashDialog> {
                       isLoading: provider.isLoading,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
