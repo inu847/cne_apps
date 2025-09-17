@@ -301,6 +301,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         const SizedBox(height: 4),
         TextField(
           controller: _customerNameController,
+          autofocus: false,
+          enableInteractiveSelection: false,
           decoration: const InputDecoration(
             hintText: 'Nama Pelanggan',
             isDense: true,
@@ -512,6 +514,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
+                    autofocus: false,
+                    enableInteractiveSelection: false,
                     style: TextStyle(
                       color: darkBlack,
                       fontSize: isMobile ? 14 : 16,

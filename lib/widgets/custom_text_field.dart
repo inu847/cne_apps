@@ -18,6 +18,8 @@ class CustomTextField extends StatelessWidget {
   final FocusNode? focusNode;
   final EdgeInsetsGeometry? contentPadding;
   final bool enabled;
+  final bool autofocus;
+  final bool enableInteractiveSelection;
 
   const CustomTextField({
     Key? key,
@@ -37,6 +39,8 @@ class CustomTextField extends StatelessWidget {
     this.focusNode,
     this.contentPadding,
     this.enabled = true,
+    this.autofocus = false,
+    this.enableInteractiveSelection = false,
   }) : super(key: key);
 
   @override
@@ -53,6 +57,8 @@ class CustomTextField extends StatelessWidget {
       readOnly: readOnly,
       focusNode: focusNode,
       enabled: enabled,
+      autofocus: autofocus,
+      enableInteractiveSelection: enableInteractiveSelection,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
@@ -95,6 +101,8 @@ class CustomNumberTextField extends StatelessWidget {
   final FocusNode? focusNode;
   final EdgeInsetsGeometry? contentPadding;
   final bool enabled;
+  final bool autofocus;
+  final bool enableInteractiveSelection;
 
   const CustomNumberTextField({
     Key? key,
@@ -110,6 +118,8 @@ class CustomNumberTextField extends StatelessWidget {
     this.focusNode,
     this.contentPadding,
     this.enabled = true,
+    this.autofocus = false,
+    this.enableInteractiveSelection = false,
   }) : super(key: key);
 
   @override
@@ -133,6 +143,8 @@ class CustomNumberTextField extends StatelessWidget {
       readOnly: readOnly,
       focusNode: focusNode,
       enabled: enabled,
+      autofocus: autofocus,
+      enableInteractiveSelection: enableInteractiveSelection,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,

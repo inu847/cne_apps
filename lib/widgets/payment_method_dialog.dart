@@ -533,6 +533,8 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
                                         TextFormField(
                                           controller: _amountController,
                                           keyboardType: TextInputType.number,
+                                          autofocus: false,
+                                          enableInteractiveSelection: false,
                                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                           onChanged: (value) {
                                             setState(() {
@@ -625,6 +627,8 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
                                       TextFormField(
                                         controller: _amountController,
                                         keyboardType: TextInputType.number,
+                                        autofocus: false,
+                                        enableInteractiveSelection: false,
                                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                         onChanged: (value) {
                                           setState(() {

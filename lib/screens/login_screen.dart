@@ -106,6 +106,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextField(
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
+                            autofocus: false,
+                            enableInteractiveSelection: false,
                             style: TextStyle(color: darkBlack),
                             decoration: InputDecoration(
                               labelText: 'Email',
@@ -130,6 +132,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextField(
                             controller: _passwordController,
                             obscureText: _obscurePassword,
+                            autofocus: false,
+                            enableInteractiveSelection: false,
                             style: TextStyle(color: darkBlack),
                             decoration: InputDecoration(
                               labelText: 'Password',

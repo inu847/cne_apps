@@ -48,6 +48,14 @@ class _POSScreenState extends State<POSScreen> {
   // ScrollController untuk infinite scroll
   final ScrollController _scrollController = ScrollController();
   
+  // ScrollController dan FocusNode untuk menangani keyboard dan responsivitas
+  final ScrollController _cartScrollController = ScrollController();
+  final FocusNode _customerNameFocusNode = FocusNode();
+  final FocusNode _voucherFocusNode = FocusNode();
+  
+  // Variabel untuk mendeteksi keyboard
+  bool _isKeyboardVisible = false;
+  
   // Kategori produk dari API
   List<Category> _apiCategories = [];
   bool _isLoadingCategories = true;
@@ -452,9 +460,40 @@ class _POSScreenState extends State<POSScreen> {
     // Menambahkan listener untuk infinite scroll
     _scrollController.addListener(_scrollListener);
     
+    // Menambahkan listener untuk mendeteksi keyboard
+    _customerNameFocusNode.addListener(_onFocusChange);
+    _voucherFocusNode.addListener(_onFocusChange);
+    
     // Inisialisasi settings dan petty cash validation
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeSettingsAndPettyCash();
+    });
+  }
+  
+  // Method untuk menangani perubahan focus dan auto-scroll
+  void _onFocusChange() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+      final isKeyboardVisible = keyboardHeight > 0;
+      
+      if (isKeyboardVisible != _isKeyboardVisible) {
+        setState(() {
+          _isKeyboardVisible = isKeyboardVisible;
+        });
+        
+        // Auto-scroll saat keyboard muncul
+        if (isKeyboardVisible && (_customerNameFocusNode.hasFocus || _voucherFocusNode.hasFocus)) {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (_cartScrollController.hasClients) {
+              _cartScrollController.animateTo(
+                _cartScrollController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            }
+          });
+        }
+      }
     });
   }
   
@@ -517,10 +556,15 @@ class _POSScreenState extends State<POSScreen> {
     // Membersihkan controller saat widget di-dispose
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
+    _cartScrollController.dispose();
     _customerNameController.dispose();
     _voucherController.dispose();
-    super.dispose();
-  }
+    _customerNameFocusNode.removeListener(_onFocusChange);
+    _voucherFocusNode.removeListener(_onFocusChange);
+    _customerNameFocusNode.dispose();
+    _voucherFocusNode.dispose();
+     super.dispose();
+   }
   
   // Validasi voucher
   void _validateVoucher() async {
@@ -2254,30 +2298,38 @@ class _POSScreenState extends State<POSScreen> {
             borderRadius: BorderRadius.circular(20.0),
           ),
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+              maxWidth: MediaQuery.of(context).size.width * 0.9,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Animasi checklist
+                // Header tetap (tidak di-scroll) - ukuran lebih kecil
                 SizedBox(
-                  height: 150,
-                  width: 150,
+                  height: 100,
+                  width: 100,
                   child: Lottie.asset(
                     'assets/animations/success_check.json',
                     repeat: false,
                   ),
                 ),
-                const SizedBox(height: 10),
-                // Judul dengan style yang lebih menarik
+                const SizedBox(height: 8),
                 const Text(
                   'Transaksi Berhasil!',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
+                // Content yang bisa di-scroll
+                 Expanded(
+                   child: SingleChildScrollView(
+                     child: Column(
+                       children: [
                 // Detail transaksi dalam card
                 Container(
                   padding: const EdgeInsets.all(15),
@@ -2451,7 +2503,7 @@ class _POSScreenState extends State<POSScreen> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () async {
-                      Navigator.of(context).pop(); // Tutup dialog
+                      // Jangan tutup dialog, biarkan kasir melakukan kedua cetakan
                       await _printTransactionReceipt(
                         order: order,
                         transactionProvider: transactionProvider,
@@ -2471,27 +2523,31 @@ class _POSScreenState extends State<POSScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Tombol Cetak Struk Checker
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      Navigator.of(context).pop(); // Tutup dialog
-                      await _showCategoryCheckerDialog(
-                        order: order,
-                        transactionProvider: transactionProvider,
-                        settingsProvider: settingsProvider,
-                      );
-                    },
-                    icon: const Icon(Icons.checklist),
-                    label: const Text('Cetak Struk Checker'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                        // Tombol Cetak Struk Checker dengan ukuran lebih kecil
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              // Jangan tutup dialog, biarkan kasir melakukan kedua cetakan
+                              await _showCategoryCheckerDialog(
+                                order: order,
+                                transactionProvider: transactionProvider,
+                                settingsProvider: settingsProvider,
+                              );
+                            },
+                            icon: const Icon(Icons.checklist, size: 16),
+                            label: const Text('Cetak Struk Checker', style: TextStyle(fontSize: 12)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.purple,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -2587,13 +2643,16 @@ class _POSScreenState extends State<POSScreen> {
         
         if (categoryItems.isNotEmpty) {
           // Buat order khusus untuk kategori ini
+          final categoryTotal = categoryItems.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
           final categoryOrder = Order(
+            orderNumber: order.orderNumber,
             items: categoryItems,
-            totalAmount: categoryItems.fold(0.0, (sum, item) => sum + (item.price * item.quantity)),
-            paymentMethod: order.paymentMethod,
+            subtotal: categoryTotal,
+            tax: 0.0,
+            total: categoryTotal,
+            createdAt: order.createdAt,
+            status: order.status,
             customerName: order.customerName,
-            voucherCode: order.voucherCode,
-            voucherDiscount: 0.0, // Tidak ada diskon untuk struk checker
           );
           
           // Buat receipt untuk kategori ini
@@ -2962,6 +3021,9 @@ class _POSScreenState extends State<POSScreen> {
                   // Input nama pelanggan
                   TextField(
                     controller: _customerNameController,
+                    focusNode: _customerNameFocusNode,
+                    autofocus: false,
+                    enableInteractiveSelection: false,
                     decoration: InputDecoration(
                       labelText: 'Nama Pelanggan',
                       hintText: 'Opsional',
@@ -2991,6 +3053,9 @@ class _POSScreenState extends State<POSScreen> {
                       Expanded(
                         child: TextField(
                           controller: _voucherController,
+                          focusNode: _voucherFocusNode,
+                          autofocus: false,
+                          enableInteractiveSelection: false,
                           decoration: InputDecoration(
                             labelText: 'Kode Voucher',
                             hintText: 'Opsional',
@@ -3217,32 +3282,36 @@ class _POSScreenState extends State<POSScreen> {
         // Daftar item keranjang
         Expanded(
           child: _totalItems == 0
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey.shade400),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Keranjang kosong',
-                        style: TextStyle(color: Colors.grey.shade600),
+              ? SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Container(
+                    height: MediaQuery.of(context).size.height * 0.3,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey.shade400),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Keranjang kosong',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tambahkan produk untuk memulai transaksi',
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.add_shopping_cart),
-                        label: const Text('Tambahkan Produk'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 )
               : ListView.builder(
+                  controller: _cartScrollController,
                   // Optimasi physics untuk scrolling yang lebih smooth
                   physics: const BouncingScrollPhysics(
                     parent: AlwaysScrollableScrollPhysics(),
@@ -3339,17 +3408,6 @@ class _POSScreenState extends State<POSScreen> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: isTablet ? 11 : 14,
                                     ),
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () => _addToCart(item['product_ref']),
-                                  icon: const Icon(Icons.add_circle_outline),
-                                  color: Colors.green,
-                                  iconSize: isTablet ? 16 : 20,
-                                  padding: EdgeInsets.all(isTablet ? 1 : 0),
-                                  constraints: BoxConstraints(
-                                    minWidth: isTablet ? 24 : 24,
-                                    minHeight: isTablet ? 24 : 24,
                                   ),
                                 ),
                               ],
@@ -3557,6 +3615,9 @@ class _POSScreenState extends State<POSScreen> {
                                     // Input nama pelanggan
                                     TextField(
                                       controller: _customerNameController,
+                                      focusNode: _customerNameFocusNode,
+                                      autofocus: false,
+                                      enableInteractiveSelection: false,
                                       style: TextStyle(fontSize: isTablet ? 12 : 14),
                                       decoration: InputDecoration(
                                         labelText: 'Nama Pelanggan',
@@ -3595,6 +3656,9 @@ class _POSScreenState extends State<POSScreen> {
                                         Expanded(
                                           child: TextField(
                                             controller: _voucherController,
+                                            focusNode: _voucherFocusNode,
+                                            autofocus: false,
+                                            enableInteractiveSelection: false,
                                             style: TextStyle(fontSize: isTablet ? 12 : 14),
                                             decoration: InputDecoration(
                                               labelText: 'Kode Voucher',
@@ -3706,54 +3770,59 @@ class _POSScreenState extends State<POSScreen> {
                 ),
               ),
               SizedBox(height: isTablet ? 12 : 16),
-              // Tombol simpan dan checkout
-              Row(
-                children: [
-                  // Tombol simpan
-                  Expanded(
-                    flex: 1,
-                    child: SizedBox(
-                      height: isTablet ? 42 : 50,
-                      child: OutlinedButton.icon(
-                        onPressed: _totalItems == 0 ? null : _saveOrder,
-                        icon: Icon(Icons.save, size: isTablet ? 16 : 18),
-                        label: Text(
-                          'SIMPAN',
-                          style: TextStyle(fontSize: isTablet ? 12 : 14),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _primaryColor,
-                          side: BorderSide(color: _primaryColor),
-                          disabledForegroundColor: Colors.grey.shade400,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: isTablet ? 6 : 8),
-                  // Tombol checkout
-                  Expanded(
-                    flex: 2,
-                    child: SizedBox(
-                      height: isTablet ? 42 : 50,
-                      child: ElevatedButton.icon(
-                        onPressed: _totalItems == 0 ? null : _checkout,
-                        icon: Icon(Icons.payment, size: isTablet ? 16 : 18),
-                        label: Text(
-                          'CHECKOUT',
-                          style: TextStyle(fontSize: isTablet ? 12 : 14),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _primaryColor,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: Colors.grey.shade300,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              // Tombol simpan dan checkout dengan padding responsif
+              Container(
+                padding: EdgeInsets.only(
+                  bottom: _isKeyboardVisible ? MediaQuery.of(context).viewInsets.bottom + 10 : 10,
+                ),
+                child: Row(
+                  children: [
+                    // Tombol simpan
+                    Expanded(
+                      flex: 1,
+                      child: SizedBox(
+                        height: isTablet ? 42 : 50,
+                        child: OutlinedButton.icon(
+                          onPressed: _totalItems == 0 ? null : _saveOrder,
+                          icon: Icon(Icons.save, size: isTablet ? 16 : 18),
+                          label: Text(
+                            'SIMPAN',
+                            style: TextStyle(fontSize: isTablet ? 12 : 14),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _primaryColor,
+                            side: BorderSide(color: _primaryColor),
+                            disabledForegroundColor: Colors.grey.shade400,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    SizedBox(width: isTablet ? 6 : 8),
+                    // Tombol checkout
+                    Expanded(
+                      flex: 2,
+                      child: SizedBox(
+                        height: isTablet ? 42 : 50,
+                        child: ElevatedButton.icon(
+                          onPressed: _totalItems == 0 ? null : _checkout,
+                          icon: Icon(Icons.payment, size: isTablet ? 16 : 18),
+                          label: Text(
+                            'CHECKOUT',
+                            style: TextStyle(fontSize: isTablet ? 12 : 14),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _primaryColor,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: Colors.grey.shade300,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

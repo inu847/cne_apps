@@ -268,50 +268,9 @@ class ReceiptService {
     final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
 
-    // Header
-    // Custom header from settings if available
-    if (receipt.receiptSettings.receiptHeader.isNotEmpty) {
-      bytes += generator.text(
-        receipt.receiptSettings.receiptHeader,
-        styles: const PosStyles(
-          align: PosAlign.center,
-          height: PosTextSize.size2,
-          width: PosTextSize.size2,
-          bold: true,
-        ),
-      );
-    } else {
-      // Default header with store info
-      bytes += generator.text(
-        receipt.storeName,
-        styles: const PosStyles(
-          align: PosAlign.center,
-          height: PosTextSize.size2,
-          width: PosTextSize.size2,
-          bold: true,
-        ),
-      );
-      bytes += generator.text(
-        receipt.storeAddress,
-        styles: const PosStyles(align: PosAlign.center),
-      );
-      if (receipt.storePhone.isNotEmpty && receipt.storePhone != '-') {
-        bytes += generator.text(
-          'Tel: ${receipt.storePhone}',
-          styles: const PosStyles(align: PosAlign.center),
-        );
-      }
-      if (receipt.storeEmail.isNotEmpty && receipt.storeEmail != '-') {
-        bytes += generator.text(
-          'Email: ${receipt.storeEmail}',
-          styles: const PosStyles(align: PosAlign.center),
-        );
-      }
-    }
-    
-    // Add checker receipt indicator if this is a checker receipt
+    // Simplified header for checker receipt
     if (receipt.isCheckerReceipt) {
-      bytes += generator.hr();
+      // 1. Hilangkan bagian judul toko - langsung ke indicator checker
       bytes += generator.text(
         '*** STRUK CHECKER ***',
         styles: const PosStyles(
@@ -329,35 +288,86 @@ class ReceiptService {
           ),
         );
       }
-      if (receipt.checkerSequence != null) {
+      // 2. Hapus nomor urutan - tidak menampilkan checkerSequence
+      
+      bytes += generator.hr();
+      bytes += generator.feed(1);
+
+      // 3. Hilangkan informasi kasir - hanya tampilkan invoice dan tanggal
+      bytes += generator.text(
+        'No. Invoice: ${receipt.invoiceNumber}',
+        styles: const PosStyles(bold: true),
+      );
+      bytes += generator.text(
+        'Tanggal: ${_formatDate(receipt.transactionDate)}',
+      );
+      bytes += generator.text(
+        'Pelanggan: ${receipt.customerName}',
+      );
+      bytes += generator.hr();
+      bytes += generator.feed(1);
+    } else {
+      // Normal receipt header
+      // Custom header from settings if available
+      if (receipt.receiptSettings.receiptHeader.isNotEmpty) {
         bytes += generator.text(
-          'Urutan: ${receipt.checkerSequence}',
+          receipt.receiptSettings.receiptHeader,
           styles: const PosStyles(
             align: PosAlign.center,
+            height: PosTextSize.size2,
+            width: PosTextSize.size2,
+            bold: true,
           ),
         );
+      } else {
+        // Default header with store info
+        bytes += generator.text(
+          receipt.storeName,
+          styles: const PosStyles(
+            align: PosAlign.center,
+            height: PosTextSize.size2,
+            width: PosTextSize.size2,
+            bold: true,
+          ),
+        );
+        bytes += generator.text(
+          receipt.storeAddress,
+          styles: const PosStyles(align: PosAlign.center),
+        );
+        if (receipt.storePhone.isNotEmpty && receipt.storePhone != '-') {
+          bytes += generator.text(
+            'Tel: ${receipt.storePhone}',
+            styles: const PosStyles(align: PosAlign.center),
+          );
+        }
+        if (receipt.storeEmail.isNotEmpty && receipt.storeEmail != '-') {
+          bytes += generator.text(
+            'Email: ${receipt.storeEmail}',
+            styles: const PosStyles(align: PosAlign.center),
+          );
+        }
       }
-    }
-    
-    bytes += generator.hr();
-    bytes += generator.feed(1);
+      
+      bytes += generator.hr();
+      bytes += generator.feed(1);
 
-    // Transaction info
-    bytes += generator.text(
-      'No. Invoice: ${receipt.invoiceNumber}',
-      styles: const PosStyles(bold: true),
-    );
-    bytes += generator.text(
-      'Tanggal: ${_formatDate(receipt.transactionDate)}',
-    );
-    bytes += generator.text(
-      'Kasir: ${receipt.cashierName}',
-    );
-    bytes += generator.text(
-      'Pelanggan: ${receipt.customerName}',
-    );
-    bytes += generator.hr();
-    bytes += generator.feed(1);
+      // Transaction info
+      bytes += generator.text(
+        'No. Invoice: ${receipt.invoiceNumber}',
+        styles: const PosStyles(bold: true),
+      );
+      bytes += generator.text(
+        'Tanggal: ${_formatDate(receipt.transactionDate)}',
+      );
+      bytes += generator.text(
+        'Kasir: ${receipt.cashierName}',
+      );
+      bytes += generator.text(
+        'Pelanggan: ${receipt.customerName}',
+      );
+      bytes += generator.hr();
+      bytes += generator.feed(1);
+    }
 
     // Items
     for (var item in receipt.order.items) {
@@ -380,75 +390,89 @@ class ReceiptService {
 
     bytes += generator.hr();
 
-    // Totals
-    bytes += generator.row([
-      PosColumn(text: 'Subtotal:', width: 8),
-      PosColumn(
-        text: _formatCurrency(receipt.order.total),
-        width: 4,
-        styles: const PosStyles(align: PosAlign.right),
-      ),
-    ]);
-
-    if (receipt.discountAmount > 0) {
-      bytes += generator.row([
-        PosColumn(text: 'Diskon:', width: 8),
-        PosColumn(
-          text: '-${_formatCurrency(receipt.discountAmount)}',
-          width: 4,
-          styles: const PosStyles(align: PosAlign.right),
-        ),
-      ]);
-    }
-
-    final total = receipt.order.total - receipt.discountAmount;
-    bytes += generator.row([
-      PosColumn(
-        text: 'TOTAL:',
-        width: 8,
-        styles: const PosStyles(bold: true, height: PosTextSize.size2),
-      ),
-      PosColumn(
-        text: _formatCurrency(total),
-        width: 4,
-        styles: const PosStyles(
-          align: PosAlign.right,
-          bold: true,
-          height: PosTextSize.size2,
-        ),
-      ),
-    ]);
-
-    bytes += generator.hr();
-
-    // Payment info
-    for (var payment in receipt.payments) {
-      bytes += generator.row([
-        PosColumn(
-          text: payment['method'] ?? 'Cash',
-          width: 8,
-        ),
-        PosColumn(
-          text: _formatCurrency(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0),
-          width: 4,
-          styles: const PosStyles(align: PosAlign.right),
-        ),
-      ]);
-    }
-
-    bytes += generator.feed(2);
-    
-    // Footer from settings
-    if (receipt.receiptSettings.receiptFooter.isNotEmpty) {
+    // Different footer for checker receipt vs normal receipt
+    if (receipt.isCheckerReceipt) {
+      // 5. Hapus seluruh section berikutnya dan ganti dengan catatan sederhana
+      bytes += generator.feed(2);
       bytes += generator.text(
-        receipt.receiptSettings.receiptFooter,
-        styles: const PosStyles(align: PosAlign.center),
+        'Catatan: Struk ini hanya untuk keperluan checker',
+        styles: const PosStyles(
+          align: PosAlign.center,
+          bold: true,
+        ),
       );
     } else {
-      bytes += generator.text(
-        'Terima kasih atas kunjungan Anda!',
-        styles: const PosStyles(align: PosAlign.center),
-      );
+      // Normal receipt totals and payment info
+      // Totals
+      bytes += generator.row([
+        PosColumn(text: 'Subtotal:', width: 8),
+        PosColumn(
+          text: _formatCurrency(receipt.order.total),
+          width: 4,
+          styles: const PosStyles(align: PosAlign.right),
+        ),
+      ]);
+
+      if (receipt.discountAmount > 0) {
+        bytes += generator.row([
+          PosColumn(text: 'Diskon:', width: 8),
+          PosColumn(
+            text: '-${_formatCurrency(receipt.discountAmount)}',
+            width: 4,
+            styles: const PosStyles(align: PosAlign.right),
+          ),
+        ]);
+      }
+
+      final total = receipt.order.total - receipt.discountAmount;
+      bytes += generator.row([
+        PosColumn(
+          text: 'TOTAL:',
+          width: 8,
+          styles: const PosStyles(bold: true, height: PosTextSize.size2),
+        ),
+        PosColumn(
+          text: _formatCurrency(total),
+          width: 4,
+          styles: const PosStyles(
+            align: PosAlign.right,
+            bold: true,
+            height: PosTextSize.size2,
+          ),
+        ),
+      ]);
+
+      bytes += generator.hr();
+
+      // Payment info
+      for (var payment in receipt.payments) {
+        bytes += generator.row([
+          PosColumn(
+            text: payment['method'] ?? 'Cash',
+            width: 8,
+          ),
+          PosColumn(
+            text: _formatCurrency(double.tryParse(payment['amount']?.toString() ?? '0') ?? 0),
+            width: 4,
+            styles: const PosStyles(align: PosAlign.right),
+          ),
+        ]);
+      }
+
+      bytes += generator.feed(2);
+      
+      // Footer from settings
+      if (receipt.receiptSettings.receiptFooter.isNotEmpty) {
+        bytes += generator.text(
+          receipt.receiptSettings.receiptFooter,
+          styles: const PosStyles(align: PosAlign.center),
+        );
+      } else {
+        bytes += generator.text(
+          'Terima kasih atas kunjungan Anda!',
+          styles: const PosStyles(align: PosAlign.center),
+        );
+      }
     }
     
     bytes += generator.feed(3);

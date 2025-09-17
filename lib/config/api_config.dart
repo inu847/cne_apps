@@ -1,7 +1,7 @@
 class ApiConfig {
   // Base URL for API
-  static const String baseUrl = 'http://cne.test/api';
-  // static const String baseUrl = 'https://dompetkasir.com/api';
+  // static const String baseUrl = 'http://cne.test/api';
+  static const String baseUrl = 'https://dompetkasir.com/api';
   
   // API Endpoints
   // Karena baseUrl sudah termasuk '/api', kita tidak perlu menambahkan '/api' lagi
