@@ -19,6 +19,7 @@ import '../providers/voucher_provider.dart';
 import '../providers/petty_cash_provider.dart';
 import '../widgets/payment_method_dialog.dart';
 import '../widgets/petty_cash_dialog.dart';
+import '../widgets/category_checker_dialog.dart';
 import '../services/receipt_service.dart';
 import 'saved_orders_screen.dart';
 import 'receipt_screen.dart';
@@ -2469,6 +2470,31 @@ class _POSScreenState extends State<POSScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 8),
+                // Tombol Cetak Struk Checker
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.of(context).pop(); // Tutup dialog
+                      await _showCategoryCheckerDialog(
+                        order: order,
+                        transactionProvider: transactionProvider,
+                        settingsProvider: settingsProvider,
+                      );
+                    },
+                    icon: const Icon(Icons.checklist),
+                    label: const Text('Cetak Struk Checker'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -2506,6 +2532,110 @@ class _POSScreenState extends State<POSScreen> {
         SnackBar(
           content: Text('Gagal mencetak struk: ${e.toString()}'),
           backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Menampilkan dialog pemilihan kategori untuk cetak struk checker
+  Future<void> _showCategoryCheckerDialog({
+    required Order order,
+    required TransactionProvider transactionProvider,
+    required SettingsProvider settingsProvider,
+  }) async {
+    showDialog(
+      context: context,
+      builder: (context) => CategoryCheckerDialog(
+        order: order,
+        onCategoriesSelected: (selectedCategories) async {
+          await _printCheckerReceiptsByCategory(
+            order: order,
+            selectedCategories: selectedCategories,
+            transactionProvider: transactionProvider,
+            settingsProvider: settingsProvider,
+          );
+        },
+      ),
+    );
+  }
+
+  // Mencetak struk checker berdasarkan kategori yang dipilih
+  Future<void> _printCheckerReceiptsByCategory({
+    required Order order,
+    required List<String> selectedCategories,
+    required TransactionProvider transactionProvider,
+    required SettingsProvider settingsProvider,
+  }) async {
+    try {
+      if (transactionProvider.lastTransaction == null) {
+        throw Exception('Data transaksi tidak ditemukan');
+      }
+
+      final receiptService = ReceiptService();
+      
+      // Urutkan kategori sesuai urutan asli dalam transaksi
+      selectedCategories.sort();
+      
+      // Cetak struk checker untuk setiap kategori secara berurutan
+      for (int i = 0; i < selectedCategories.length; i++) {
+        final category = selectedCategories[i];
+        
+        // Filter items berdasarkan kategori
+        final categoryItems = order.items
+            .where((item) => item.category == category)
+            .toList();
+        
+        if (categoryItems.isNotEmpty) {
+          // Buat order khusus untuk kategori ini
+          final categoryOrder = Order(
+            items: categoryItems,
+            totalAmount: categoryItems.fold(0.0, (sum, item) => sum + (item.price * item.quantity)),
+            paymentMethod: order.paymentMethod,
+            customerName: order.customerName,
+            voucherCode: order.voucherCode,
+            voucherDiscount: 0.0, // Tidak ada diskon untuk struk checker
+          );
+          
+          // Buat receipt untuk kategori ini
+          final receipt = Receipt.fromTransaction(
+            transaction: transactionProvider.lastTransaction!,
+            order: categoryOrder,
+            receiptSettings: settingsProvider.receipt,
+            cashierName: settingsProvider.general.cashierName ?? 'Kasir',
+            storeName: settingsProvider.store.storeName ?? 'Toko',
+            storeAddress: settingsProvider.store.storeAddress ?? 'Alamat Toko',
+            storePhone: settingsProvider.store.storePhone ?? '-',
+            storeEmail: settingsProvider.general.storeEmail ?? '-',
+            isCheckerReceipt: true,
+            checkerCategory: category,
+            checkerSequence: '${i + 1}/${selectedCategories.length}',
+          );
+          
+          // Cetak struk checker
+          await receiptService.printReceipt(context, receipt);
+          
+          // Delay singkat antara pencetakan untuk memastikan urutan
+          if (i < selectedCategories.length - 1) {
+            await Future.delayed(const Duration(milliseconds: 500));
+          }
+        }
+      }
+      
+      // Tampilkan notifikasi sukses
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Berhasil mencetak ${selectedCategories.length} struk checker'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mencetak struk checker: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
         ),
       );
     }

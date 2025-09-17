@@ -32,6 +32,7 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
   
   // Shortcut nominal untuk Cash
   final List<int> _cashShortcuts = [10000, 20000, 50000, 100000];
+  bool _isCustomAmount = false;
 
   @override
   void initState() {
@@ -381,20 +382,79 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
                                     if (_selectedMethod?.code.toLowerCase() == 'cash') ...[
                                       // Shortcut nominal untuk Cash
                                       const Text(
-                                        'Pilih Nominal Uang',
+                                        'Pilih Nominal Pembayaran',
                                         style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                                       ),
                                       const SizedBox(height: 8),
+                                      
+                                      // Opsi Uang Pas
+                                      InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            _paidAmount = widget.totalAmount;
+                                            _amountController.text = widget.totalAmount.toString();
+                                            _isCustomAmount = false;
+                                          });
+                                        },
+                                        child: Container(
+                                          width: double.infinity,
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          margin: const EdgeInsets.only(bottom: 8),
+                                          decoration: BoxDecoration(
+                                            color: !_isCustomAmount && _paidAmount == widget.totalAmount ? primaryColor : Colors.white,
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: !_isCustomAmount && _paidAmount == widget.totalAmount ? primaryColor : Colors.grey.shade300,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.money,
+                                                color: !_isCustomAmount && _paidAmount == widget.totalAmount ? Colors.white : primaryColor,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      'Uang Pas',
+                                                      style: TextStyle(
+                                                        color: !_isCustomAmount && _paidAmount == widget.totalAmount ? Colors.white : Colors.black87,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      '${FormatUtils.formatCurrency(widget.totalAmount.toInt())}',
+                                                      style: TextStyle(
+                                                        color: !_isCustomAmount && _paidAmount == widget.totalAmount ? Colors.white70 : Colors.grey.shade600,
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      
+                                      // Shortcut nominal lainnya
                                       Wrap(
                                         spacing: 8,
                                         runSpacing: 8,
                                         children: _cashShortcuts.map((amount) {
-                                          final isSelected = _paidAmount == amount.toDouble();
+                                          final isSelected = !_isCustomAmount && _paidAmount == amount.toDouble();
                                           return InkWell(
                                             onTap: () {
                                               setState(() {
                                                 _paidAmount = amount.toDouble();
                                                 _amountController.text = amount.toString();
+                                                _isCustomAmount = false;
                                               });
                                             },
                                             child: Container(
@@ -418,31 +478,108 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
                                           );
                                         }).toList(),
                                       ),
+                                      
+                                      const SizedBox(height: 8),
+                                      
+                                      // Opsi Custom Nominal
+                                      InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            _isCustomAmount = true;
+                                          });
+                                        },
+                                        child: Container(
+                                          width: double.infinity,
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          decoration: BoxDecoration(
+                                            color: _isCustomAmount ? primaryColor.withOpacity(0.1) : Colors.white,
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: _isCustomAmount ? primaryColor : Colors.grey.shade300,
+                                              width: _isCustomAmount ? 2 : 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.edit,
+                                                color: primaryColor,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Text(
+                                                'Custom Nominal',
+                                                style: TextStyle(
+                                                  color: _isCustomAmount ? primaryColor : Colors.black87,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
                                       const SizedBox(height: 12),
                                       
-                                      // Display jumlah bayar (read-only)
+                                      // Display jumlah bayar
                                       const Text(
                                         'Jumlah Bayar',
                                         style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                                       ),
                                       const SizedBox(height: 6),
-                                      Container(
-                                        width: double.infinity,
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey.shade100,
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: Colors.grey.shade300),
-                                        ),
-                                        child: Text(
-                                          '${FormatUtils.formatCurrency(_paidAmount.toInt())}',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: primaryColor,
+                                      
+                                      // Tampilkan input field jika custom nominal dipilih
+                                      if (_isCustomAmount) ...[
+                                        TextFormField(
+                                          controller: _amountController,
+                                          keyboardType: TextInputType.number,
+                                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _paidAmount = double.tryParse(value) ?? widget.totalAmount;
+                                            });
+                                          },
+                                          decoration: InputDecoration(
+                                            prefixText: 'Rp ',
+                                            prefixStyle: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.w600),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                              borderSide: BorderSide(color: Colors.grey.shade300),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                              borderSide: BorderSide(color: Colors.grey.shade300),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                              borderSide: BorderSide(color: primaryColor, width: 2),
+                                            ),
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            hintText: 'Masukkan nominal pembayaran',
                                           ),
                                         ),
-                                      ),
+                                      ] else ...[
+                                        // Display read-only untuk shortcut yang dipilih
+                                        Container(
+                                          width: double.infinity,
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade100,
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: Colors.grey.shade300),
+                                          ),
+                                          child: Text(
+                                            '${FormatUtils.formatCurrency(_paidAmount.toInt())}',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: primaryColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                       const SizedBox(height: 12),
                                       
                                       // Display kembalian

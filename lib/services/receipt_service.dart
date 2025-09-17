@@ -308,6 +308,37 @@ class ReceiptService {
         );
       }
     }
+    
+    // Add checker receipt indicator if this is a checker receipt
+    if (receipt.isCheckerReceipt) {
+      bytes += generator.hr();
+      bytes += generator.text(
+        '*** STRUK CHECKER ***',
+        styles: const PosStyles(
+          align: PosAlign.center,
+          bold: true,
+          height: PosTextSize.size2,
+        ),
+      );
+      if (receipt.checkerCategory != null) {
+        bytes += generator.text(
+          'Kategori: ${receipt.checkerCategory}',
+          styles: const PosStyles(
+            align: PosAlign.center,
+            bold: true,
+          ),
+        );
+      }
+      if (receipt.checkerSequence != null) {
+        bytes += generator.text(
+          'Urutan: ${receipt.checkerSequence}',
+          styles: const PosStyles(
+            align: PosAlign.center,
+          ),
+        );
+      }
+    }
+    
     bytes += generator.hr();
     bytes += generator.feed(1);
 

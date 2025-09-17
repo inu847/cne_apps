@@ -17,6 +17,9 @@ class Receipt {
   final String storeAddress;
   final String storePhone;
   final String storeEmail;
+  final bool isCheckerReceipt;
+  final String? checkerCategory;
+  final String? checkerSequence;
 
   Receipt({
     required this.invoiceNumber,
@@ -34,6 +37,9 @@ class Receipt {
     required this.storeAddress,
     required this.storePhone,
     required this.storeEmail,
+    this.isCheckerReceipt = false,
+    this.checkerCategory,
+    this.checkerSequence,
   }) : this.transactionId = transactionId ?? invoiceNumber;
 
   // Membuat Receipt dari data transaksi
@@ -46,6 +52,9 @@ class Receipt {
     required String storeAddress,
     required String storePhone,
     required String storeEmail,
+    bool isCheckerReceipt = false,
+    String? checkerCategory,
+    String? checkerSequence,
   }) {
     return Receipt(
       invoiceNumber: transaction['invoice_number'] ?? '',
@@ -63,6 +72,9 @@ class Receipt {
       storeAddress: storeAddress,
       storePhone: storePhone,
       storeEmail: storeEmail,
+      isCheckerReceipt: isCheckerReceipt,
+      checkerCategory: checkerCategory,
+      checkerSequence: checkerSequence,
     );
   }
 }
