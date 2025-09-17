@@ -9,6 +9,7 @@ import '../models/order_model.dart';
 import '../models/receipt_model.dart';
 import '../services/receipt_service.dart';
 import 'receipt_screen.dart';
+import '../widgets/category_checker_dialog.dart';
 
 // Tema warna aplikasi
 const Color primaryGreen = Color(0xFF03D26F);
@@ -136,7 +137,8 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
       }
       
       try {
-        category = item['category']?.toString() ?? 'Umum';
+        // Menggunakan category_product_name dari response API yang baru
+        category = item['category_product_name']?.toString() ?? 'Umum';
       } catch (e) {
         category = 'Umum';
       }
@@ -293,6 +295,120 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal mencetak struk: ${e.toString()}')),
+      );
+    }
+  }
+
+  // Mencetak checker receipt
+  void _printCheckerReceipt() async {
+    if (_transaction == null) return;
+    
+    try {
+      final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+      final order = _createOrderFromTransaction(_transaction!);
+      
+      // Tampilkan dialog untuk memilih kategori
+      showDialog(
+        context: context,
+        builder: (context) => CategoryCheckerDialog(
+          order: order,
+          onCategoriesSelected: (selectedCategories) async {
+            await _printCheckerReceiptsByCategory(
+              order: order,
+              selectedCategories: selectedCategories,
+              settingsProvider: settingsProvider,
+            );
+          },
+        ),
+      );
+      
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mencetak struk checker: ${e.toString()}')),
+      );
+    }
+  }
+  
+  // Mencetak struk checker berdasarkan kategori yang dipilih
+  Future<void> _printCheckerReceiptsByCategory({
+    required Order order,
+    required List<String> selectedCategories,
+    required SettingsProvider settingsProvider,
+  }) async {
+    try {
+      if (_transaction == null) {
+        throw Exception('Data transaksi tidak ditemukan');
+      }
+
+      final receiptService = ReceiptService();
+      
+      // Urutkan kategori sesuai urutan asli dalam transaksi
+      selectedCategories.sort();
+      
+      // Cetak struk checker untuk setiap kategori secara berurutan
+      for (int i = 0; i < selectedCategories.length; i++) {
+        final category = selectedCategories[i];
+        
+        // Filter items berdasarkan kategori
+        final categoryItems = order.items
+            .where((item) => item.category == category)
+            .toList();
+        
+        if (categoryItems.isNotEmpty) {
+          // Buat order khusus untuk kategori ini
+          final categoryTotal = categoryItems.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
+          final categoryOrder = Order(
+            orderNumber: order.orderNumber,
+            items: categoryItems,
+            subtotal: categoryTotal,
+            tax: 0.0,
+            total: categoryTotal,
+            createdAt: order.createdAt,
+            status: order.status,
+            customerName: order.customerName,
+          );
+          
+          // Buat receipt untuk kategori ini
+          final receipt = Receipt.fromTransaction(
+            transaction: _transaction!,
+            order: categoryOrder,
+            receiptSettings: settingsProvider.receipt,
+            cashierName: settingsProvider.general.cashierName ?? 'Kasir',
+            storeName: settingsProvider.store.storeName ?? 'Toko',
+            storeAddress: settingsProvider.store.storeAddress ?? 'Alamat Toko',
+            storePhone: settingsProvider.store.storePhone ?? '-',
+            storeEmail: settingsProvider.general.storeEmail ?? '-',
+            isCheckerReceipt: true,
+            checkerCategory: category,
+            checkerSequence: '${i + 1}/${selectedCategories.length}',
+          );
+          
+          // Cetak struk checker
+          await receiptService.printReceipt(context, receipt);
+          
+          // Delay singkat antara pencetakan untuk memastikan urutan
+          if (i < selectedCategories.length - 1) {
+            await Future.delayed(const Duration(milliseconds: 500));
+          }
+        }
+      }
+      
+      // Tampilkan notifikasi sukses
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Berhasil mencetak ${selectedCategories.length} struk checker'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mencetak struk checker: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
       );
     }
   }
@@ -482,10 +598,40 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                   //   onPressed: _showReceipt,
                   // ),
                   const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.print),
-                    label: const Text('Cetak Struk'),
-                    onPressed: _printReceipt,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.print),
+                          label: const Text('Cetak Struk'),
+                          onPressed: _printReceipt,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.checklist),
+                          label: const Text('Cetak Checker'),
+                          onPressed: _printCheckerReceipt,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
