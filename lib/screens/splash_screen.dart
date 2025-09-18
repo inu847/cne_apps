@@ -3,7 +3,7 @@ import 'package:lottie/lottie.dart';
 import 'dart:async';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
-import 'dashboard_screen.dart';
+import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -83,11 +83,11 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
       
       if (user != null) {
-        // User is logged in, navigate to dashboard
+        // User is logged in, navigate to home screen
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                DashboardScreen(user: user),
+                HomeScreen(user: user),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(
                 opacity: animation,

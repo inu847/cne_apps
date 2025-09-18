@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
-import 'dashboard_screen.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -294,11 +294,11 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.success && response.data != null) {
-        // Login successful, navigate to dashboard
+        // Login successful, navigate to home screen
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => DashboardScreen(user: response.data!.user),
+            builder: (context) => HomeScreen(user: response.data!.user),
           ),
         );
       } else {

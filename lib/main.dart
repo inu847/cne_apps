@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/home_screen.dart';
 import 'screens/pos_screen.dart';
 import 'screens/transactions_screen.dart';
 import 'screens/inventory_screen.dart';
