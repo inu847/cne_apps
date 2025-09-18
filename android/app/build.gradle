@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.cne_pos_apps"
-    compileSdk = 34 // Explicitly set to 33 for blue_thermal_printer compatibility
+    compileSdk = 35 // Updated to 35 for url_launcher compatibility (backward compatible)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -25,7 +25,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 21 // Minimum SDK version for Bluetooth functionality
-        targetSdk = 33 // Match with compileSdk
+        targetSdk = 35 // Match with compileSdk
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

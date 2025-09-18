@@ -6,6 +6,8 @@ import '../services/receipt_service.dart';
 import '../utils/responsive_helper.dart';
 import '../config/api_config.dart';
 import '../main.dart';
+import '../widgets/promotion_section_widget.dart';
+import '../widgets/announcement_section_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -78,42 +80,9 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
-  // Sample data
-  final List<Map<String, dynamic>> _announcements = [
-    {
-      'id': 1,
-      'title': 'Update Sistem POS v2.1',
-      'content': 'Fitur baru telah ditambahkan untuk meningkatkan performa aplikasi.',
-      'date': '15 Jan 2024',
-      'type': 'feature',
-    },
-    {
-      'id': 2,
-      'title': 'Maintenance Server',
-      'content': 'Server akan mengalami maintenance pada tanggal 20 Januari 2024.',
-      'date': '12 Jan 2024',
-      'type': 'info',
-    },
-  ];
 
-  final List<Map<String, dynamic>> _promotions = [
-    {
-      'id': 1,
-      'title': 'Diskon Akhir Tahun',
-      'description': 'Dapatkan diskon hingga 50% untuk semua produk elektronik',
-      'discount': '50% OFF',
-      'validUntil': '31 Des 2024',
-      'color': const Color(0xFFE91E63),
-    },
-    {
-      'id': 2,
-      'title': 'Cashback Spesial',
-      'description': 'Cashback 20% untuk pembelian minimal Rp 500.000',
-      'discount': '20% Cashback',
-      'validUntil': '15 Feb 2024',
-      'color': const Color(0xFF9C27B0),
-    },
-  ];
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen>
                   const SizedBox(height: 32),
                   _buildQuickActionsSection(),
                   const SizedBox(height: 32),
-                  _buildAnnouncementsSection(),
+                  AnnouncementSectionWidget(isTablet: !isMobile),
                   const SizedBox(height: 32),
                   _buildPromotionsSection(),
                   const SizedBox(height: 24),
@@ -257,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    'Staff',
+                    'Premium',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -428,321 +397,17 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildAnnouncementsSection() {
-    final isMobile = ResponsiveHelper.isMobile(context);
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.campaign_outlined,
-              color: ApiConfig.secondaryColor,
-              size: isMobile ? 24 : 28,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Pengumuman',
-              style: TextStyle(
-                fontSize: isMobile ? 20 : 22,
-                fontWeight: FontWeight.w700,
-                color: textPrimary,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: ApiConfig.secondaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                '${_announcements.length} Baru',
-                style: TextStyle(
-                  color: ApiConfig.secondaryColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Informasi terbaru dan update sistem',
-          style: TextStyle(
-            color: textSecondary,
-            fontSize: isMobile ? 14 : 15,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _announcements.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final announcement = _announcements[index];
-            return FadeTransition(
-              opacity: _fadeAnimation,
-              child: _buildAnnouncementCard(announcement),
-            );
-          },
-        ),
-      ],
-    );
-  }
 
-  Widget _buildAnnouncementCard(Map<String, dynamic> announcement) {
-    final isMobile = ResponsiveHelper.isMobile(context);
-
-    Color getTypeColor(String type) {
-      switch (type) {
-        case 'info':
-          return ApiConfig.secondaryColor;
-        case 'feature':
-          return ApiConfig.primaryColor;
-        case 'tip':
-          return ApiConfig.accentColor;
-        default:
-          return textPrimary;
-      }
-    }
-
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 16 : 20),
-      decoration: BoxDecoration(
-        color: cardBackground,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: getTypeColor(announcement['type']).withOpacity(0.2),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: getTypeColor(announcement['type']).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  announcement['type'].toUpperCase(),
-                  style: TextStyle(
-                    color: getTypeColor(announcement['type']),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                announcement['date'],
-                style: TextStyle(
-                  fontSize: 12,
-                  color: textTertiary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            announcement['title'],
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: isMobile ? 16 : 18,
-              color: textPrimary,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            announcement['content'],
-            style: TextStyle(
-              fontSize: isMobile ? 14 : 15,
-              color: textSecondary,
-              height: 1.5,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPromotionsSection() {
     final isMobile = ResponsiveHelper.isMobile(context);
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Promosi & Penawaran',
-          style: TextStyle(
-            fontSize: isMobile ? 20 : 22,
-            fontWeight: FontWeight.w700,
-            color: textPrimary,
-            letterSpacing: -0.3,
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 200,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _promotions.length,
-            itemBuilder: (context, index) {
-              final promotion = _promotions[index];
-              return _buildPromotionCard(promotion);
-            },
-          ),
-        ),
-      ],
+    return PromotionSectionWidget(
+      isTablet: !isMobile,
     );
   }
 
-  Widget _buildPromotionCard(Map<String, dynamic> promotion) {
-    final isMobile = ResponsiveHelper.isMobile(context);
 
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Container(
-        width: isMobile ? 300 : 340,
-        margin: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              promotion['color'],
-              promotion['color'].withOpacity(0.7),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: promotion['color'].withOpacity(0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: () {
-              // Handle promotion tap
-            },
-            child: Padding(
-              padding: EdgeInsets.all(isMobile ? 24 : 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: Text(
-                          promotion['discount'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        Icons.local_offer_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    promotion['title'],
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: isMobile ? 18 : 20,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    promotion['description'],
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.95),
-                      fontSize: isMobile ? 14 : 15,
-                      height: 1.5,
-                    ),
-                  ),
-                  const Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Berlaku hingga ${promotion['validUntil']}',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: Text(
-                          'Klaim',
-                          style: TextStyle(
-                            color: promotion['color'],
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   void _showReportsMenu() {
     showModalBottomSheet(

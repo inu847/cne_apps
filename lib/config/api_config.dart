@@ -31,6 +31,8 @@ class ApiConfig {
   static const String pettyCashOpeningEndpoint = '$baseUrl/petty-cash/opening';
   static const String pettyCashActiveOpeningEndpoint = '$baseUrl/petty-cash/active-opening';
   static const String pettyCashClosingEndpoint = '$baseUrl/petty-cash/closing';
+  static const String promotionsEndpoint = '$baseUrl/promotions';
+  static const String activePromotionsEndpoint = '$baseUrl/promotions/active';
   
   // Token Key for SharedPreferences
   static const String tokenKey = 'auth_token';
