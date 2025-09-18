@@ -6,7 +6,7 @@ import '../utils/format_utils.dart';
 
 class PaymentMethodDialog extends StatefulWidget {
   final double totalAmount;
-  final Function(PaymentMethod, double) onPaymentSelected;
+  final Function(PaymentMethod, double, {double? changeAmount}) onPaymentSelected;
 
   const PaymentMethodDialog({
     Key? key,
@@ -682,7 +682,13 @@ class _PaymentMethodDialogState extends State<PaymentMethodDialog> {
                                           
                                           final amount = _paidAmount;
                                           Navigator.pop(context); // Tutup dialog terlebih dahulu
-                                          widget.onPaymentSelected(_selectedMethod!, amount); // Panggil callback setelah dialog ditutup
+                                          
+                                          // Kirim informasi kembalian untuk metode cash
+                                          if (_selectedMethod!.code.toLowerCase() == 'cash') {
+                                            widget.onPaymentSelected(_selectedMethod!, amount, changeAmount: _changeAmount);
+                                          } else {
+                                            widget.onPaymentSelected(_selectedMethod!, amount);
+                                          }
                                         },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: primaryColor,

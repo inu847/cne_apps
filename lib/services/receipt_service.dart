@@ -463,9 +463,15 @@ class ReceiptService {
 
       // Payment info
       for (var payment in receipt.payments) {
+        // Coba berbagai key yang mungkin untuk nama metode pembayaran
+        String paymentMethodName = payment['payment_method'] ?? 
+                                  payment['method'] ?? 
+                                  payment['payment_method_name'] ?? 
+                                  'Cash';
+        
         bytes += generator.row([
           PosColumn(
-            text: payment['method'] ?? 'Cash',
+            text: paymentMethodName,
             width: 8,
           ),
           PosColumn(
@@ -474,6 +480,57 @@ class ReceiptService {
             styles: const PosStyles(align: PosAlign.right),
           ),
         ]);
+        
+        // Tampilkan informasi kembalian untuk metode cash
+        if (paymentMethodName.toLowerCase().contains('cash') && 
+            payment['change_amount'] != null) {
+          final changeAmount = double.tryParse(payment['change_amount']?.toString() ?? '0') ?? 0;
+          final paidAmount = double.tryParse(payment['paid_amount']?.toString() ?? '0') ?? 0;
+          
+          // Tampilkan jumlah bayar
+          if (paidAmount > 0) {
+            bytes += generator.row([
+              PosColumn(
+                text: 'Jumlah Bayar:',
+                width: 8,
+              ),
+              PosColumn(
+                text: _formatCurrency(paidAmount),
+                width: 4,
+                styles: const PosStyles(align: PosAlign.right),
+              ),
+            ]);
+          }
+          
+          // Tampilkan kembalian atau kekurangan
+          if (changeAmount > 0) {
+            bytes += generator.row([
+              PosColumn(
+                text: 'Kembalian:',
+                width: 8,
+                styles: const PosStyles(bold: true),
+              ),
+              PosColumn(
+                text: _formatCurrency(changeAmount),
+                width: 4,
+                styles: const PosStyles(align: PosAlign.right, bold: true),
+              ),
+            ]);
+          } else if (changeAmount < 0) {
+            bytes += generator.row([
+              PosColumn(
+                text: 'Kekurangan:',
+                width: 8,
+                styles: const PosStyles(bold: true),
+              ),
+              PosColumn(
+                text: _formatCurrency(changeAmount.abs()),
+                width: 4,
+                styles: const PosStyles(align: PosAlign.right, bold: true),
+              ),
+            ]);
+          }
+        }
       }
 
       bytes += generator.feed(2);

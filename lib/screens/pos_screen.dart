@@ -2207,16 +2207,19 @@ class _POSScreenState extends State<POSScreen> {
       barrierDismissible: false, // Pastikan dialog tidak bisa ditutup dengan tap di luar
       builder: (context) => PaymentMethodDialog(
         totalAmount: _totalAmount,
-        onPaymentSelected: (PaymentMethod paymentMethod, double amount) {
+        onPaymentSelected: (PaymentMethod paymentMethod, double amount, {double? changeAmount}) {
           print('Metode pembayaran dipilih: ${paymentMethod.name}, amount: $amount');
-          _processCheckout(paymentMethod, amount);
+          if (changeAmount != null) {
+            print('Kembalian: $changeAmount');
+          }
+          _processCheckout(paymentMethod, amount, changeAmount: changeAmount);
         },
       ),
     );
   }
   
   // Proses checkout dengan metode pembayaran yang dipilih
-  void _processCheckout(PaymentMethod paymentMethod, double amount) async {
+  void _processCheckout(PaymentMethod paymentMethod, double amount, {double? changeAmount}) async {
     try {
       // Tambahkan log untuk debugging
       print('Memproses checkout dengan metode pembayaran: ${paymentMethod.name}');
@@ -2268,14 +2271,20 @@ class _POSScreenState extends State<POSScreen> {
             );
       
       // Siapkan informasi pembayaran
-      final List<Map<String, dynamic>> payments = [
-        {
-          'payment_method_id': paymentMethod.id,
-          'payment_method_name': paymentMethod.name,
-          'amount': amount,
-          'reference_number': 'REF-${DateTime.now().millisecondsSinceEpoch}'
-        }
-      ];
+      final Map<String, dynamic> paymentData = {
+        'payment_method_id': paymentMethod.id,
+        'payment_method_name': paymentMethod.name,
+        'amount': amount,
+        'reference_number': 'REF-${DateTime.now().millisecondsSinceEpoch}'
+      };
+      
+      // Tambahkan informasi kembalian untuk metode cash
+      if (paymentMethod.code.toLowerCase() == 'cash' && changeAmount != null) {
+        paymentData['change_amount'] = changeAmount;
+        paymentData['paid_amount'] = amount;
+      }
+      
+      final List<Map<String, dynamic>> payments = [paymentData];
       
       // Kirim transaksi ke API
       final result = await transactionProvider.createTransaction(
