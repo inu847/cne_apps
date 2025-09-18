@@ -11,6 +11,7 @@ import '../utils/format_utils.dart';
 import '../services/category_service.dart';
 import '../services/product_service.dart';
 import '../services/auth_service.dart';
+import '../services/local_storage_service.dart';
 import '../config/api_config.dart';
 import '../providers/settings_provider.dart';
 import '../providers/order_provider.dart';
@@ -37,6 +38,7 @@ class _POSScreenState extends State<POSScreen> {
   final CategoryService _categoryService = CategoryService();
   final ProductService _productService = ProductService();
   final AuthService _authService = AuthService();
+  final LocalStorageService _localStorageService = LocalStorageService();
   
   // Controller untuk input nama pelanggan dan voucher
   final TextEditingController _customerNameController = TextEditingController();
@@ -355,10 +357,10 @@ class _POSScreenState extends State<POSScreen> {
   // Mengambil data produk dari API dengan infinite scroll
   Future<void> _fetchProducts({bool refresh = false}) async {
     // Jika sedang memuat atau tidak ada lagi produk (kecuali refresh), jangan lakukan apa-apa
-    // if ((_isLoadingProducts || !_hasMoreProducts) && !refresh) {
-    //   print('POSScreen: Already loading or no more products to fetch');
-    //   return;
-    // }
+    if ((_isLoadingProducts || !_hasMoreProducts) && !refresh) {
+      print('POSScreen: Already loading or no more products to fetch');
+      return;
+    }
     
     // Reset state jika refresh
     if (refresh) {
@@ -432,6 +434,11 @@ class _POSScreenState extends State<POSScreen> {
             _hasMoreProducts = false;
           }
         });
+        
+        // Simpan ke localStorage jika ini adalah refresh atau halaman pertama
+        if (refresh || _currentPage == 2) {
+          _localStorageService.saveProducts(_apiProducts);
+        }
       } else {
         print('POSScreen: Token is null');
         setState(() {
@@ -451,8 +458,8 @@ class _POSScreenState extends State<POSScreen> {
   @override
   void initState() {
     super.initState();
-    // Mengambil data kategori dan produk saat screen diinisialisasi
-    _fetchCategories().then((_) => _fetchProducts());
+    // Mengambil data dari localStorage terlebih dahulu, jika tidak ada maka fetch dari server
+    _loadDataFromLocalStorage();
     
     // Menambahkan listener untuk infinite scroll
     _scrollController.addListener(_scrollListener);
@@ -492,6 +499,211 @@ class _POSScreenState extends State<POSScreen> {
         }
       }
     });
+  }
+  
+  // Method untuk memuat data dari localStorage
+  Future<void> _loadDataFromLocalStorage() async {
+    try {
+      print('POSScreen: Loading data from localStorage...');
+      
+      // Cek apakah localStorage tersedia
+      if (!_localStorageService.isLocalStorageAvailable) {
+        print('POSScreen: localStorage not available, fetching from server');
+        _showLocalStorageWarning('localStorage tidak tersedia di browser ini');
+        _fetchCategories().then((_) => _fetchProducts());
+        return;
+      }
+      
+      // Coba ambil data dari localStorage
+      final cachedProducts = await _localStorageService.getProducts();
+      
+      if (cachedProducts != null && cachedProducts.isNotEmpty) {
+        print('POSScreen: Products loaded from localStorage: ${cachedProducts.length} items');
+        
+        // Validasi data integrity
+        final validProducts = cachedProducts.where((product) => 
+          product.id != null && 
+          product.name != null && 
+          product.name!.isNotEmpty &&
+          product.price != null &&
+          product.price! >= 0
+        ).toList();
+        
+        if (validProducts.length != cachedProducts.length) {
+          print('POSScreen: Found ${cachedProducts.length - validProducts.length} corrupt products, cleaning up...');
+          await _localStorageService.saveProducts(validProducts);
+        }
+        
+        setState(() {
+          _apiProducts = validProducts;
+          _isLoadingProducts = false;
+          // Set pagination state untuk data dari localStorage
+          // Anggap data localStorage adalah halaman pertama yang sudah lengkap
+          _currentPage = 2; // Set ke halaman 2 agar scroll berikutnya akan load halaman 2
+          _hasMoreProducts = true; // Masih ada kemungkinan produk lain di server
+        });
+        
+        // Untuk categories, kita extract dari products yang ada
+        final Set<String> categoryNames = validProducts
+            .map((product) => product.categoryName ?? 'Lainnya')
+            .toSet();
+        
+        // Buat dummy categories dari product data
+        final categories = categoryNames.map((name) => Category(
+          id: categoryNames.toList().indexOf(name) + 1,
+          name: name,
+          productCount: validProducts.where((p) => p.categoryName == name).length,
+          isActive: true,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        )).toList();
+        
+        setState(() {
+          _apiCategories = categories;
+          _isLoadingCategories = false;
+        });
+        
+      } else {
+        print('POSScreen: No cached data found, fetching from server');
+        _fetchCategories().then((_) => _fetchProducts());
+      }
+      
+    } catch (e) {
+      print('POSScreen: Error loading from localStorage: $e');
+      
+      // Tampilkan error notification
+      _showLocalStorageError('Gagal memuat data offline: ${e.toString()}');
+      
+      // Clear corrupt data dan fallback ke server
+      try {
+        await _localStorageService.clearProducts();
+        await _localStorageService.clearPaymentMethods();
+      } catch (clearError) {
+        print('POSScreen: Error clearing corrupt data: $clearError');
+      }
+      
+      // Fallback ke server jika ada error
+      _fetchCategories().then((_) => _fetchProducts());
+    }
+  }
+  
+  // Method untuk refresh data dari server dan update localStorage
+  Future<void> _refreshData() async {
+    try {
+      print('POSScreen: Refreshing data from server...');
+      
+      // Reset state
+      setState(() {
+        _isLoadingCategories = true;
+        _isLoadingProducts = true;
+        _currentPage = 1;
+        _hasMoreProducts = true;
+        _categoryError = null;
+        _productError = null;
+      });
+      
+      // Fetch data dari server
+      await _fetchCategories();
+      await _fetchProducts(refresh: true);
+      
+      // Refresh payment methods
+      final paymentMethodProvider = Provider.of<PaymentMethodProvider>(context, listen: false);
+      await paymentMethodProvider.refreshPaymentMethods(isActive: true);
+      
+      // Tampilkan notifikasi sukses
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Data berhasil diperbarui'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      
+    } catch (e) {
+      print('POSScreen: Error refreshing data: $e');
+      
+      // Tampilkan notifikasi error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Gagal memperbarui data: $e')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+  
+  // Method untuk menampilkan warning localStorage tidak tersedia
+  void _showLocalStorageWarning(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.warning, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+  
+  // Method untuk menampilkan notifikasi data offline
+  void _showOfflineDataNotification() {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.offline_bolt, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Menggunakan data offline'),
+            ],
+          ),
+          backgroundColor: Colors.blue,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+  
+  // Method untuk menampilkan error localStorage
+  void _showLocalStorageError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
   
   @override
@@ -619,7 +831,13 @@ class _POSScreenState extends State<POSScreen> {
   
   // Listener untuk infinite scroll
   void _scrollListener() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
+    // Dapatkan ukuran layar untuk menentukan apakah tablet view
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 650 && screenWidth < 1100;
+    
+    // Hanya lakukan infinite scroll jika bukan tablet view
+    if (!isTablet &&
+        _scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
         !_isLoadingProducts &&
         _hasMoreProducts) {
       // Memuat lebih banyak produk ketika pengguna mendekati akhir scroll
@@ -972,21 +1190,11 @@ class _POSScreenState extends State<POSScreen> {
               }).toList();
             },
           ),
-          // Tombol reload page
+          // Tombol refresh data
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Muat Ulang',
-            onPressed: () {
-              // Muat ulang data
-              setState(() {
-                _isLoadingCategories = true;
-                _isLoadingProducts = true;
-                _currentPage = 1;
-                _hasMoreProducts = true;
-              });
-              _fetchCategories();
-              _fetchProducts(refresh: true);
-            },
+            tooltip: 'Refresh Data',
+            onPressed: _refreshData,
           ),
           // Tombol laporan
           PopupMenuButton<String>(
@@ -1254,34 +1462,58 @@ class _POSScreenState extends State<POSScreen> {
                                           child: Column(
                                             children: [
                                               Expanded(
-                                                child: RefreshIndicator(
-                                                  onRefresh: () async {
-                                                    // Refresh data produk
-                                                    await _fetchProducts(refresh: true);
-                                                  },
-                                                  color: _primaryColor,
-                                                  child: GridView.builder(
-                                                    controller: _scrollController,
-                                                    // Optimasi physics untuk scrolling yang lebih smooth
-                                                    physics: const BouncingScrollPhysics(
-                                                      parent: AlwaysScrollableScrollPhysics(),
+                                                child: isTablet 
+                                                  ? // Untuk tablet: tanpa RefreshIndicator, hanya gunakan icon refresh
+                                                    GridView.builder(
+                                                      controller: _scrollController,
+                                                      // Optimasi physics untuk scrolling yang lebih smooth
+                                                      physics: const BouncingScrollPhysics(
+                                                        parent: AlwaysScrollableScrollPhysics(),
+                                                      ),
+                                                      // Optimasi caching untuk performa yang lebih baik
+                                                      cacheExtent: 500.0,
+                                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                        crossAxisCount: isMobile ? 2 : (isTablet ? 3 : 4),
+                                                        childAspectRatio: isMobile ? 0.68 : (isTablet ? 0.8 : 0.85),
+                                                        crossAxisSpacing: isMobile ? 8 : (isTablet ? 16 : 16),
+                                                        mainAxisSpacing: isMobile ? 8 : (isTablet ? 16 : 16),
+                                                      ),
+                                                      itemCount: _filteredProducts.length,
+                                                      itemBuilder: (context, index) {
+                                                        final product = _filteredProducts[index];
+                                                        // Optimasi dengan key untuk widget recycling yang lebih baik
+                                                        return _buildOptimizedProductCard(product, index);
+                                                      },
+                                                    )
+                                                  : // Untuk mobile: tetap gunakan RefreshIndicator
+                                                    RefreshIndicator(
+                                                      onRefresh: () async {
+                                                        // Refresh data produk
+                                                        await _fetchProducts(refresh: true);
+                                                      },
+                                                      color: _primaryColor,
+                                                      child: GridView.builder(
+                                                        controller: _scrollController,
+                                                        // Optimasi physics untuk scrolling yang lebih smooth
+                                                        physics: const BouncingScrollPhysics(
+                                                          parent: AlwaysScrollableScrollPhysics(),
+                                                        ),
+                                                        // Optimasi caching untuk performa yang lebih baik
+                                                        cacheExtent: 500.0,
+                                                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                          crossAxisCount: isMobile ? 2 : (isTablet ? 3 : 4),
+                                                          childAspectRatio: isMobile ? 0.68 : (isTablet ? 0.8 : 0.85),
+                                                          crossAxisSpacing: isMobile ? 8 : (isTablet ? 16 : 16),
+                                                          mainAxisSpacing: isMobile ? 8 : (isTablet ? 16 : 16),
+                                                        ),
+                                                        itemCount: _filteredProducts.length,
+                                                        itemBuilder: (context, index) {
+                                                          final product = _filteredProducts[index];
+                                                          // Optimasi dengan key untuk widget recycling yang lebih baik
+                                                          return _buildOptimizedProductCard(product, index);
+                                                        },
+                                                      ),
                                                     ),
-                                                    // Optimasi caching untuk performa yang lebih baik
-                                                    cacheExtent: 500.0,
-                                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                                      crossAxisCount: isMobile ? 2 : (isTablet ? 3 : 4),
-                                                      childAspectRatio: isMobile ? 0.68 : (isTablet ? 0.8 : 0.85),
-                                                      crossAxisSpacing: isMobile ? 8 : (isTablet ? 16 : 16),
-                                                      mainAxisSpacing: isMobile ? 8 : (isTablet ? 16 : 16),
-                                                    ),
-                                                    itemCount: _filteredProducts.length,
-                                                    itemBuilder: (context, index) {
-                                                      final product = _filteredProducts[index];
-                                                      // Optimasi dengan key untuk widget recycling yang lebih baik
-                                                      return _buildOptimizedProductCard(product, index);
-                                                    },
-                                                  ),
-                                                ),
                                               ),
                                               // Indikator loading untuk infinite scroll
                                               if (_isLoadingProducts && _currentPage > 1)
@@ -2600,10 +2832,11 @@ class _POSScreenState extends State<POSScreen> {
       context: context,
       builder: (context) => CategoryCheckerDialog(
         order: order,
-        onCategoriesSelected: (selectedCategories) async {
+        onCategoriesSelected: (selectedCategories, showPrices) async {
           await _printCheckerReceiptsByCategory(
             order: order,
             selectedCategories: selectedCategories,
+            showPrices: showPrices,
             transactionProvider: transactionProvider,
             settingsProvider: settingsProvider,
           );
@@ -2616,6 +2849,7 @@ class _POSScreenState extends State<POSScreen> {
   Future<void> _printCheckerReceiptsByCategory({
     required Order order,
     required List<String> selectedCategories,
+    required bool showPrices,
     required TransactionProvider transactionProvider,
     required SettingsProvider settingsProvider,
   }) async {
@@ -2665,6 +2899,7 @@ class _POSScreenState extends State<POSScreen> {
             isCheckerReceipt: true,
             checkerCategory: category,
             checkerSequence: '${i + 1}/${selectedCategories.length}',
+            showPrices: showPrices,
           );
           
           // Cetak struk checker

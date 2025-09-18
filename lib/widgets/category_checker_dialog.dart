@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/order_model.dart';
 
 class CategoryCheckerDialog extends StatefulWidget {
   final Order order;
-  final Function(List<String>) onCategoriesSelected;
+  final Function(List<String>, bool) onCategoriesSelected;
 
   const CategoryCheckerDialog({
     Key? key,
@@ -18,11 +19,13 @@ class CategoryCheckerDialog extends StatefulWidget {
 class _CategoryCheckerDialogState extends State<CategoryCheckerDialog> {
   Map<String, bool> categorySelection = {};
   List<String> availableCategories = [];
+  bool showPrices = true; // Default menampilkan harga
 
   @override
   void initState() {
     super.initState();
     _initializeCategories();
+    _loadPricePreference();
   }
 
   void _initializeCategories() {
@@ -39,6 +42,28 @@ class _CategoryCheckerDialogState extends State<CategoryCheckerDialog> {
     // Default semua kategori ter-checklist
     for (String category in availableCategories) {
       categorySelection[category] = true;
+    }
+  }
+
+  // Load price preference from localStorage
+  Future<void> _loadPricePreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        showPrices = prefs.getBool('checker_show_prices') ?? true;
+      });
+    } catch (e) {
+      print('Error loading price preference: $e');
+    }
+  }
+
+  // Save price preference to localStorage
+  Future<void> _savePricePreference(bool value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('checker_show_prices', value);
+    } catch (e) {
+      print('Error saving price preference: $e');
     }
   }
 
@@ -228,6 +253,56 @@ class _CategoryCheckerDialogState extends State<CategoryCheckerDialog> {
 
             const SizedBox(height: 20),
 
+            // Price display option
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: showPrices,
+                    onChanged: (value) {
+                      setState(() {
+                        showPrices = value ?? true;
+                      });
+                      _savePricePreference(showPrices);
+                    },
+                    activeColor: Colors.blue,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tampilkan Harga',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          showPrices 
+                            ? 'Harga produk akan ditampilkan di struk'
+                            : 'Hanya nama produk dan quantity yang ditampilkan',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
             // Action buttons
             Row(
               children: [
@@ -263,7 +338,7 @@ class _CategoryCheckerDialogState extends State<CategoryCheckerDialog> {
                       }
 
                       Navigator.of(context).pop();
-                      widget.onCategoriesSelected(selectedCategories);
+                      widget.onCategoriesSelected(selectedCategories, showPrices);
                     },
                     icon: const Icon(Icons.print),
                     label: Text(

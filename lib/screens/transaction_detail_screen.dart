@@ -310,10 +310,11 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         context: context,
         builder: (context) => CategoryCheckerDialog(
           order: order,
-          onCategoriesSelected: (selectedCategories) async {
+          onCategoriesSelected: (selectedCategories, showPrices) async {
             await _printCheckerReceiptsByCategory(
               order: order,
               selectedCategories: selectedCategories,
+              showPrices: showPrices,
               settingsProvider: settingsProvider,
             );
           },
@@ -331,6 +332,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   Future<void> _printCheckerReceiptsByCategory({
     required Order order,
     required List<String> selectedCategories,
+    required bool showPrices,
     required SettingsProvider settingsProvider,
   }) async {
     try {
@@ -379,6 +381,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             isCheckerReceipt: true,
             checkerCategory: category,
             checkerSequence: '${i + 1}/${selectedCategories.length}',
+            showPrices: showPrices,
           );
           
           // Cetak struk checker

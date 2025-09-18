@@ -371,21 +371,38 @@ class ReceiptService {
 
     // Items
     for (var item in receipt.order.items) {
-      bytes += generator.text(
-        item.productName,
-        styles: const PosStyles(bold: true),
-      );
-      bytes += generator.row([
-        PosColumn(
-          text: '${item.quantity} x ${_formatCurrency(item.price.toDouble())}',
-          width: 8,
-        ),
-        PosColumn(
-          text: _formatCurrency((item.quantity * item.price).toDouble()),
-          width: 4,
-          styles: const PosStyles(align: PosAlign.right),
-        ),
-      ]);
+      if (receipt.showPrices) {
+        // Tampilkan dengan harga (format terpisah)
+        bytes += generator.text(
+          item.productName,
+          styles: const PosStyles(bold: true),
+        );
+        bytes += generator.row([
+          PosColumn(
+            text: '${item.quantity} x ${_formatCurrency(item.price.toDouble())}',
+            width: 8,
+          ),
+          PosColumn(
+            text: _formatCurrency((item.quantity * item.price).toDouble()),
+            width: 4,
+            styles: const PosStyles(align: PosAlign.right),
+          ),
+        ]);
+      } else {
+        // Tampilkan dalam dua kolom: nama produk (kiri) dan quantity (kanan)
+        bytes += generator.row([
+          PosColumn(
+            text: item.productName,
+            width: 8,
+            styles: const PosStyles(bold: true),
+          ),
+          PosColumn(
+            text: 'x ${item.quantity}',
+            width: 4,
+            styles: const PosStyles(align: PosAlign.right),
+          ),
+        ]);
+      }
     }
 
     bytes += generator.hr();
