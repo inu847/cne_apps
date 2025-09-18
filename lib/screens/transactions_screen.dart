@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/api_config.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/order_model.dart';
@@ -11,9 +12,6 @@ import '../utils/format_utils.dart';
 // import '../utils/responsive_helper.dart';
 
 // Tema warna aplikasi
-const Color primaryGreen = Color(0xFF03D26F);
-const Color lightBlue = Color(0xFFEAF4F4);
-const Color darkBlack = Color(0xFF161514);
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({Key? key}) : super(key: key);
@@ -331,21 +329,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              lightBlue,
-              lightBlue.withOpacity(0.8),
+              ApiConfig.backgroundColor,
+              ApiConfig.backgroundColor.withOpacity(0.8),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: primaryGreen.withOpacity(0.1),
+              color: ApiConfig.primaryColor.withOpacity(0.1),
               blurRadius: 15,
               spreadRadius: 0,
               offset: const Offset(0, 8),
             ),
           ],
           border: Border.all(
-            color: primaryGreen.withOpacity(0.2),
+            color: ApiConfig.primaryColor.withOpacity(0.2),
             width: 1,
           ),
         ),
@@ -363,15 +361,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          primaryGreen,
-                          primaryGreen.withOpacity(0.8),
+                          ApiConfig.primaryColor,
+                          ApiConfig.primaryColor.withOpacity(0.8),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       Icons.filter_alt,
-                      color: lightBlue,
+                      color: ApiConfig.backgroundColor,
                       size: isMobile ? 18 : 20,
                     ),
                   ),
@@ -381,7 +379,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     style: TextStyle(
                       fontSize: isMobile ? 16 : 18,
                       fontWeight: FontWeight.bold,
-                      color: darkBlack,
+                      color: ApiConfig.textColor,
                     ),
                   ),
                 ],
@@ -401,8 +399,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   OutlinedButton(
                     onPressed: _resetFilters,
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: primaryGreen, width: 2),
-                      foregroundColor: primaryGreen,
+                      side: BorderSide(color: ApiConfig.primaryColor, width: 2),
+                      foregroundColor: ApiConfig.primaryColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -422,10 +420,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   ElevatedButton(
                     onPressed: _applyFilters,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryGreen,
-                      foregroundColor: lightBlue,
+                      backgroundColor: ApiConfig.primaryColor,
+                      foregroundColor: ApiConfig.backgroundColor,
                       elevation: 2,
-                      shadowColor: primaryGreen.withOpacity(0.3),
+                      shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -461,14 +459,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           'Daftar Transaksi',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: lightBlue,
+            color: ApiConfig.backgroundColor,
             fontSize: isMobile ? 18 : 20,
           ),
         ),
-        backgroundColor: primaryGreen,
-        foregroundColor: lightBlue,
+        backgroundColor: ApiConfig.primaryColor,
+        foregroundColor: ApiConfig.backgroundColor,
         elevation: 4,
-        shadowColor: primaryGreen.withOpacity(0.3),
+        shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
@@ -491,21 +489,21 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  lightBlue,
-                  lightBlue.withOpacity(0.8),
+                  ApiConfig.backgroundColor,
+                  ApiConfig.backgroundColor.withOpacity(0.8),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: primaryGreen.withOpacity(0.1),
+                  color: ApiConfig.primaryColor.withOpacity(0.1),
                   blurRadius: 15,
                   spreadRadius: 0,
                   offset: const Offset(0, 8),
                 ),
               ],
               border: Border.all(
-                color: primaryGreen.withOpacity(0.2),
+                color: ApiConfig.primaryColor.withOpacity(0.2),
                 width: 1,
               ),
             ),
@@ -517,25 +515,25 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     autofocus: false,
                     enableInteractiveSelection: false,
                     style: TextStyle(
-                      color: darkBlack,
+                      color: ApiConfig.textColor,
                       fontSize: isMobile ? 14 : 16,
                     ),
                     decoration: InputDecoration(
                       hintText: 'Cari transaksi berdasarkan invoice, pelanggan...',
                       hintStyle: TextStyle(
-                        color: darkBlack.withOpacity(0.6),
+                        color: ApiConfig.textColor.withOpacity(0.6),
                         fontSize: isMobile ? 14 : 16,
                       ),
                       prefixIcon: Icon(
                         Icons.search,
-                        color: primaryGreen,
+                        color: ApiConfig.primaryColor,
                         size: isMobile ? 20 : 24,
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: Icon(
                                 Icons.clear,
-                                color: darkBlack.withOpacity(0.6),
+                                color: ApiConfig.textColor.withOpacity(0.6),
                                 size: isMobile ? 20 : 24,
                               ),
                               onPressed: () {
@@ -570,17 +568,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 const SizedBox(width: 12),
                 Container(
                   decoration: BoxDecoration(
-                    color: _isFilterExpanded ? primaryGreen : Colors.white,
+                    color: _isFilterExpanded ? ApiConfig.primaryColor : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: primaryGreen.withOpacity(0.3),
+                      color: ApiConfig.primaryColor.withOpacity(0.3),
                       width: 2,
                     ),
                   ),
                   child: IconButton(
                     icon: Icon(
                       _isFilterExpanded ? Icons.filter_list_off : Icons.filter_list,
-                      color: _isFilterExpanded ? lightBlue : primaryGreen,
+                      color: _isFilterExpanded ? ApiConfig.backgroundColor : ApiConfig.primaryColor,
                       size: isMobile ? 20 : 24,
                     ),
                     onPressed: () {
@@ -608,14 +606,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                          valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                           strokeWidth: 3,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'Memuat transaksi...',
                           style: TextStyle(
-                            color: darkBlack.withOpacity(0.7),
+                            color: ApiConfig.textColor.withOpacity(0.7),
                             fontSize: isMobile ? 14 : 16,
                           ),
                         ),
@@ -640,14 +638,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           style: TextStyle(
                             fontSize: isMobile ? 16 : 18,
                             fontWeight: FontWeight.bold,
-                            color: darkBlack,
+                            color: ApiConfig.textColor,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           transactionProvider.error!,
                           style: TextStyle(
-                            color: darkBlack.withOpacity(0.7),
+                            color: ApiConfig.textColor.withOpacity(0.7),
                             fontSize: isMobile ? 14 : 16,
                           ),
                           textAlign: TextAlign.center,
@@ -656,10 +654,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         ElevatedButton(
                           onPressed: _refreshTransactions,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryGreen,
-                            foregroundColor: lightBlue,
+                            backgroundColor: ApiConfig.primaryColor,
+                            foregroundColor: ApiConfig.backgroundColor,
                             elevation: 2,
-                            shadowColor: primaryGreen.withOpacity(0.3),
+                            shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -683,7 +681,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         Icon(
                           Icons.receipt_long_outlined,
                           size: 80,
-                          color: darkBlack.withOpacity(0.4),
+                          color: ApiConfig.textColor.withOpacity(0.4),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -691,14 +689,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                           style: TextStyle(
                             fontSize: isMobile ? 16 : 18,
                             fontWeight: FontWeight.bold,
-                            color: darkBlack,
+                            color: ApiConfig.textColor,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Transaksi yang dibuat akan muncul di sini',
                           style: TextStyle(
-                            color: darkBlack.withOpacity(0.7),
+                            color: ApiConfig.textColor.withOpacity(0.7),
                             fontSize: isMobile ? 14 : 16,
                           ),
                           textAlign: TextAlign.center,
@@ -721,14 +719,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             child: Column(
                               children: [
                                 CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                                  valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                                   strokeWidth: 2,
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   'Memuat lebih banyak...',
                                   style: TextStyle(
-                                    color: darkBlack.withOpacity(0.6),
+                                    color: ApiConfig.textColor.withOpacity(0.6),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -824,7 +822,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     Color statusColor;
     String statusText;
     if (status == 'completed') {
-      statusColor = primaryGreen;
+      statusColor = ApiConfig.primaryColor;
       statusText = 'Selesai';
     } else if (status == 'cancelled') {
       statusColor = Colors.red;
@@ -837,7 +835,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     Color paymentColor;
     String paymentText;
     if (paymentStatus == 'paid') {
-      paymentColor = primaryGreen;
+      paymentColor = ApiConfig.primaryColor;
       paymentText = 'Lunas';
     } else {
       paymentColor = Colors.orange;
@@ -863,20 +861,20 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           end: Alignment.bottomRight,
           colors: [
             Colors.white,
-            lightBlue.withOpacity(0.3),
+            ApiConfig.backgroundColor.withOpacity(0.3),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: primaryGreen.withOpacity(0.1),
+            color: ApiConfig.primaryColor.withOpacity(0.1),
             blurRadius: 15,
             spreadRadius: 0,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: primaryGreen.withOpacity(0.2),
+          color: ApiConfig.primaryColor.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -910,7 +908,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: isMobile ? 16 : 18,
-                              color: darkBlack,
+                              color: ApiConfig.textColor,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -919,14 +917,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                               Icon(
                                 Icons.access_time,
                                 size: isMobile ? 14 : 16,
-                                color: darkBlack.withOpacity(0.6),
+                                color: ApiConfig.textColor.withOpacity(0.6),
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 formattedDate,
                                 style: TextStyle(
                                   fontSize: isMobile ? 12 : 14,
-                                  color: darkBlack.withOpacity(0.7),
+                                  color: ApiConfig.textColor.withOpacity(0.7),
                                 ),
                               ),
                             ],
@@ -940,10 +938,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         vertical: isMobile ? 4 : 6,
                       ),
                       decoration: BoxDecoration(
-                        color: primaryGreen.withOpacity(0.1),
+                        color: ApiConfig.primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: primaryGreen.withOpacity(0.3),
+                          color: ApiConfig.primaryColor.withOpacity(0.3),
                         ),
                       ),
                       child: Text(
@@ -951,7 +949,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: isMobile ? 14 : 16,
-                          color: primaryGreen,
+                          color: ApiConfig.primaryColor,
                         ),
                       ),
                     ),
@@ -965,7 +963,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     Icon(
                       Icons.person_outline,
                       size: isMobile ? 16 : 18,
-                      color: primaryGreen,
+                      color: ApiConfig.primaryColor,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -973,7 +971,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         customerName,
                         style: TextStyle(
                           fontSize: isMobile ? 14 : 16,
-                          color: darkBlack,
+                          color: ApiConfig.textColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1032,7 +1030,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         Text(
                           'Lihat Detail',
                           style: TextStyle(
-                            color: primaryGreen,
+                            color: ApiConfig.primaryColor,
                             fontSize: isMobile ? 12 : 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -1041,7 +1039,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                         Icon(
                           Icons.arrow_forward_ios,
                           size: isMobile ? 12 : 14,
-                          color: primaryGreen,
+                          color: ApiConfig.primaryColor,
                         ),
                       ],
                     ),

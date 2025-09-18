@@ -4,6 +4,7 @@ import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/receipt_service.dart';
 import '../utils/responsive_helper.dart';
+import '../config/api_config.dart';
 import '../main.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -19,11 +20,9 @@ class _HomeScreenState extends State<HomeScreen>
     with TickerProviderStateMixin {
   final AuthService _authService = AuthService();
   
-  // Enhanced color palette
-  static const Color primaryGreen = Color(0xFF2E7D32);
-  static const Color lightGreen = Color(0xFF4CAF50);
-  static const Color accentBlue = Color(0xFF1976D2);
-  static const Color accentOrange = Color(0xFFFF6B35);
+  // Using theme colors from ApiConfig
+  
+  // Additional theme colors
   static const Color backgroundLight = Color(0xFFF8F9FA);
   static const Color cardBackground = Color(0xFFFFFFFF);
   static const Color textPrimary = Color(0xFF212121);
@@ -152,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: primaryGreen,
+      backgroundColor: ApiConfig.primaryColor,
       foregroundColor: Colors.white,
       elevation: 0,
       title: const Text(
@@ -191,15 +190,15 @@ class _HomeScreenState extends State<HomeScreen>
       width: double.infinity,
       padding: EdgeInsets.all(isMobile ? 24 : 32),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [primaryGreen, lightGreen],
+        gradient: LinearGradient(
+          colors: [ApiConfig.primaryColor, ApiConfig.secondaryColor],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: primaryGreen.withOpacity(0.3),
+            color: ApiConfig.primaryColor.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -284,21 +283,21 @@ class _HomeScreenState extends State<HomeScreen>
         'title': 'Point of Sale',
         'subtitle': 'Mulai transaksi',
         'icon': Icons.point_of_sale,
-        'color': primaryGreen,
+        'color': ApiConfig.primaryColor,
         'route': '/pos',
       },
       {
         'title': 'Transaksi',
         'subtitle': 'Riwayat penjualan',
         'icon': Icons.receipt_long,
-        'color': accentBlue,
+        'color': ApiConfig.secondaryColor,
         'route': '/transactions',
       },
       {
         'title': 'Persediaan',
         'subtitle': 'Kelola stok',
         'icon': Icons.inventory_2,
-        'color': accentOrange,
+        'color': ApiConfig.accentColor,
         'route': '/inventory',
       },
       {
@@ -439,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             Icon(
               Icons.campaign_outlined,
-              color: accentBlue,
+              color: ApiConfig.secondaryColor,
               size: isMobile ? 24 : 28,
             ),
             const SizedBox(width: 12),
@@ -456,13 +455,13 @@ class _HomeScreenState extends State<HomeScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: accentBlue.withOpacity(0.1),
+                color: ApiConfig.secondaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 '${_announcements.length} Baru',
                 style: TextStyle(
-                  color: accentBlue,
+                  color: ApiConfig.secondaryColor,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -503,11 +502,11 @@ class _HomeScreenState extends State<HomeScreen>
     Color getTypeColor(String type) {
       switch (type) {
         case 'info':
-          return accentBlue;
+          return ApiConfig.secondaryColor;
         case 'feature':
-          return primaryGreen;
+          return ApiConfig.primaryColor;
         case 'tip':
-          return accentOrange;
+          return ApiConfig.accentColor;
         default:
           return textPrimary;
       }
@@ -780,12 +779,12 @@ class _HomeScreenState extends State<HomeScreen>
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: primaryGreen.withOpacity(0.1),
+                  color: ApiConfig.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.summarize,
-                  color: primaryGreen,
+                  color: ApiConfig.primaryColor,
                 ),
               ),
               title: const Text('Rekapitulasi Harian'),
@@ -799,12 +798,12 @@ class _HomeScreenState extends State<HomeScreen>
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: accentBlue.withOpacity(0.1),
+                  color: ApiConfig.secondaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.bar_chart,
-                  color: accentBlue,
+                  color: ApiConfig.secondaryColor,
                 ),
               ),
               title: const Text('Laporan Penjualan'),
@@ -835,7 +834,7 @@ class _HomeScreenState extends State<HomeScreen>
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryGreen,
+              backgroundColor: ApiConfig.primaryColor,
               foregroundColor: Colors.white,
             ),
             child: const Text('Keluar'),

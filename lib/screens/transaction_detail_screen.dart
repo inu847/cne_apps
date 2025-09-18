@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/api_config.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -11,10 +12,7 @@ import '../services/receipt_service.dart';
 import 'receipt_screen.dart';
 import '../widgets/category_checker_dialog.dart';
 
-// Tema warna aplikasi
-const Color primaryGreen = Color(0xFF03D26F);
-const Color lightBlue = Color(0xFFEAF4F4);
-const Color darkBlack = Color(0xFF161514);
+// Theme colors - menggunakan warna dari ApiConfig
 
 class TransactionDetailScreen extends StatefulWidget {
   final int transactionId;
@@ -424,14 +422,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
           'Detail Transaksi',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: lightBlue,
+            color: ApiConfig.backgroundColor,
             fontSize: isMobile ? 18 : 20,
           ),
         ),
-        backgroundColor: primaryGreen,
-        foregroundColor: lightBlue,
+        backgroundColor: ApiConfig.primaryColor,
+        foregroundColor: ApiConfig.backgroundColor,
         elevation: 4,
-        shadowColor: primaryGreen.withOpacity(0.3),
+        shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
@@ -458,14 +456,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+              valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
               strokeWidth: 3,
             ),
             const SizedBox(height: 16),
             Text(
               'Memuat detail transaksi...',
               style: TextStyle(
-                color: darkBlack.withOpacity(0.7),
+                color: ApiConfig.textColor.withOpacity(0.7),
                 fontSize: isMobile ? 14 : 16,
               ),
             ),
@@ -490,14 +488,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
               style: TextStyle(
                 fontSize: isMobile ? 16 : 18,
                 fontWeight: FontWeight.bold,
-                color: darkBlack,
+                color: ApiConfig.textColor,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Error: $_error',
               style: TextStyle(
-                color: darkBlack.withOpacity(0.7),
+                color: ApiConfig.textColor.withOpacity(0.7),
                 fontSize: isMobile ? 14 : 16,
               ),
               textAlign: TextAlign.center,
@@ -506,10 +504,10 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             ElevatedButton(
               onPressed: _fetchTransactionDetail,
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryGreen,
-                foregroundColor: lightBlue,
+                backgroundColor: ApiConfig.primaryColor,
+                foregroundColor: ApiConfig.backgroundColor,
                 elevation: 2,
-                shadowColor: primaryGreen.withOpacity(0.3),
+                shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -533,7 +531,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             Icon(
               Icons.search_off,
               size: 80,
-              color: darkBlack.withOpacity(0.4),
+              color: ApiConfig.textColor.withOpacity(0.4),
             ),
             const SizedBox(height: 16),
             Text(
@@ -541,14 +539,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
               style: TextStyle(
                 fontSize: isMobile ? 16 : 18,
                 fontWeight: FontWeight.bold,
-                color: darkBlack,
+                color: ApiConfig.textColor,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Transaksi dengan ID ini tidak tersedia',
               style: TextStyle(
-                color: darkBlack.withOpacity(0.7),
+                color: ApiConfig.textColor.withOpacity(0.7),
                 fontSize: isMobile ? 14 : 16,
               ),
               textAlign: TextAlign.center,
@@ -557,10 +555,10 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryGreen,
-                foregroundColor: lightBlue,
+                backgroundColor: ApiConfig.primaryColor,
+                foregroundColor: ApiConfig.backgroundColor,
                 elevation: 2,
-                shadowColor: primaryGreen.withOpacity(0.3),
+                shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -652,7 +650,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     Color statusColor;
     String statusText;
     if (status == 'completed') {
-      statusColor = primaryGreen;
+      statusColor = ApiConfig.primaryColor;
       statusText = 'Selesai';
     } else if (status == 'cancelled') {
       statusColor = Colors.red;
@@ -665,7 +663,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     Color paymentColor;
     String paymentText;
     if (paymentStatus == 'paid') {
-      paymentColor = primaryGreen;
+      paymentColor = ApiConfig.primaryColor;
       paymentText = 'Lunas';
     } else {
       paymentColor = Colors.orange;
@@ -694,21 +692,21 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            lightBlue,
-            lightBlue.withOpacity(0.8),
+            ApiConfig.backgroundColor,
+            ApiConfig.backgroundColor.withOpacity(0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: primaryGreen.withOpacity(0.1),
+            color: ApiConfig.primaryColor.withOpacity(0.1),
             blurRadius: 15,
             spreadRadius: 0,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: primaryGreen.withOpacity(0.2),
+          color: ApiConfig.primaryColor.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -727,15 +725,15 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        primaryGreen,
-                        primaryGreen.withOpacity(0.8),
+                        ApiConfig.primaryColor,
+                        ApiConfig.primaryColor.withOpacity(0.8),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     Icons.receipt_long,
-                    color: lightBlue,
+                    color: ApiConfig.backgroundColor,
                     size: isMobile ? 18 : 20,
                   ),
                 ),
@@ -746,7 +744,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                     style: TextStyle(
                       fontSize: isMobile ? 16 : 18,
                       fontWeight: FontWeight.bold,
-                      color: darkBlack,
+                      color: ApiConfig.textColor,
                     ),
                   ),
                 ),
@@ -761,7 +759,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: primaryGreen.withOpacity(0.2),
+                  color: ApiConfig.primaryColor.withOpacity(0.2),
                 ),
               ),
               child: Column(
@@ -771,7 +769,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                     'Invoice Number',
                     style: TextStyle(
                       fontSize: isMobile ? 12 : 14,
-                      color: darkBlack.withOpacity(0.6),
+                      color: ApiConfig.textColor.withOpacity(0.6),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -781,7 +779,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                     style: TextStyle(
                       fontSize: isMobile ? 16 : 18,
                       fontWeight: FontWeight.bold,
-                      color: darkBlack,
+                      color: ApiConfig.textColor,
                     ),
                   ),
                 ],
@@ -799,7 +797,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: primaryGreen.withOpacity(0.2),
+                        color: ApiConfig.primaryColor.withOpacity(0.2),
                       ),
                     ),
                     child: Column(
@@ -810,14 +808,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                             Icon(
                               Icons.access_time,
                               size: isMobile ? 14 : 16,
-                              color: primaryGreen,
+                              color: ApiConfig.primaryColor,
                             ),
                             const SizedBox(width: 6),
                             Text(
                               'Tanggal',
                               style: TextStyle(
                                 fontSize: isMobile ? 12 : 14,
-                                color: darkBlack.withOpacity(0.6),
+                                color: ApiConfig.textColor.withOpacity(0.6),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -829,7 +827,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                           style: TextStyle(
                             fontSize: isMobile ? 14 : 16,
                             fontWeight: FontWeight.bold,
-                            color: darkBlack,
+                            color: ApiConfig.textColor,
                           ),
                         ),
                       ],
@@ -844,7 +842,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: primaryGreen.withOpacity(0.2),
+                        color: ApiConfig.primaryColor.withOpacity(0.2),
                       ),
                     ),
                     child: Column(
@@ -855,14 +853,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                             Icon(
                               Icons.person_outline,
                               size: isMobile ? 14 : 16,
-                              color: primaryGreen,
+                              color: ApiConfig.primaryColor,
                             ),
                             const SizedBox(width: 6),
                             Text(
                               'Pelanggan',
                               style: TextStyle(
                                 fontSize: isMobile ? 12 : 14,
-                                color: darkBlack.withOpacity(0.6),
+                                color: ApiConfig.textColor.withOpacity(0.6),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -874,7 +872,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                           style: TextStyle(
                             fontSize: isMobile ? 14 : 16,
                             fontWeight: FontWeight.bold,
-                            color: darkBlack,
+                            color: ApiConfig.textColor,
                           ),
                         ),
                       ],
@@ -971,21 +969,21 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            lightBlue,
-            lightBlue.withOpacity(0.8),
+            ApiConfig.backgroundColor,
+            ApiConfig.backgroundColor.withOpacity(0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: primaryGreen.withOpacity(0.1),
+            color: ApiConfig.primaryColor.withOpacity(0.1),
             blurRadius: 15,
             spreadRadius: 0,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: primaryGreen.withOpacity(0.2),
+          color: ApiConfig.primaryColor.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -1004,15 +1002,15 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        primaryGreen,
-                        primaryGreen.withOpacity(0.8),
+                        ApiConfig.primaryColor,
+                        ApiConfig.primaryColor.withOpacity(0.8),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     Icons.shopping_cart,
-                    color: lightBlue,
+                    color: ApiConfig.backgroundColor,
                     size: isMobile ? 18 : 20,
                   ),
                 ),
@@ -1023,7 +1021,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                     style: TextStyle(
                       fontSize: isMobile ? 16 : 18,
                       fontWeight: FontWeight.bold,
-                      color: darkBlack,
+                      color: ApiConfig.textColor,
                     ),
                   ),
                 ),
@@ -1036,7 +1034,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 decoration: BoxDecoration(
-                  color: primaryGreen.withOpacity(0.1),
+                  color: ApiConfig.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -1047,7 +1045,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                         'Produk',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: darkBlack,
+                          color: ApiConfig.textColor,
                           fontSize: 14,
                         ),
                       ),
@@ -1059,7 +1057,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: darkBlack,
+                          color: ApiConfig.textColor,
                           fontSize: 14,
                         ),
                       ),
@@ -1071,7 +1069,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: darkBlack,
+                          color: ApiConfig.textColor,
                           fontSize: 14,
                         ),
                       ),
@@ -1083,7 +1081,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: darkBlack,
+                          color: ApiConfig.textColor,
                           fontSize: 14,
                         ),
                       ),
@@ -1104,13 +1102,13 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                           Icon(
                             Icons.shopping_cart_outlined,
                             size: 48,
-                            color: darkBlack.withOpacity(0.4),
+                            color: ApiConfig.textColor.withOpacity(0.4),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Tidak ada item',
                             style: TextStyle(
-                              color: darkBlack.withOpacity(0.6),
+                              color: ApiConfig.textColor.withOpacity(0.6),
                               fontSize: isMobile ? 14 : 16,
                             ),
                           ),
@@ -1134,7 +1132,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: primaryGreen.withOpacity(0.2),
+                            color: ApiConfig.primaryColor.withOpacity(0.2),
                           ),
                         ),
                         child: isMobile
@@ -1149,13 +1147,13 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: primaryGreen.withOpacity(0.1),
+                                          color: ApiConfig.primaryColor.withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: Text(
                                           '${index + 1}',
                                           style: TextStyle(
-                                            color: primaryGreen,
+                                            color: ApiConfig.primaryColor,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12,
                                           ),
@@ -1167,7 +1165,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                           productName,
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            color: darkBlack,
+                                            color: ApiConfig.textColor,
                                             fontSize: 14,
                                           ),
                                         ),
@@ -1181,7 +1179,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                       Text(
                                         '${quantity}x @ ${FormatUtils.formatCurrency(unitPrice)}',
                                         style: TextStyle(
-                                          color: darkBlack.withOpacity(0.7),
+                                          color: ApiConfig.textColor.withOpacity(0.7),
                                           fontSize: 12,
                                         ),
                                       ),
@@ -1189,7 +1187,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                         FormatUtils.formatCurrency(subtotal),
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: primaryGreen,
+                                          color: ApiConfig.primaryColor,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -1209,13 +1207,13 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                             vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: primaryGreen.withOpacity(0.1),
+                                            color: ApiConfig.primaryColor.withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
                                             '${index + 1}',
                                             style: TextStyle(
-                                              color: primaryGreen,
+                                              color: ApiConfig.primaryColor,
                                               fontWeight: FontWeight.bold,
                                               fontSize: 12,
                                             ),
@@ -1226,7 +1224,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                           child: Text(
                                             productName,
                                             style: TextStyle(
-                                              color: darkBlack,
+                                              color: ApiConfig.textColor,
                                               fontSize: 14,
                                             ),
                                           ),
@@ -1240,7 +1238,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                       '${quantity}x',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        color: darkBlack,
+                                        color: ApiConfig.textColor,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -1251,7 +1249,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                       FormatUtils.formatCurrency(unitPrice),
                                       textAlign: TextAlign.right,
                                       style: TextStyle(
-                                        color: darkBlack,
+                                        color: ApiConfig.textColor,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -1263,7 +1261,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                                       textAlign: TextAlign.right,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: primaryGreen,
+                                        color: ApiConfig.primaryColor,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -1282,7 +1280,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: primaryGreen.withOpacity(0.3),
+                    color: ApiConfig.primaryColor.withOpacity(0.3),
                     width: 2,
                   ),
                 ),
@@ -1294,14 +1292,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                          Text(
                            'Subtotal',
                            style: TextStyle(
-                             color: darkBlack,
+                             color: ApiConfig.textColor,
                              fontSize: isMobile ? 14 : 16,
                            ),
                          ),
                          Text(
                            FormatUtils.formatCurrency(FormatUtils.safeParseInt(transaction['total_amount'])),
                            style: TextStyle(
-                             color: darkBlack,
+                             color: ApiConfig.textColor,
                              fontSize: isMobile ? 14 : 16,
                            ),
                          ),
@@ -1314,14 +1312,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                          Text(
                            _taxName,
                            style: TextStyle(
-                             color: darkBlack,
+                             color: ApiConfig.textColor,
                              fontSize: isMobile ? 14 : 16,
                            ),
                          ),
                          Text(
                            FormatUtils.formatCurrency(FormatUtils.safeParseInt(transaction['tax_amount'])),
                            style: TextStyle(
-                             color: darkBlack,
+                             color: ApiConfig.textColor,
                              fontSize: isMobile ? 14 : 16,
                            ),
                          ),
@@ -1335,7 +1333,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                            Text(
                              'Diskon',
                              style: TextStyle(
-                               color: darkBlack,
+                               color: ApiConfig.textColor,
                                fontSize: isMobile ? 14 : 16,
                              ),
                            ),
@@ -1363,8 +1361,8 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                    begin: Alignment.topLeft,
                    end: Alignment.bottomRight,
                    colors: [
-                     primaryGreen,
-                     primaryGreen.withOpacity(0.8),
+                     ApiConfig.primaryColor,
+                     ApiConfig.primaryColor.withOpacity(0.8),
                    ],
                  ),
                  borderRadius: BorderRadius.circular(12),
@@ -1376,7 +1374,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                      'Total',
                      style: TextStyle(
                        fontWeight: FontWeight.bold,
-                       color: lightBlue,
+                       color: ApiConfig.backgroundColor,
                        fontSize: isMobile ? 16 : 18,
                      ),
                    ),
@@ -1384,7 +1382,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                      FormatUtils.formatCurrency(FormatUtils.safeParseInt(transaction['final_amount'])),
                      style: TextStyle(
                        fontWeight: FontWeight.bold,
-                       color: lightBlue,
+                       color: ApiConfig.backgroundColor,
                        fontSize: isMobile ? 16 : 18,
                      ),
                    ),

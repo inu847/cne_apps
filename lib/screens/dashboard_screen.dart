@@ -32,10 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final TransactionService _transactionService = TransactionService();
   int _selectedIndex = 0;
   
-  // Color palette baru
-  static const Color primaryGreen = Color(0xFF03D26F);
-  static const Color lightBlue = Color(0xFFEAF4F4);
-  static const Color darkBlack = Color(0xFF161514);
+  // Menggunakan warna tema dari ApiConfig
   
   // Data dashboard penjualan
   SalesDashboardData? _salesDashboardData;
@@ -271,32 +268,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
       key: _scaffoldKey,
       // AppBar hanya ditampilkan pada tablet dan mobile
       appBar: (isTablet || isMobile) ? AppBar(
-        backgroundColor: lightBlue,
+        backgroundColor: ApiConfig.backgroundColor,
         elevation: 0,
         title: Text(
           _getPageTitle(),
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: darkBlack),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ApiConfig.textColor),
         ),
         leading: isTablet ? IconButton(
-          icon: Icon(Icons.menu, color: primaryGreen),
+          icon: Icon(Icons.menu, color: ApiConfig.primaryColor),
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ) : null,
         actions: [
           // Help icon
           IconButton(
-            icon: Icon(Icons.help_outline, color: primaryGreen),
+            icon: Icon(Icons.help_outline, color: ApiConfig.primaryColor),
             onPressed: () {},
             tooltip: 'Help',
           ),
           // Notification icon
           IconButton(
-            icon: Icon(Icons.notifications_outlined, color: primaryGreen),
+            icon: Icon(Icons.notifications_outlined, color: ApiConfig.primaryColor),
             onPressed: () {},
             tooltip: 'Notifications',
           ),
           // Logout icon
           IconButton(
-            icon: Icon(Icons.logout, color: primaryGreen),
+            icon: Icon(Icons.logout, color: ApiConfig.primaryColor),
             onPressed: _logout,
             tooltip: 'Logout',
           ),
@@ -311,9 +308,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: lightBlue,
-        selectedItemColor: primaryGreen,
-        unselectedItemColor: darkBlack.withOpacity(0.6),
+        backgroundColor: ApiConfig.backgroundColor,
+        selectedItemColor: ApiConfig.primaryColor,
+        unselectedItemColor: ApiConfig.textColor.withOpacity(0.6),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
@@ -357,10 +354,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   height: 64,
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   decoration: BoxDecoration(
-                    color: lightBlue,
+                    color: ApiConfig.backgroundColor,
                     boxShadow: [
                       BoxShadow(
-                        color: darkBlack.withOpacity(0.05),
+                        color: ApiConfig.textColor.withOpacity(0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -371,7 +368,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       // Page title based on selected index
                       Text(
                         _getPageTitle(),
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: darkBlack),
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ApiConfig.textColor),
                       ),
                       const Spacer(),
                       // Search bar
@@ -381,35 +378,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: primaryGreen.withOpacity(0.3)),
+                          border: Border.all(color: ApiConfig.primaryColor.withOpacity(0.3)),
                         ),
                         child: TextField(
                           decoration: InputDecoration(
                             hintText: 'Search...',
-                            prefixIcon: Icon(Icons.search, color: primaryGreen),
+                            prefixIcon: Icon(Icons.search, color: ApiConfig.primaryColor),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                            hintStyle: TextStyle(color: darkBlack.withOpacity(0.5)),
+                            hintStyle: TextStyle(color: ApiConfig.textColor.withOpacity(0.5)),
                           ),
-                          style: TextStyle(color: darkBlack),
+                          style: TextStyle(color: ApiConfig.textColor),
                         ),
                       ),
                       const SizedBox(width: 16),
                       // Help icon
                       IconButton(
-                        icon: Icon(Icons.help_outline, color: primaryGreen),
+                        icon: Icon(Icons.help_outline, color: ApiConfig.primaryColor),
                         onPressed: () {},
                         tooltip: 'Help',
                       ),
                       // Notification icon
                       IconButton(
-                        icon: Icon(Icons.notifications_outlined, color: primaryGreen),
+                        icon: Icon(Icons.notifications_outlined, color: ApiConfig.primaryColor),
                         onPressed: () {},
                         tooltip: 'Notifications',
                       ),
                       // Logout icon
                       IconButton(
-                        icon: Icon(Icons.logout, color: primaryGreen),
+                        icon: Icon(Icons.logout, color: ApiConfig.primaryColor),
                         onPressed: _logout,
                         tooltip: 'Logout',
                       ),
@@ -433,7 +430,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildSidebar() {
     return Container(
       width: 250,
-      color: darkBlack, // Dark black color for sidebar
+      color: ApiConfig.textColor, // Dark black color for sidebar
       child: Column(
         children: [
           // Logo
@@ -447,7 +444,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fit: BoxFit.contain,
             ),
           ),
-          Divider(color: primaryGreen.withOpacity(0.3), height: 1),
+          Divider(color: ApiConfig.primaryColor.withOpacity(0.3), height: 1),
           
           // User profile section
           Container(
@@ -455,7 +452,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: primaryGreen,
+                  backgroundColor: ApiConfig.primaryColor,
                   radius: 24,
                   child: Text(
                     widget.user.name.isNotEmpty ? widget.user.name[0].toUpperCase() : 'U',
@@ -483,7 +480,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          Divider(color: primaryGreen.withOpacity(0.3), height: 1),
+          Divider(color: ApiConfig.primaryColor.withOpacity(0.3), height: 1),
           
           // Navigation menu
           Expanded(
@@ -508,7 +505,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               icon: const Icon(Icons.logout, color: Colors.white),
               label: const Text('Logout', style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryGreen,
+                backgroundColor: ApiConfig.primaryColor,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -573,7 +570,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: isSelected ? primaryGreen.withOpacity(0.2) : Colors.transparent,
+            color: isSelected ? ApiConfig.primaryColor.withOpacity(0.2) : Colors.transparent,
             borderRadius: BorderRadius.circular(0),
           ),
           child: Row(
@@ -597,7 +594,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: 4,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: primaryGreen,
+                    color: ApiConfig.primaryColor,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -661,7 +658,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     
     // Dashboard content
     return Container(
-      color: lightBlue,
+      color: ApiConfig.backgroundColor,
       child: SingleChildScrollView(
         padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Column(
@@ -677,150 +674,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: darkBlack,
+                          color: ApiConfig.textColor,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Here\'s what\'s happening with your store today',
+                        'Here\'s what\'s happening with your store today.',
                         style: TextStyle(
-                          fontSize: 14,
-                          color: darkBlack.withOpacity(0.7),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Date range picker
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: primaryGreen.withOpacity(0.3)),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<int>(
-                            value: _selectedPeriod,
-                            icon: const Icon(Icons.arrow_drop_down, size: 18),
-                            isExpanded: true,
-                            onChanged: (int? newValue) {
-                              if (newValue != null) {
-                                _changePeriod(newValue);
-                              }
-                            },
-                            items: const [
-                              DropdownMenuItem(
-                                value: 7,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.calendar_today, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('7 Hari Terakhir'),
-                                  ],
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 30,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.calendar_today, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('30 Hari Terakhir'),
-                                  ],
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 90,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.calendar_today, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('90 Hari Terakhir'),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                          fontSize: 16,
+                          color: ApiConfig.textColor.withOpacity(0.7),
                         ),
                       ),
                     ],
                   )
                 : Row(
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Welcome back, ${widget.user.name}!',
-                              style: TextStyle(
-                                fontSize: isTablet ? 22 : 24,
-                                fontWeight: FontWeight.bold,
-                                color: darkBlack,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Here\'s what\'s happening with your store today',
-                              style: TextStyle(
-                                fontSize: isTablet ? 15 : 16,
-                                color: darkBlack.withOpacity(0.7),
-                              ),
-                            ),
-                          ],
+                      Text(
+                        'Welcome back, ${widget.user.name}!',
+                        style: TextStyle(
+                          fontSize: isTablet ? 22 : 24,
+                          fontWeight: FontWeight.bold,
+                          color: ApiConfig.textColor,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      // Date range picker
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: primaryGreen.withOpacity(0.3)),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<int>(
-                            value: _selectedPeriod,
-                            icon: const Icon(Icons.arrow_drop_down, size: 18),
-                            onChanged: (int? newValue) {
-                              if (newValue != null) {
-                                _changePeriod(newValue);
-                              }
-                            },
-                            items: const [
-                              DropdownMenuItem(
-                                value: 7,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.calendar_today, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('7 Hari Terakhir'),
-                                  ],
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 30,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.calendar_today, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('30 Hari Terakhir'),
-                                  ],
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 90,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.calendar_today, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('90 Hari Terakhir'),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Here\'s what\'s happening with your store today.',
+                        style: TextStyle(
+                          fontSize: isTablet ? 15 : 16,
+                          color: ApiConfig.textColor.withOpacity(0.7),
                         ),
                       ),
                     ],
@@ -832,7 +714,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ? const Center(
                     child: Padding(
                       padding: EdgeInsets.all(20.0),
-                      child: CircularProgressIndicator(color: primaryGreen),
+                      child: CircularProgressIndicator(color: ApiConfig.primaryColor),
                     ),
                   )
                 : _salesDataError != null
@@ -853,7 +735,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ElevatedButton(
                                 onPressed: _fetchSalesDashboardData,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: primaryGreen,
+                                  backgroundColor: ApiConfig.primaryColor,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -880,7 +762,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Total Penjualan',
                                     value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.totalSales),
                                     icon: Icons.attach_money,
-                                    color: primaryGreen,
+                                    color: ApiConfig.primaryColor,
                                     changePercentage: _salesDashboardData!.comparison.totalSalesChange,
                                     isCurrency: true,
                                   ),
@@ -889,7 +771,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Jumlah Transaksi',
                                     value: CurrencyFormatter.formatNumber(_salesDashboardData!.currentPeriod.transactionCount.toDouble()),
                                     icon: Icons.receipt_long,
-                                    color: primaryGreen,
+                                    color: ApiConfig.primaryColor,
                                     changePercentage: _salesDashboardData!.comparison.transactionCountChange,
                                   ),
                                   const SizedBox(height: 16),
@@ -897,7 +779,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Rata-rata Transaksi',
                                     value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.averageTransactionValue),
                                     icon: Icons.trending_up,
-                                    color: primaryGreen,
+                                    color: ApiConfig.primaryColor,
                                     changePercentage: _salesDashboardData!.comparison.averageTransactionValueChange,
                                     isCurrency: true,
                                   ),
@@ -906,7 +788,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     title: 'Total Profit',
                                     value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.totalProfit),
                                     icon: Icons.account_balance_wallet,
-                                    color: primaryGreen,
+                                    color: ApiConfig.primaryColor,
                                     changePercentage: _salesDashboardData!.comparison.profitChange,
                                     isCurrency: true,
                                   ),
@@ -919,7 +801,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       title: 'Total Penjualan',
                                       value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.totalSales),
                                       icon: Icons.attach_money,
-                                      color: primaryGreen,
+                                      color: ApiConfig.primaryColor,
                                       changePercentage: _salesDashboardData!.comparison.totalSalesChange,
                                       isCurrency: true,
                                     ),
@@ -930,7 +812,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       title: 'Jumlah Transaksi',
                                       value: CurrencyFormatter.formatNumber(_salesDashboardData!.currentPeriod.transactionCount.toDouble()),
                                       icon: Icons.receipt_long,
-                                      color: primaryGreen,
+                                      color: ApiConfig.primaryColor,
                                       changePercentage: _salesDashboardData!.comparison.transactionCountChange,
                                     ),
                                   ),
@@ -940,7 +822,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       title: 'Rata-rata Transaksi',
                                       value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.averageTransactionValue),
                                       icon: Icons.trending_up,
-                                      color: primaryGreen,
+                                      color: ApiConfig.primaryColor,
                                       changePercentage: _salesDashboardData!.comparison.averageTransactionValueChange,
                                       isCurrency: true,
                                     ),
@@ -951,7 +833,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       title: 'Total Profit',
                                       value: CurrencyFormatter.formatCurrency(_salesDashboardData!.currentPeriod.totalProfit),
                                       icon: Icons.account_balance_wallet,
-                                      color: primaryGreen,
+                                      color: ApiConfig.primaryColor,
                                       changePercentage: _salesDashboardData!.comparison.profitChange,
                                       isCurrency: true,
                                     ),
@@ -1382,7 +1264,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: TextStyle(
                     fontSize: isMobile ? 16 : (isTablet ? 17 : 18),
                     fontWeight: FontWeight.bold,
-                    color: darkBlack,
+                    color: ApiConfig.textColor,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1390,7 +1272,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               TextButton(
                 onPressed: () {},
                 style: TextButton.styleFrom(
-                  foregroundColor: primaryGreen,
+                  foregroundColor: ApiConfig.primaryColor,
                 ),
                 child: Text(
                   isMobile ? 'All' : 'View All',
@@ -1449,9 +1331,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 margin: EdgeInsets.only(bottom: isMobile ? 12 : 16),
                 padding: EdgeInsets.all(isMobile ? 12 : 16),
                 decoration: BoxDecoration(
-                  color: lightBlue.withOpacity(0.3),
+                  color: ApiConfig.backgroundColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: primaryGreen.withOpacity(0.2)),
+                  border: Border.all(color: ApiConfig.primaryColor.withOpacity(0.2)),
                 ),
                 child: isMobile 
                   ? Column(
@@ -1465,7 +1347,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               height: 28,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: primaryGreen,
+                                color: ApiConfig.primaryColor,
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Text(
@@ -1484,7 +1366,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold, 
                                   fontSize: 14,
-                                  color: darkBlack,
+                                  color: ApiConfig.textColor,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -1504,7 +1386,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Text(
                                     '${product['sold']} units',
                                     style: TextStyle(
-                                      color: darkBlack.withOpacity(0.7), 
+                                      color: ApiConfig.textColor.withOpacity(0.7), 
                                       fontSize: 12,
                                     ),
                                   ),
@@ -1512,7 +1394,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     Text(
                                       'Margin: ${product['profit_margin']}%',
                                       style: TextStyle(
-                                        color: darkBlack.withOpacity(0.7), 
+                                        color: ApiConfig.textColor.withOpacity(0.7), 
                                         fontSize: 12,
                                       ),
                                     ),
@@ -1527,14 +1409,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold, 
                                     fontSize: 14,
-                                    color: primaryGreen,
+                                    color: ApiConfig.primaryColor,
                                   ),
                                 ),
                                 if (product['profit'] != null)
                                   Text(
                                     'Profit: Rp ${NumberFormat('#,###', 'id_ID').format(product['profit'])}',
                                     style: TextStyle(
-                                      color: darkBlack.withOpacity(0.7), 
+                                      color: ApiConfig.textColor.withOpacity(0.7), 
                                       fontSize: 11,
                                     ),
                                   ),
@@ -1552,7 +1434,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           height: isTablet ? 30 : 32,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: primaryGreen,
+                            color: ApiConfig.primaryColor,
                             borderRadius: BorderRadius.circular(isTablet ? 15 : 16),
                           ),
                           child: Text(
@@ -1574,7 +1456,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold, 
                                   fontSize: isTablet ? 15 : 16,
-                                  color: darkBlack,
+                                  color: ApiConfig.textColor,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -1585,7 +1467,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Text(
                                     '${product['sold']} units sold',
                                     style: TextStyle(
-                                      color: darkBlack.withOpacity(0.7), 
+                                      color: ApiConfig.textColor.withOpacity(0.7), 
                                       fontSize: isTablet ? 13 : 14,
                                     ),
                                   ),
@@ -1593,7 +1475,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     Text(
                                       ' • SKU: ${product['sku']}',
                                       style: TextStyle(
-                                        color: darkBlack.withOpacity(0.7), 
+                                        color: ApiConfig.textColor.withOpacity(0.7), 
                                         fontSize: 14,
                                       ),
                                     ),
@@ -1605,7 +1487,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 Text(
                                   'Profit Margin: ${product['profit_margin']}%',
                                   style: TextStyle(
-                                    color: darkBlack.withOpacity(0.7), 
+                                    color: ApiConfig.textColor.withOpacity(0.7), 
                                     fontSize: isTablet ? 13 : 14,
                                   ),
                                 ),
@@ -1622,7 +1504,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold, 
                                 fontSize: isTablet ? 15 : 16,
-                                color: primaryGreen,
+                                color: ApiConfig.primaryColor,
                               ),
                             ),
                             if (product['profit'] != null) ...[  
@@ -1630,7 +1512,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Text(
                                 'Profit: Rp ${NumberFormat('#,###', 'id_ID').format(product['profit'])}',
                                 style: TextStyle(
-                                  color: darkBlack.withOpacity(0.7), 
+                                  color: ApiConfig.textColor.withOpacity(0.7), 
                                   fontSize: isTablet ? 12 : 14,
                                 ),
                               ),

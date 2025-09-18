@@ -74,16 +74,13 @@ class _POSScreenState extends State<POSScreen> {
     return ['Semua', ..._apiCategories.map((c) => c.name)];
   }
   
-  // Color palette baru untuk aplikasi
-  static const Color primaryGreen = Color(0xFF03D26F);
-  static const Color lightBlue = Color(0xFFEAF4F4);
-  static const Color darkBlack = Color(0xFF161514);
+  // Theme colors - menggunakan warna dari ApiConfig
   
   // Legacy colors (akan diganti bertahap)
-  final Color _primaryColor = primaryGreen;
-  final Color _secondaryColor = primaryGreen.withOpacity(0.8);
-  final Color _accentColor = lightBlue;
-  final Color _lightColor = lightBlue;
+  final Color _primaryColor = ApiConfig.primaryColor;
+  final Color _secondaryColor = ApiConfig.primaryColor.withOpacity(0.8);
+  final Color _accentColor = ApiConfig.backgroundColor;
+  final Color _lightColor = ApiConfig.backgroundColor;
   
   // Warna untuk kategori produk
   final Map<String, Color> _categoryColors = {
@@ -722,7 +719,7 @@ class _POSScreenState extends State<POSScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Petty cash berhasil dibuka, transaksi dapat dilakukan'),
-            backgroundColor: primaryGreen,
+            backgroundColor: ApiConfig.primaryColor,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -886,16 +883,16 @@ class _POSScreenState extends State<POSScreen> {
                 : 'Point of Sale', 
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: lightBlue,
+                color: ApiConfig.backgroundColor,
                 fontSize: isMobile ? 18 : 20,
               ),
             );
           },
         ),
-        backgroundColor: primaryGreen,
-        foregroundColor: lightBlue,
+        backgroundColor: ApiConfig.primaryColor,
+        foregroundColor: ApiConfig.backgroundColor,
         elevation: 4,
-        shadowColor: primaryGreen.withOpacity(0.3),
+        shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
@@ -1025,7 +1022,7 @@ class _POSScreenState extends State<POSScreen> {
                 icon: Icon(
                   Icons.account_balance_wallet,
                   color: pettyCashProvider.canMakeTransaction 
-                      ? primaryGreen 
+                      ? ApiConfig.primaryColor 
                       : Colors.red.shade400,
                 ),
                 tooltip: 'Petty Cash',
@@ -1052,7 +1049,7 @@ class _POSScreenState extends State<POSScreen> {
                                 ? Icons.check_circle 
                                 : Icons.cancel,
                             color: pettyCashProvider.canMakeTransaction 
-                                ? primaryGreen 
+                                ? ApiConfig.primaryColor 
                                 : Colors.red.shade400,
                             size: 16,
                           ),
@@ -1127,14 +1124,14 @@ class _POSScreenState extends State<POSScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          lightBlue,
-                          lightBlue.withOpacity(0.8),
+                          ApiConfig.backgroundColor,
+                          ApiConfig.backgroundColor.withOpacity(0.8),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: primaryGreen.withOpacity(0.1),
+                          color: ApiConfig.primaryColor.withOpacity(0.1),
                           blurRadius: 15,
                           spreadRadius: 0,
                           offset: const Offset(0, 8),
@@ -1147,7 +1144,7 @@ class _POSScreenState extends State<POSScreen> {
                         ),
                       ],
                       border: Border.all(
-                        color: primaryGreen.withOpacity(0.2),
+                        color: ApiConfig.primaryColor.withOpacity(0.2),
                         width: 1,
                       ),
                     ),
@@ -1163,7 +1160,7 @@ class _POSScreenState extends State<POSScreen> {
                               style: TextStyle(
                                 fontSize: isMobile ? 14 : 16,
                                 fontWeight: FontWeight.bold,
-                                color: darkBlack,
+                                color: ApiConfig.textColor,
                               ),
                             ),
                           ),
@@ -1174,14 +1171,14 @@ class _POSScreenState extends State<POSScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       CircularProgressIndicator(
-                                        valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                                        valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                                         strokeWidth: 3,
                                       ),
                                       const SizedBox(height: 16),
                                       Text(
                                         'Memuat produk...', 
                                         style: TextStyle(
-                                          color: darkBlack.withOpacity(0.7),
+                                          color: ApiConfig.textColor.withOpacity(0.7),
                                           fontSize: isMobile ? 14 : 16,
                                         ),
                                       ),
@@ -1349,14 +1346,14 @@ class _POSScreenState extends State<POSScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    lightBlue,
-                    lightBlue.withOpacity(0.8),
+                    ApiConfig.backgroundColor,
+                    ApiConfig.backgroundColor.withOpacity(0.8),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryGreen.withOpacity(0.1),
+                    color: ApiConfig.primaryColor.withOpacity(0.1),
                     blurRadius: 15,
                     spreadRadius: 0,
                     offset: const Offset(0, 8),
@@ -1369,7 +1366,7 @@ class _POSScreenState extends State<POSScreen> {
                   ),
                 ],
                 border: Border.all(
-                  color: primaryGreen.withOpacity(0.2),
+                  color: ApiConfig.primaryColor.withOpacity(0.2),
                   width: 1,
                 ),
               ),
@@ -1484,13 +1481,13 @@ class _POSScreenState extends State<POSScreen> {
             end: Alignment.bottomRight,
             colors: [
               Colors.white,
-              lightBlue.withOpacity(0.3),
+              ApiConfig.backgroundColor.withOpacity(0.3),
             ],
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: primaryGreen.withOpacity(0.1),
+              color: ApiConfig.primaryColor.withOpacity(0.1),
               blurRadius: 12,
               spreadRadius: 0,
               offset: const Offset(0, 6),
@@ -1503,7 +1500,7 @@ class _POSScreenState extends State<POSScreen> {
             ),
           ],
           border: Border.all(
-            color: primaryGreen.withOpacity(0.15),
+            color: ApiConfig.primaryColor.withOpacity(0.15),
             width: 1,
           ),
         ),
@@ -1519,8 +1516,8 @@ class _POSScreenState extends State<POSScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      primaryGreen,
-                      primaryGreen.withOpacity(0.7),
+                      ApiConfig.primaryColor,
+                      ApiConfig.primaryColor.withOpacity(0.7),
                     ],
                   ),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -1637,7 +1634,7 @@ class _POSScreenState extends State<POSScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold, 
                               fontSize: isMobile ? 12 : (isTablet ? 13 : 16),
-                              color: darkBlack,
+                              color: ApiConfig.textColor,
                             ),
                             maxLines: isMobile ? 2 : (isTablet ? 2 : 1),
                             overflow: TextOverflow.ellipsis,
@@ -1654,7 +1651,7 @@ class _POSScreenState extends State<POSScreen> {
                           Text(
                             '${FormatUtils.formatCurrency(product.price)}',
                             style: TextStyle(
-                              color: primaryGreen, 
+                              color: ApiConfig.primaryColor, 
                               fontWeight: FontWeight.bold, 
                               fontSize: isMobile ? 12 : (isTablet ? 13 : 16)
                             ),
@@ -1674,14 +1671,14 @@ class _POSScreenState extends State<POSScreen> {
                           style: TextStyle(fontSize: isMobile ? 10 : (isTablet ? 11 : 14)),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryGreen,
-                          foregroundColor: lightBlue,
+                          backgroundColor: ApiConfig.primaryColor,
+                          foregroundColor: ApiConfig.backgroundColor,
                           padding: EdgeInsets.symmetric(
                             vertical: isMobile ? 6 : (isTablet ? 8 : 10),
                             horizontal: isMobile ? 8 : (isTablet ? 10 : 12),
                           ),
                           elevation: 2,
-                          shadowColor: primaryGreen.withOpacity(0.3),
+                          shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                           disabledBackgroundColor: Colors.grey.shade300,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),

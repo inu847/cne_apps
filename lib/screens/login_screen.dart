@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
+import '../config/api_config.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -28,10 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Color palette baru
-    const Color primaryGreen = Color(0xFF03D26F);
-    const Color lightBlue = Color(0xFFEAF4F4);
-    const Color darkBlack = Color(0xFF161514);
+    // Using theme colors from ApiConfig
     
     return Scaffold(
       body: Container(
@@ -40,8 +38,8 @@ class _LoginScreenState extends State<LoginScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              primaryGreen,
-              primaryGreen.withOpacity(0.8),
+              ApiConfig.primaryColor,
+              ApiConfig.primaryColor.withOpacity(0.8),
             ],
           ),
         ),
@@ -58,11 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 400,
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: lightBlue,
+                        color: ApiConfig.backgroundColor,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: darkBlack.withOpacity(0.1),
+                            color: ApiConfig.textColor.withOpacity(0.1),
                             blurRadius: 20,
                             spreadRadius: 1,
                           ),
@@ -85,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
-                              color: darkBlack,
+                              color: ApiConfig.textColor,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -93,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             'Please sign in to continue',
                             style: TextStyle(
                               fontSize: 16,
-                              color: darkBlack.withOpacity(0.7),
+                              color: ApiConfig.textColor.withOpacity(0.7),
                             ),
                           ),
                           const SizedBox(height: 32),
@@ -108,21 +106,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             keyboardType: TextInputType.emailAddress,
                             autofocus: false,
                             enableInteractiveSelection: false,
-                            style: TextStyle(color: darkBlack),
+                            style: TextStyle(color: ApiConfig.textColor),
                             decoration: InputDecoration(
                               labelText: 'Email',
-                              labelStyle: TextStyle(color: darkBlack.withOpacity(0.7)),
-                              prefixIcon: Icon(Icons.email, color: primaryGreen),
+                              labelStyle: TextStyle(color: ApiConfig.textColor.withOpacity(0.7)),
+                              prefixIcon: Icon(Icons.email, color: ApiConfig.primaryColor),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: darkBlack.withOpacity(0.3)),
+                                borderSide: BorderSide(color: ApiConfig.primaryColor, width: 2),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: primaryGreen, width: 2),
+                                borderSide: BorderSide(color: ApiConfig.primaryColor, width: 2),
                               ),
                             ),
                           ),
@@ -134,15 +132,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             obscureText: _obscurePassword,
                             autofocus: false,
                             enableInteractiveSelection: false,
-                            style: TextStyle(color: darkBlack),
+                            style: TextStyle(color: ApiConfig.textColor),
                             decoration: InputDecoration(
                               labelText: 'Password',
-                              labelStyle: TextStyle(color: darkBlack.withOpacity(0.7)),
-                              prefixIcon: Icon(Icons.lock, color: primaryGreen),
+                              labelStyle: TextStyle(color: ApiConfig.textColor.withOpacity(0.7)),
+                              prefixIcon: Icon(Icons.lock, color: ApiConfig.primaryColor),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                                  color: primaryGreen,
+                                  color: ApiConfig.primaryColor,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -155,11 +153,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: darkBlack.withOpacity(0.3)),
+                                borderSide: BorderSide(color: ApiConfig.textColor.withOpacity(0.3)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide(color: primaryGreen, width: 2),
+                                borderSide: BorderSide(color: ApiConfig.primaryColor, width: 2),
                               ),
                             ),
                           ),
@@ -178,12 +176,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                         _rememberMe = value!;
                                       });
                                     },
-                                    activeColor: primaryGreen,
-                                    checkColor: lightBlue,
+                                    activeColor: ApiConfig.primaryColor,
+                                    checkColor: ApiConfig.backgroundColor,
                                   ),
                                   Text(
                                     'Remember me',
-                                    style: TextStyle(color: darkBlack),
+                                    style: TextStyle(color: ApiConfig.textColor),
                                   ),
                                 ],
                               ),
@@ -193,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 },
                                 child: Text(
                                   'Forgot Password?',
-                                  style: TextStyle(color: primaryGreen),
+                                  style: TextStyle(color: ApiConfig.primaryColor),
                                 ),
                               ),
                             ],
@@ -220,9 +218,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : _handleLogin,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryGreen,
-                                foregroundColor: lightBlue,
-                                disabledBackgroundColor: primaryGreen.withOpacity(0.5),
+                                backgroundColor: ApiConfig.primaryColor,
+                                foregroundColor: ApiConfig.backgroundColor,
+                                disabledBackgroundColor: ApiConfig.primaryColor.withOpacity(0.5),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -233,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     height: 20,
                                     width: 20,
                                     child: CircularProgressIndicator(
-                                      color: lightBlue,
+                                      color: ApiConfig.backgroundColor,
                                       strokeWidth: 3,
                                     ),
                                   )
@@ -242,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: lightBlue,
+                                      color: ApiConfig.backgroundColor,
                                     ),
                                   ),
                             ),
@@ -258,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       '© 2023 DompetKasir POS System',
                       style: TextStyle(
-                        color: lightBlue,
+                        color: ApiConfig.backgroundColor,
                         fontSize: 14,
                       ),
                     ),

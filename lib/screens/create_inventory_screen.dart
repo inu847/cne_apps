@@ -7,6 +7,7 @@ import 'package:cne_pos_apps/providers/daily_inventory_stock_provider.dart';
 import 'package:cne_pos_apps/services/daily_inventory_stock_service.dart';
 import 'package:cne_pos_apps/services/warehouse_service.dart';
 import 'package:cne_pos_apps/services/inventory_item_service.dart';
+import '../config/api_config.dart';
 
 class CreateInventoryScreen extends StatefulWidget {
   const CreateInventoryScreen({Key? key}) : super(key: key);
@@ -16,10 +17,7 @@ class CreateInventoryScreen extends StatefulWidget {
 }
 
 class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
-  // Color palette baru untuk aplikasi
-  static const Color primaryGreen = Color(0xFF03D26F);
-  static const Color lightBlue = Color(0xFFEAF4F4);
-  static const Color darkBlack = Color(0xFF161514);
+  // Theme colors - menggunakan warna dari ApiConfig
   
   final _formKey = GlobalKey<FormState>();
   final _dateFormat = DateFormat('yyyy-MM-dd');
@@ -541,15 +539,15 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
               bottom: isMobile ? 8 : 12,
             ),
             decoration: BoxDecoration(
-              color: isEnabled ? primaryGreen.withOpacity(0.05) : Colors.white,
+              color: isEnabled ? ApiConfig.primaryColor.withOpacity(0.05) : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isEnabled ? primaryGreen.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+                color: isEnabled ? ApiConfig.primaryColor.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
                 width: isEnabled ? 2 : 1,
               ),
               boxShadow: isEnabled ? [
                 BoxShadow(
-                  color: primaryGreen.withOpacity(0.1),
+                  color: ApiConfig.primaryColor.withOpacity(0.1),
                   blurRadius: 8,
                   spreadRadius: 0,
                   offset: const Offset(0, 2),
@@ -574,7 +572,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                     }
                   });
                 },
-                activeColor: primaryGreen,
+                activeColor: ApiConfig.primaryColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -584,7 +582,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: isMobile ? 14 : 16,
-                  color: isEnabled ? primaryGreen : darkBlack,
+                  color: isEnabled ? ApiConfig.primaryColor : ApiConfig.textColor,
                 ),
               ),
               subtitle: Padding(
@@ -593,14 +591,14 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                   'UOM: ${item['inventory_uom_name'] ?? ''}',
                   style: TextStyle(
                     fontSize: isMobile ? 12 : 14,
-                    color: darkBlack.withOpacity(0.7),
+                    color: ApiConfig.textColor.withOpacity(0.7),
                   ),
                 ),
               ),
               trailing: isEnabled
                   ? Icon(
                       Icons.keyboard_arrow_down,
-                      color: primaryGreen,
+                      color: ApiConfig.primaryColor,
                     )
                   : Icon(
                       Icons.keyboard_arrow_right,
@@ -614,7 +612,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                           horizontal: isMobile ? 8 : 12,
                         ),
                         decoration: BoxDecoration(
-                          color: lightBlue.withOpacity(0.3),
+                          color: ApiConfig.backgroundColor.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(
@@ -629,7 +627,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                       hintText: '0',
                                       labelStyle: TextStyle(
                                         fontSize: isMobile ? 12 : 14,
-                                        color: darkBlack.withOpacity(0.7),
+                                        color: ApiConfig.textColor.withOpacity(0.7),
                                       ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
@@ -637,13 +635,13 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide(
-                                          color: primaryGreen,
+                                          color: ApiConfig.primaryColor,
                                           width: 2,
                                         ),
                                       ),
                                       prefixIcon: Icon(
                                         Icons.add_circle_outline,
-                                        color: primaryGreen,
+                                        color: ApiConfig.primaryColor,
                                         size: isMobile ? 20 : 24,
                                       ),
                                       filled: true,
@@ -671,7 +669,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                       hintText: '0',
                                       labelStyle: TextStyle(
                                         fontSize: isMobile ? 12 : 14,
-                                        color: darkBlack.withOpacity(0.7),
+                                        color: ApiConfig.textColor.withOpacity(0.7),
                                       ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
@@ -714,7 +712,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                 hintText: 'Tambahkan catatan untuk item ini...',
                                 labelStyle: TextStyle(
                                   fontSize: isMobile ? 12 : 14,
-                                  color: darkBlack.withOpacity(0.7),
+                                  color: ApiConfig.textColor.withOpacity(0.7),
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
@@ -722,13 +720,13 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                   borderSide: BorderSide(
-                                    color: primaryGreen,
+                                    color: ApiConfig.primaryColor,
                                     width: 2,
                                   ),
                                 ),
                                 prefixIcon: Icon(
                                   Icons.note_outlined,
-                                  color: primaryGreen,
+                                  color: ApiConfig.primaryColor,
                                   size: isMobile ? 20 : 24,
                                 ),
                                 filled: true,
@@ -772,14 +770,14 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
           'Buat Persediaan Baru',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: lightBlue,
+            color: ApiConfig.backgroundColor,
             fontSize: isMobile ? 18 : 20,
           ),
         ),
-        backgroundColor: primaryGreen,
-        foregroundColor: lightBlue,
+        backgroundColor: ApiConfig.primaryColor,
+        foregroundColor: ApiConfig.backgroundColor,
         elevation: 4,
-        shadowColor: primaryGreen.withOpacity(0.3),
+        shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
@@ -813,14 +811,14 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                    valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                     strokeWidth: 3,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Memuat data...',
                     style: TextStyle(
-                      color: darkBlack.withOpacity(0.7),
+                      color: ApiConfig.textColor.withOpacity(0.7),
                       fontSize: isMobile ? 14 : 16,
                     ),
                   ),
@@ -843,14 +841,14 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                         style: TextStyle(
                           fontSize: isMobile ? 16 : 18,
                           fontWeight: FontWeight.bold,
-                          color: darkBlack,
+                          color: ApiConfig.textColor,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         _errorMessage!,
                         style: TextStyle(
-                          color: darkBlack.withOpacity(0.7),
+                          color: ApiConfig.textColor.withOpacity(0.7),
                           fontSize: isMobile ? 14 : 16,
                         ),
                         textAlign: TextAlign.center,
@@ -859,10 +857,10 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                       ElevatedButton(
                         onPressed: _loadInitialData,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryGreen,
-                          foregroundColor: lightBlue,
+                          backgroundColor: ApiConfig.primaryColor,
+                          foregroundColor: ApiConfig.backgroundColor,
                           elevation: 2,
-                          shadowColor: primaryGreen.withOpacity(0.3),
+                          shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -891,14 +889,14 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              lightBlue,
-                              lightBlue.withOpacity(0.8),
+                              ApiConfig.backgroundColor,
+                              ApiConfig.backgroundColor.withOpacity(0.8),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: primaryGreen.withOpacity(0.1),
+                              color: ApiConfig.primaryColor.withOpacity(0.1),
                               blurRadius: 15,
                               spreadRadius: 0,
                               offset: const Offset(0, 8),
@@ -911,7 +909,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                             ),
                           ],
                           border: Border.all(
-                            color: primaryGreen.withOpacity(0.2),
+                            color: ApiConfig.primaryColor.withOpacity(0.2),
                             width: 1,
                           ),
                         ),
@@ -927,15 +925,15 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        primaryGreen,
-                                        primaryGreen.withOpacity(0.8),
+                                        ApiConfig.primaryColor,
+                                        ApiConfig.primaryColor.withOpacity(0.8),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(
                                     Icons.inventory_2,
-                                    color: lightBlue,
+                                    color: ApiConfig.backgroundColor,
                                     size: isMobile ? 20 : 24,
                                   ),
                                 ),
@@ -945,7 +943,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                   style: TextStyle(
                                     fontSize: isMobile ? 16 : 18,
                                     fontWeight: FontWeight.bold,
-                                    color: darkBlack,
+                                    color: ApiConfig.textColor,
                                   ),
                                 ),
                               ],
@@ -961,25 +959,25 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                       decoration: InputDecoration(
                                         labelText: 'Tanggal Stok',
                                         labelStyle: TextStyle(
-                                          color: darkBlack.withOpacity(0.7),
+                                          color: ApiConfig.textColor.withOpacity(0.7),
                                           fontSize: isMobile ? 14 : 16,
                                         ),
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(12),
                                           borderSide: BorderSide(
-                                            color: primaryGreen.withOpacity(0.3),
+                                            color: ApiConfig.primaryColor.withOpacity(0.3),
                                           ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(12),
                                           borderSide: BorderSide(
-                                            color: primaryGreen.withOpacity(0.3),
+                                            color: ApiConfig.primaryColor.withOpacity(0.3),
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(12),
                                           borderSide: BorderSide(
-                                            color: primaryGreen,
+                                            color: ApiConfig.primaryColor,
                                             width: 2,
                                           ),
                                         ),
@@ -992,13 +990,13 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                           Text(
                                             _dateFormat.format(_selectedDate),
                                             style: TextStyle(
-                                              color: darkBlack,
+                                              color: ApiConfig.textColor,
                                               fontSize: isMobile ? 14 : 16,
                                             ),
                                           ),
                                           Icon(
                                             Icons.calendar_today,
-                                            color: primaryGreen,
+                                            color: ApiConfig.primaryColor,
                                             size: isMobile ? 20 : 24,
                                           ),
                                         ],
@@ -1012,25 +1010,25 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                     decoration: InputDecoration(
                                       labelText: 'Gudang',
                                       labelStyle: TextStyle(
-                                        color: darkBlack.withOpacity(0.7),
+                                        color: ApiConfig.textColor.withOpacity(0.7),
                                         fontSize: isMobile ? 14 : 16,
                                       ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: primaryGreen.withOpacity(0.3),
+                                          color: ApiConfig.primaryColor.withOpacity(0.3),
                                         ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: primaryGreen.withOpacity(0.3),
+                                          color: ApiConfig.primaryColor.withOpacity(0.3),
                                         ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: primaryGreen,
+                                          color: ApiConfig.primaryColor,
                                           width: 2,
                                         ),
                                       ),
@@ -1065,25 +1063,25 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Catatan',
                                 labelStyle: TextStyle(
-                                  color: darkBlack.withOpacity(0.7),
+                                  color: ApiConfig.textColor.withOpacity(0.7),
                                   fontSize: isMobile ? 14 : 16,
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(
-                                    color: primaryGreen.withOpacity(0.3),
+                                    color: ApiConfig.primaryColor.withOpacity(0.3),
                                   ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(
-                                    color: primaryGreen.withOpacity(0.3),
+                                    color: ApiConfig.primaryColor.withOpacity(0.3),
                                   ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(
-                                    color: primaryGreen,
+                                    color: ApiConfig.primaryColor,
                                     width: 2,
                                   ),
                                 ),
@@ -1091,7 +1089,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                 fillColor: Colors.white,
                               ),
                               style: TextStyle(
-                                color: darkBlack,
+                                color: ApiConfig.textColor,
                                 fontSize: isMobile ? 14 : 16,
                               ),
                               maxLines: 3,
@@ -1112,13 +1110,13 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              lightBlue,
-                              lightBlue.withOpacity(0.8),
+                              ApiConfig.backgroundColor,
+                              ApiConfig.backgroundColor.withOpacity(0.8),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: primaryGreen.withOpacity(0.2),
+                            color: ApiConfig.primaryColor.withOpacity(0.2),
                             width: 1,
                           ),
                         ),
@@ -1129,10 +1127,10 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Cari Item Persediaan',
                                 hintText: 'Ketik nama item untuk mencari...',
-                                prefixIcon: Icon(Icons.search, color: primaryGreen),
+                                prefixIcon: Icon(Icons.search, color: ApiConfig.primaryColor),
                                 suffixIcon: _searchItemController.text.isNotEmpty
                                     ? IconButton(
-                                        icon: Icon(Icons.clear, color: darkBlack.withOpacity(0.6)),
+                                        icon: Icon(Icons.clear, color: ApiConfig.textColor.withOpacity(0.6)),
                                         onPressed: () {
                                           _searchItemController.clear();
                                           setState(() {});
@@ -1168,8 +1166,8 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                       style: TextStyle(fontSize: isMobile ? 12 : 14),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: primaryGreen,
-                                      foregroundColor: lightBlue,
+                                      backgroundColor: ApiConfig.primaryColor,
+                                      foregroundColor: ApiConfig.backgroundColor,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
@@ -1195,8 +1193,8 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                       style: TextStyle(fontSize: isMobile ? 12 : 14),
                                     ),
                                     style: OutlinedButton.styleFrom(
-                                      foregroundColor: primaryGreen,
-                                      side: BorderSide(color: primaryGreen),
+                                      foregroundColor: ApiConfig.primaryColor,
+                                      side: BorderSide(color: ApiConfig.primaryColor),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
@@ -1224,13 +1222,13 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  lightBlue,
-                                  lightBlue.withOpacity(0.8),
+                                  ApiConfig.backgroundColor,
+                                  ApiConfig.backgroundColor.withOpacity(0.8),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: primaryGreen.withOpacity(0.2),
+                                color: ApiConfig.primaryColor.withOpacity(0.2),
                                 width: 1,
                               ),
                             ),
@@ -1243,15 +1241,15 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        primaryGreen,
-                                        primaryGreen.withOpacity(0.8),
+                                        ApiConfig.primaryColor,
+                                        ApiConfig.primaryColor.withOpacity(0.8),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(
                                     Icons.inventory_2,
-                                    color: lightBlue,
+                                    color: ApiConfig.backgroundColor,
                                     size: isMobile ? 18 : 20,
                                   ),
                                 ),
@@ -1265,14 +1263,14 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                         style: TextStyle(
                                           fontSize: isMobile ? 16 : 18,
                                           fontWeight: FontWeight.bold,
-                                          color: darkBlack,
+                                          color: ApiConfig.textColor,
                                         ),
                                       ),
                                       Text(
                                         'Centang item yang ingin dimasukkan ke persediaan',
                                         style: TextStyle(
                                           fontSize: isMobile ? 12 : 14,
-                                          color: darkBlack.withOpacity(0.7),
+                                          color: ApiConfig.textColor.withOpacity(0.7),
                                         ),
                                       ),
                                     ],
@@ -1284,10 +1282,10 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                     vertical: isMobile ? 4 : 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: primaryGreen.withOpacity(0.1),
+                                    color: ApiConfig.primaryColor.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
-                                      color: primaryGreen.withOpacity(0.3),
+                                      color: ApiConfig.primaryColor.withOpacity(0.3),
                                     ),
                                   ),
                                   child: Text(
@@ -1295,7 +1293,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                     style: TextStyle(
                                       fontSize: isMobile ? 11 : 12,
                                       fontWeight: FontWeight.bold,
-                                      color: primaryGreen,
+                                      color: ApiConfig.primaryColor,
                                     ),
                                   ),
                                 ),
@@ -1312,14 +1310,14 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: primaryGreen.withOpacity(0.1),
+                                  color: ApiConfig.primaryColor.withOpacity(0.1),
                                   blurRadius: 15,
                                   spreadRadius: 0,
                                   offset: const Offset(0, 8),
                                 ),
                               ],
                               border: Border.all(
-                                color: primaryGreen.withOpacity(0.2),
+                                color: ApiConfig.primaryColor.withOpacity(0.2),
                                 width: 1,
                               ),
                             ),
@@ -1331,14 +1329,14 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           CircularProgressIndicator(
-                                            valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                                            valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                                           ),
                                           const SizedBox(height: 16),
                                           Text(
                                             'Memuat item persediaan...',
                                             style: TextStyle(
                                               fontSize: isMobile ? 14 : 16,
-                                              color: darkBlack.withOpacity(0.7),
+                                              color: ApiConfig.textColor.withOpacity(0.7),
                                             ),
                                           ),
                                         ],
@@ -1362,13 +1360,13 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              lightBlue,
-                              lightBlue.withOpacity(0.8),
+                              ApiConfig.backgroundColor,
+                              ApiConfig.backgroundColor.withOpacity(0.8),
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: primaryGreen.withOpacity(0.1),
+                              color: ApiConfig.primaryColor.withOpacity(0.1),
                               blurRadius: 15,
                               spreadRadius: 0,
                               offset: const Offset(0, -8),
@@ -1376,7 +1374,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                           ],
                           border: Border(
                             top: BorderSide(
-                              color: primaryGreen.withOpacity(0.2),
+                              color: ApiConfig.primaryColor.withOpacity(0.2),
                               width: 1,
                             ),
                           ),
@@ -1387,8 +1385,8 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                             OutlinedButton(
                               onPressed: () => Navigator.pop(context),
                               style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: primaryGreen, width: 2),
-                                foregroundColor: primaryGreen,
+                                side: BorderSide(color: ApiConfig.primaryColor, width: 2),
+                                foregroundColor: ApiConfig.primaryColor,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1408,10 +1406,10 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                             ElevatedButton(
                               onPressed: _saveInventory,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryGreen,
-                                foregroundColor: lightBlue,
+                                backgroundColor: ApiConfig.primaryColor,
+                                foregroundColor: ApiConfig.backgroundColor,
                                 elevation: 2,
-                                shadowColor: primaryGreen.withOpacity(0.3),
+                                shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),

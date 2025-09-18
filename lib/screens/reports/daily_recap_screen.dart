@@ -5,11 +5,9 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../providers/transaction_provider.dart';
 import '../../utils/format_utils.dart';
 import '../../widgets/loading_indicator.dart';
+import '../../config/api_config.dart';
 
-// Tema warna aplikasi
-const Color primaryGreen = Color(0xFF03D26F);
-const Color lightBlue = Color(0xFFEAF4F4);
-const Color darkBlack = Color(0xFF161514);
+// Theme colors - menggunakan warna dari ApiConfig
 
 class DailyRecapScreen extends StatefulWidget {
   static const String routeName = '/reports/daily-recap';
@@ -107,7 +105,7 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
           _isShowingDetails ? 'Detail Rekapitulasi Harian' : 'Rekapitulasi Harian',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: lightBlue,
+            color: ApiConfig.backgroundColor,
             fontSize: isMobile ? 18 : 20,
           ),
         ),
@@ -122,10 +120,10 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
                 },
               )
             : null,
-        backgroundColor: primaryGreen,
-        foregroundColor: lightBlue,
+        backgroundColor: ApiConfig.primaryColor,
+        foregroundColor: ApiConfig.backgroundColor,
         elevation: 4,
-        shadowColor: primaryGreen.withOpacity(0.3),
+        shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
@@ -147,14 +145,14 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                      valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                       strokeWidth: 3,
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'Memuat detail rekapitulasi...',
                       style: TextStyle(
-                        color: darkBlack.withOpacity(0.7),
+                        color: ApiConfig.textColor.withOpacity(0.7),
                         fontSize: isMobile ? 14 : 16,
                       ),
                     ),
@@ -169,14 +167,14 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                      valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                       strokeWidth: 3,
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'Memuat rekapitulasi harian...',
                       style: TextStyle(
-                        color: darkBlack.withOpacity(0.7),
+                        color: ApiConfig.textColor.withOpacity(0.7),
                         fontSize: isMobile ? 14 : 16,
                       ),
                     ),
@@ -203,14 +201,14 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
                     style: TextStyle(
                       fontSize: isMobile ? 16 : 18,
                       fontWeight: FontWeight.bold,
-                      color: darkBlack,
+                      color: ApiConfig.textColor,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Error: ${provider.error}',
                     style: TextStyle(
-                      color: darkBlack.withOpacity(0.7),
+                      color: ApiConfig.textColor.withOpacity(0.7),
                       fontSize: isMobile ? 14 : 16,
                     ),
                     textAlign: TextAlign.center,
@@ -219,10 +217,10 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
                   ElevatedButton(
                     onPressed: _isShowingDetails ? () => _fetchDailyRecapDetails(pettyCashId: _selectedPettyCashId) : _fetchDailyRecap,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryGreen,
-                      foregroundColor: lightBlue,
+                      backgroundColor: ApiConfig.primaryColor,
+                      foregroundColor: ApiConfig.backgroundColor,
                       elevation: 2,
-                      shadowColor: primaryGreen.withOpacity(0.3),
+                      shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

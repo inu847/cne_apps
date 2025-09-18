@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/api_config.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/transaction_provider.dart';
@@ -7,10 +8,7 @@ import '../../utils/responsive_helper.dart';
 import '../../widgets/loading_indicator.dart';
 import '../transaction_detail_screen.dart';
 
-// Tema warna aplikasi
-const Color primaryGreen = Color(0xFF03D26F);
-const Color lightBlue = Color(0xFFEAF4F4);
-const Color darkBlack = Color(0xFF161514);
+// Theme colors - menggunakan warna dari ApiConfig
 
 class SalesReportScreen extends StatefulWidget {
   static const String routeName = '/reports/sales';
@@ -78,14 +76,14 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
           'Laporan Penjualan',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: lightBlue,
+            color: ApiConfig.backgroundColor,
             fontSize: isMobile ? 18 : 20,
           ),
         ),
-        backgroundColor: primaryGreen,
-        foregroundColor: lightBlue,
+        backgroundColor: ApiConfig.primaryColor,
+        foregroundColor: ApiConfig.backgroundColor,
         elevation: 4,
-        shadowColor: primaryGreen.withOpacity(0.3),
+        shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
@@ -118,14 +116,14 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                  valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                   strokeWidth: 3,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Memuat laporan penjualan...',
                   style: TextStyle(
-                    color: darkBlack.withOpacity(0.7),
+                    color: ApiConfig.textColor.withOpacity(0.7),
                     fontSize: isMobile ? 14 : 16,
                   ),
                 ),
@@ -150,14 +148,14 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                   style: TextStyle(
                     fontSize: isMobile ? 16 : 18,
                     fontWeight: FontWeight.bold,
-                    color: darkBlack,
+                    color: ApiConfig.textColor,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Error: ${provider.error}',
                   style: TextStyle(
-                    color: darkBlack.withOpacity(0.7),
+                    color: ApiConfig.textColor.withOpacity(0.7),
                     fontSize: isMobile ? 14 : 16,
                   ),
                   textAlign: TextAlign.center,
@@ -166,10 +164,10 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                 ElevatedButton(
                   onPressed: _fetchSalesReport,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryGreen,
-                    foregroundColor: lightBlue,
+                    backgroundColor: ApiConfig.primaryColor,
+                    foregroundColor: ApiConfig.backgroundColor,
                     elevation: 2,
-                    shadowColor: primaryGreen.withOpacity(0.3),
+                    shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -194,7 +192,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                 Icon(
                   Icons.assessment_outlined,
                   size: 80,
-                  color: darkBlack.withOpacity(0.4),
+                  color: ApiConfig.textColor.withOpacity(0.4),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -202,14 +200,14 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                   style: TextStyle(
                     fontSize: isMobile ? 16 : 18,
                     fontWeight: FontWeight.bold,
-                    color: darkBlack,
+                    color: ApiConfig.textColor,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Belum ada transaksi pada periode yang dipilih',
                   style: TextStyle(
-                    color: darkBlack.withOpacity(0.7),
+                    color: ApiConfig.textColor.withOpacity(0.7),
                     fontSize: isMobile ? 14 : 16,
                   ),
                   textAlign: TextAlign.center,
@@ -245,21 +243,21 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            lightBlue,
-            lightBlue.withOpacity(0.8),
+            ApiConfig.backgroundColor,
+            ApiConfig.backgroundColor.withOpacity(0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: primaryGreen.withOpacity(0.1),
+            color: ApiConfig.primaryColor.withOpacity(0.1),
             blurRadius: 15,
             spreadRadius: 0,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: primaryGreen.withOpacity(0.2),
+          color: ApiConfig.primaryColor.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -276,15 +274,15 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      primaryGreen,
-                      primaryGreen.withOpacity(0.8),
+                      ApiConfig.primaryColor,
+                      ApiConfig.primaryColor.withOpacity(0.8),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.date_range,
-                  color: lightBlue,
+                  color: ApiConfig.backgroundColor,
                   size: isMobile ? 18 : 20,
                 ),
               ),
@@ -295,7 +293,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                   style: TextStyle(
                     fontSize: isMobile ? 16 : 18,
                     fontWeight: FontWeight.bold,
-                    color: darkBlack,
+                    color: ApiConfig.textColor,
                   ),
                 ),
               ),
@@ -310,14 +308,14 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: primaryGreen.withOpacity(0.2),
+                color: ApiConfig.primaryColor.withOpacity(0.2),
               ),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.calendar_month,
-                  color: primaryGreen,
+                  color: ApiConfig.primaryColor,
                   size: isMobile ? 20 : 24,
                 ),
                 const SizedBox(width: 12),
@@ -329,7 +327,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                         'Dari: ${DateFormat('dd MMM yyyy').format(_startDate)}',
                         style: TextStyle(
                           fontSize: isMobile ? 14 : 16,
-                          color: darkBlack,
+                          color: ApiConfig.textColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -338,7 +336,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                         'Sampai: ${DateFormat('dd MMM yyyy').format(_endDate)}',
                         style: TextStyle(
                           fontSize: isMobile ? 14 : 16,
-                          color: darkBlack,
+                          color: ApiConfig.textColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -347,13 +345,13 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: primaryGreen.withOpacity(0.1),
+                    color: ApiConfig.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: IconButton(
                     icon: Icon(
                       Icons.edit_calendar,
-                      color: primaryGreen,
+                      color: ApiConfig.primaryColor,
                       size: isMobile ? 20 : 24,
                     ),
                     onPressed: () => _selectDateRange(context),
@@ -373,7 +371,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                 vertical: isMobile ? 8 : 10,
               ),
               decoration: BoxDecoration(
-                color: primaryGreen,
+                color: ApiConfig.primaryColor,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -382,13 +380,13 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                   Icon(
                     Icons.filter_alt,
                     size: isMobile ? 14 : 16,
-                    color: lightBlue,
+                    color: ApiConfig.backgroundColor,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     'Status: $_selectedStatus',
                     style: TextStyle(
-                      color: lightBlue,
+                      color: ApiConfig.backgroundColor,
                       fontSize: isMobile ? 12 : 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -404,7 +402,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                     child: Icon(
                       Icons.close,
                       size: isMobile ? 14 : 16,
-                      color: lightBlue,
+                      color: ApiConfig.backgroundColor,
                     ),
                   ),
                 ],

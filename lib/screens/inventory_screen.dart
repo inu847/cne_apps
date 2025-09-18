@@ -5,6 +5,7 @@ import 'package:cne_pos_apps/models/daily_inventory_stock_model.dart';
 import 'package:cne_pos_apps/providers/daily_inventory_stock_provider.dart';
 import 'package:cne_pos_apps/screens/inventory_detail_screen.dart';
 import 'package:cne_pos_apps/screens/create_inventory_screen.dart';
+import '../config/api_config.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({Key? key}) : super(key: key);
@@ -14,10 +15,7 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  // Color palette baru untuk aplikasi
-  static const Color primaryGreen = Color(0xFF03D26F);
-  static const Color lightBlue = Color(0xFFEAF4F4);
-  static const Color darkBlack = Color(0xFF161514);
+  // Theme colors - menggunakan warna dari ApiConfig
   
   final _dateFormat = DateFormat('yyyy-MM-dd');
   final _displayDateFormat = DateFormat('dd MMM yyyy');
@@ -220,22 +218,22 @@ class _InventoryScreenState extends State<InventoryScreen> {
            Icon(
              icon,
              size: 16,
-             color: isSelected ? lightBlue : primaryGreen,
+             color: isSelected ? ApiConfig.backgroundColor : ApiConfig.primaryColor,
            ),
            const SizedBox(width: 4),
            Text(
              label,
              style: TextStyle(
-               color: isSelected ? lightBlue : primaryGreen,
+               color: isSelected ? ApiConfig.backgroundColor : ApiConfig.primaryColor,
                fontSize: 12,
                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
              ),
            ),
          ],
        ),
-       selectedColor: primaryGreen,
-       backgroundColor: lightBlue,
-       checkmarkColor: lightBlue,
+       selectedColor: ApiConfig.primaryColor,
+       backgroundColor: ApiConfig.backgroundColor,
+       checkmarkColor: ApiConfig.backgroundColor,
        onSelected: (selected) {
          setState(() {
            _quickFilter = value;
@@ -303,14 +301,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
           'Manajemen Persediaan',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: lightBlue,
+            color: ApiConfig.backgroundColor,
             fontSize: isMobile ? 18 : 20,
           ),
         ),
-        backgroundColor: primaryGreen,
-        foregroundColor: lightBlue,
+        backgroundColor: ApiConfig.primaryColor,
+        foregroundColor: ApiConfig.backgroundColor,
         elevation: 4,
-        shadowColor: primaryGreen.withOpacity(0.3),
+        shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
@@ -321,7 +319,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                  _selectedItems.length == Provider.of<DailyInventoryStockProvider>(context).dailyInventoryStocks.length
                      ? Icons.deselect
                      : Icons.select_all,
-                 color: lightBlue,
+                 color: ApiConfig.backgroundColor,
                ),
                onPressed: () {
                  if (_selectedItems.length == Provider.of<DailyInventoryStockProvider>(context, listen: false).dailyInventoryStocks.length) {
@@ -335,12 +333,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                tooltip: 'Select All',
              ),
              IconButton(
-               icon: Icon(Icons.delete, color: lightBlue),
+               icon: Icon(Icons.delete, color: ApiConfig.backgroundColor),
                onPressed: _selectedItems.isNotEmpty ? _bulkDelete : null,
                tooltip: 'Delete Selected',
              ),
              IconButton(
-               icon: Icon(Icons.close, color: lightBlue),
+               icon: Icon(Icons.close, color: ApiConfig.backgroundColor),
                onPressed: _toggleSelectionMode,
                tooltip: 'Cancel Selection',
              ),
@@ -348,7 +346,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
              IconButton(
                icon: Icon(
                  Icons.checklist,
-                 color: lightBlue,
+                 color: ApiConfig.backgroundColor,
                ),
                onPressed: _toggleSelectionMode,
                tooltip: 'Bulk Actions',
@@ -375,14 +373,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  lightBlue,
-                  lightBlue.withOpacity(0.8),
+                  ApiConfig.backgroundColor,
+                  ApiConfig.backgroundColor.withOpacity(0.8),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: primaryGreen.withOpacity(0.1),
+                  color: ApiConfig.primaryColor.withOpacity(0.1),
                   blurRadius: 12,
                   spreadRadius: 0,
                   offset: const Offset(0, 6),
@@ -397,19 +395,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     decoration: InputDecoration(
                       hintText: 'Cari ID, gudang, atau tanggal...',
                       hintStyle: TextStyle(
-                        color: darkBlack.withOpacity(0.6),
+                        color: ApiConfig.textColor.withOpacity(0.6),
                         fontSize: isMobile ? 14 : 16,
                       ),
                       prefixIcon: Icon(
                         Icons.search,
-                        color: primaryGreen,
+                        color: ApiConfig.primaryColor,
                         size: isMobile ? 20 : 24,
                       ),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
                               icon: Icon(
                                 Icons.clear,
-                                color: darkBlack.withOpacity(0.6),
+                                color: ApiConfig.textColor.withOpacity(0.6),
                                 size: isMobile ? 18 : 20,
                               ),
                               onPressed: () {
@@ -433,7 +431,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       ),
                     ),
                     style: TextStyle(
-                      color: darkBlack,
+                      color: ApiConfig.textColor,
                       fontSize: isMobile ? 14 : 16,
                     ),
                     onChanged: (value) {
@@ -455,11 +453,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 const SizedBox(width: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: _isFilterExpanded ? primaryGreen : Colors.white,
+                    color: _isFilterExpanded ? ApiConfig.primaryColor : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryGreen.withOpacity(0.2),
+                        color: ApiConfig.primaryColor.withOpacity(0.2),
                         blurRadius: 6,
                         spreadRadius: 0,
                         offset: const Offset(0, 3),
@@ -469,7 +467,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   child: IconButton(
                     icon: Icon(
                       _isFilterExpanded ? Icons.filter_list_off : Icons.filter_list,
-                      color: _isFilterExpanded ? lightBlue : primaryGreen,
+                      color: _isFilterExpanded ? ApiConfig.backgroundColor : ApiConfig.primaryColor,
                       size: isMobile ? 20 : 24,
                     ),
                     onPressed: () {
@@ -516,21 +514,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    lightBlue,
-                    lightBlue.withOpacity(0.8),
+                    ApiConfig.backgroundColor,
+                    ApiConfig.backgroundColor.withOpacity(0.8),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryGreen.withOpacity(0.1),
+                    color: ApiConfig.primaryColor.withOpacity(0.1),
                     blurRadius: 12,
                     spreadRadius: 0,
                     offset: const Offset(0, 6),
                   ),
                 ],
                 border: Border.all(
-                  color: primaryGreen.withOpacity(0.2),
+                  color: ApiConfig.primaryColor.withOpacity(0.2),
                   width: 1,
                 ),
               ),
@@ -544,7 +542,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       style: TextStyle(
                         fontSize: isMobile ? 16 : 18,
                         fontWeight: FontWeight.bold,
-                        color: darkBlack,
+                        color: ApiConfig.textColor,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -558,8 +556,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         OutlinedButton(
                           onPressed: _resetFilters,
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: primaryGreen, width: 2),
-                            foregroundColor: primaryGreen,
+                            side: BorderSide(color: ApiConfig.primaryColor, width: 2),
+                            foregroundColor: ApiConfig.primaryColor,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -574,10 +572,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         ElevatedButton(
                           onPressed: _applyFilters,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryGreen,
-                            foregroundColor: lightBlue,
+                            backgroundColor: ApiConfig.primaryColor,
+                            foregroundColor: ApiConfig.backgroundColor,
                             elevation: 2,
-                            shadowColor: primaryGreen.withOpacity(0.3),
+                            shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -606,14 +604,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                          valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                           strokeWidth: 3,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'Memuat data persediaan...',
                           style: TextStyle(
-                            color: darkBlack.withOpacity(0.7),
+                            color: ApiConfig.textColor.withOpacity(0.7),
                             fontSize: isMobile ? 14 : 16,
                           ),
                         ),
@@ -638,14 +636,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           style: TextStyle(
                             fontSize: isMobile ? 16 : 18,
                             fontWeight: FontWeight.bold,
-                            color: darkBlack,
+                            color: ApiConfig.textColor,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           provider.error!,
                           style: TextStyle(
-                            color: darkBlack.withOpacity(0.7),
+                            color: ApiConfig.textColor.withOpacity(0.7),
                             fontSize: isMobile ? 14 : 16,
                           ),
                           textAlign: TextAlign.center,
@@ -657,10 +655,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             provider.fetchDailyInventoryStocks();
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryGreen,
-                            foregroundColor: lightBlue,
+                            backgroundColor: ApiConfig.primaryColor,
+                            foregroundColor: ApiConfig.backgroundColor,
                             elevation: 2,
-                            shadowColor: primaryGreen.withOpacity(0.3),
+                            shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -684,7 +682,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         Icon(
                           Icons.inventory_2_outlined,
                           size: 64,
-                          color: darkBlack.withOpacity(0.4),
+                          color: ApiConfig.textColor.withOpacity(0.4),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -692,14 +690,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           style: TextStyle(
                             fontSize: isMobile ? 16 : 18,
                             fontWeight: FontWeight.bold,
-                            color: darkBlack,
+                            color: ApiConfig.textColor,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Belum ada data persediaan harian yang tersedia',
                           style: TextStyle(
-                            color: darkBlack.withOpacity(0.7),
+                            color: ApiConfig.textColor.withOpacity(0.7),
                             fontSize: isMobile ? 14 : 16,
                           ),
                           textAlign: TextAlign.center,
@@ -722,7 +720,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                              valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                               strokeWidth: 2.5,
                             ),
                           ),
@@ -741,13 +739,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             end: Alignment.bottomRight,
                             colors: [
                               Colors.white,
-                              lightBlue.withOpacity(0.3),
+                              ApiConfig.backgroundColor.withOpacity(0.3),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: primaryGreen.withOpacity(0.1),
+                              color: ApiConfig.primaryColor.withOpacity(0.1),
                               blurRadius: 12,
                               spreadRadius: 0,
                               offset: const Offset(0, 6),
@@ -760,7 +758,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             ),
                           ],
                           border: Border.all(
-                            color: primaryGreen.withOpacity(0.15),
+                            color: ApiConfig.primaryColor.withOpacity(0.15),
                             width: 1,
                           ),
                         ),
@@ -800,7 +798,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                           onChanged: (value) {
                                             _toggleItemSelection(stock.id);
                                           },
-                                          activeColor: primaryGreen,
+                                          activeColor: ApiConfig.primaryColor,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(4),
                                           ),
@@ -813,15 +811,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
                                           colors: [
-                                            primaryGreen,
-                                            primaryGreen.withOpacity(0.8),
+                                            ApiConfig.primaryColor,
+                                            ApiConfig.primaryColor.withOpacity(0.8),
                                           ],
                                         ),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Icon(
                                         Icons.inventory_2,
-                                        color: lightBlue,
+                                        color: ApiConfig.backgroundColor,
                                         size: isMobile ? 20 : 24,
                                       ),
                                     ),
@@ -838,14 +836,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: isMobile ? 16 : 18,
-                                                    color: darkBlack,
+                                                    color: ApiConfig.textColor,
                                                   ),
                                                 ),
                                               ),
                                               if (!_isSelectionMode)
                                                 Icon(
                                                   Icons.more_vert,
-                                                  color: darkBlack.withOpacity(0.5),
+                                                  color: ApiConfig.textColor.withOpacity(0.5),
                                                   size: 16,
                                                 ),
                                             ],
@@ -853,7 +851,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                           Text(
                                             stock.stockDate,
                                             style: TextStyle(
-                                              color: darkBlack.withOpacity(0.7),
+                                              color: ApiConfig.textColor.withOpacity(0.7),
                                               fontSize: isMobile ? 12 : 14,
                                             ),
                                           ),
@@ -896,7 +894,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       child: Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: lightBlue.withOpacity(0.3),
+                                          color: ApiConfig.backgroundColor.withOpacity(0.3),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Row(
@@ -904,7 +902,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                             Icon(
                                               Icons.warehouse,
                                               size: isMobile ? 14 : 16,
-                                              color: primaryGreen,
+                                              color: ApiConfig.primaryColor,
                                             ),
                                             const SizedBox(width: 4),
                                             Expanded(
@@ -913,7 +911,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                 style: TextStyle(
                                                   fontSize: isMobile ? 11 : 12,
                                                   fontWeight: FontWeight.w500,
-                                                  color: darkBlack,
+                                                  color: ApiConfig.textColor,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -927,7 +925,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       child: Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: lightBlue.withOpacity(0.3),
+                                          color: ApiConfig.backgroundColor.withOpacity(0.3),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Row(
@@ -935,7 +933,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                             Icon(
                                               Icons.inventory,
                                               size: isMobile ? 14 : 16,
-                                              color: primaryGreen,
+                                              color: ApiConfig.primaryColor,
                                             ),
                                             const SizedBox(width: 4),
                                             Expanded(
@@ -944,7 +942,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                 style: TextStyle(
                                                   fontSize: isMobile ? 11 : 12,
                                                   fontWeight: FontWeight.w500,
-                                                  color: darkBlack,
+                                                  color: ApiConfig.textColor,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -962,21 +960,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     Icon(
                                       Icons.person,
                                       size: isMobile ? 14 : 16,
-                                      color: darkBlack.withOpacity(0.6),
+                                      color: ApiConfig.textColor.withOpacity(0.6),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       'Dibuat oleh: ${stock.createdBy}',
                                       style: TextStyle(
                                         fontSize: isMobile ? 11 : 12,
-                                        color: darkBlack.withOpacity(0.6),
+                                        color: ApiConfig.textColor.withOpacity(0.6),
                                       ),
                                     ),
                                     const Spacer(),
                                     Icon(
                                       Icons.arrow_forward_ios,
                                       size: isMobile ? 12 : 14,
-                                      color: primaryGreen,
+                                      color: ApiConfig.primaryColor,
                                     ),
                                   ],
                                 ),
@@ -1001,13 +999,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    lightBlue,
-                    lightBlue.withOpacity(0.8),
+                    ApiConfig.backgroundColor,
+                    ApiConfig.backgroundColor.withOpacity(0.8),
                   ],
                 ),
                 border: Border(
                   top: BorderSide(
-                    color: primaryGreen.withOpacity(0.2),
+                    color: ApiConfig.primaryColor.withOpacity(0.2),
                     width: 1,
                   ),
                 ),
@@ -1020,7 +1018,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           '${_selectedItems.length} item dipilih',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: darkBlack,
+                            color: ApiConfig.textColor,
                             fontSize: isMobile ? 14 : 16,
                           ),
                         ),
@@ -1054,7 +1052,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildSummaryItem('Total', totalItems.toString(), Icons.inventory_2, primaryGreen),
+                            _buildSummaryItem('Total', totalItems.toString(), Icons.inventory_2, ApiConfig.primaryColor),
                             _buildSummaryItem('Terkunci', lockedItems.toString(), Icons.lock, Colors.orange),
                             _buildSummaryItem('Belum Terkunci', unlockedItems.toString(), Icons.lock_open, Colors.blue),
                           ],
@@ -1078,8 +1076,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   }
                 });
               },
-              backgroundColor: primaryGreen,
-              foregroundColor: lightBlue,
+              backgroundColor: ApiConfig.primaryColor,
+              foregroundColor: ApiConfig.backgroundColor,
               child: const Icon(Icons.add),
             )
           : null,
@@ -1266,14 +1264,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: isMobile ? 16 : 18,
-            color: darkBlack,
+            color: ApiConfig.textColor,
           ),
         ),
         Text(
           label,
           style: TextStyle(
             fontSize: isMobile ? 10 : 12,
-            color: darkBlack.withOpacity(0.7),
+            color: ApiConfig.textColor.withOpacity(0.7),
           ),
         ),
       ],

@@ -1,7 +1,16 @@
+import 'package:flutter/material.dart';
+
 class ApiConfig {
   // Base URL for API
   // static const String baseUrl = 'http://cne.test/api';
   static const String baseUrl = 'https://dompetkasir.com/api';
+  
+  // Theme Colors Configuration
+  static const Color primaryColor = Color(0xFF03D26F); // Hijau primer
+  static const Color secondaryColor = Color(0xFF17A899); // #17a899 (hijau tosca)
+  static const Color accentColor = Color(0xFF6FEF78); // #6fef78 (hijau terang)
+  static const Color backgroundColor = Color(0xFFEAF4F4); // Background terang
+  static const Color textColor = Color(0xFF161514); // Teks gelap
   
   // API Endpoints
   // Karena baseUrl sudah termasuk '/api', kita tidak perlu menambahkan '/api' lagi

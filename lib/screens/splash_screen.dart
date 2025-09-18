@@ -4,6 +4,7 @@ import 'dart:async';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
+import '../config/api_config.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -21,10 +22,7 @@ class _SplashScreenState extends State<SplashScreen>
   
   final AuthService _authService = AuthService();
   
-  // Theme colors
-  static const Color primaryGreen = Color(0xFF4CAF50);
-  static const Color lightBlue = Color(0xFFE3F2FD);
-  static const Color darkBlack = Color(0xFF212121);
+  // Theme colors - menggunakan warna dari ApiConfig
 
   @override
   void initState() {
@@ -145,7 +143,7 @@ class _SplashScreenState extends State<SplashScreen>
     final isTablet = screenSize.width >= 650;
     
     return Scaffold(
-      backgroundColor: darkBlack,
+      backgroundColor: ApiConfig.textColor,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -154,9 +152,9 @@ class _SplashScreenState extends State<SplashScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              darkBlack,
-              darkBlack.withOpacity(0.9),
-              primaryGreen.withOpacity(0.1),
+              ApiConfig.textColor,
+              ApiConfig.textColor.withOpacity(0.9),
+              ApiConfig.primaryColor.withOpacity(0.1),
             ],
           ),
         ),
@@ -185,10 +183,10 @@ class _SplashScreenState extends State<SplashScreen>
                                   Container(
                                     padding: const EdgeInsets.all(20),
                                     decoration: BoxDecoration(
-                                      color: lightBlue.withOpacity(0.1),
+                                      color: ApiConfig.backgroundColor.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
-                                        color: primaryGreen.withOpacity(0.3),
+                                        color: ApiConfig.primaryColor.withOpacity(0.3),
                                         width: 2,
                                       ),
                                     ),
@@ -208,7 +206,7 @@ class _SplashScreenState extends State<SplashScreen>
                                     style: TextStyle(
                                       fontSize: isTablet ? 32 : 28,
                                       fontWeight: FontWeight.bold,
-                                      color: lightBlue,
+                                      color: ApiConfig.backgroundColor,
                                       letterSpacing: 1.2,
                                     ),
                                   ),
@@ -220,7 +218,7 @@ class _SplashScreenState extends State<SplashScreen>
                                     'Point of Sale System',
                                     style: TextStyle(
                                       fontSize: isTablet ? 18 : 16,
-                                      color: lightBlue.withOpacity(0.8),
+                                      color: ApiConfig.backgroundColor.withOpacity(0.8),
                                       letterSpacing: 0.5,
                                     ),
                                   ),
@@ -260,7 +258,7 @@ class _SplashScreenState extends State<SplashScreen>
                       width: 40,
                       height: 40,
                       child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
+                        valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
                         strokeWidth: 3,
                       ),
                     ),
@@ -277,7 +275,7 @@ class _SplashScreenState extends State<SplashScreen>
                             'Loading...',
                             style: TextStyle(
                               fontSize: 16,
-                              color: lightBlue.withOpacity(0.7),
+                              color: ApiConfig.backgroundColor.withOpacity(0.7),
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -300,7 +298,7 @@ class _SplashScreenState extends State<SplashScreen>
                         '© 2023 DompetKasir POS System',
                         style: TextStyle(
                           fontSize: 12,
-                          color: lightBlue.withOpacity(0.5),
+                          color: ApiConfig.backgroundColor.withOpacity(0.5),
                         ),
                       ),
                     );
