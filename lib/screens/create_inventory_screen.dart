@@ -655,6 +655,10 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                       fontSize: isMobile ? 14 : 16,
                                     ),
                                     keyboardType: TextInputType.number,
+                                    enableInteractiveSelection: false,
+                                    autocorrect: false,
+                                    enableSuggestions: false,
+                                    textInputAction: TextInputAction.next,
                                     onChanged: (value) {
                                       item['quantity_in'] = double.tryParse(value) ?? 0.0;
                                     },
@@ -697,6 +701,10 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                       fontSize: isMobile ? 14 : 16,
                                     ),
                                     keyboardType: TextInputType.number,
+                                    enableInteractiveSelection: false,
+                                    autocorrect: false,
+                                    enableSuggestions: false,
+                                    textInputAction: TextInputAction.next,
                                     onChanged: (value) {
                                       item['quantity_out'] = double.tryParse(value) ?? 0.0;
                                     },
@@ -740,6 +748,10 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
                                 fontSize: isMobile ? 14 : 16,
                               ),
                               maxLines: 2,
+                              enableInteractiveSelection: true,
+                              autocorrect: true,
+                              enableSuggestions: false,
+                              textInputAction: TextInputAction.done,
                               onChanged: (value) {
                                 item['notes'] = value;
                               },

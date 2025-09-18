@@ -18,6 +18,8 @@ import '../providers/order_provider.dart';
 import '../providers/payment_method_provider.dart';
 import '../providers/voucher_provider.dart';
 import '../providers/petty_cash_provider.dart';
+import '../widgets/keyboard_aware_widget.dart';
+import '../utils/performance_utils.dart';
 import '../widgets/payment_method_dialog.dart';
 import '../widgets/petty_cash_dialog.dart';
 import '../widgets/category_checker_dialog.dart';
@@ -3251,7 +3253,7 @@ class _POSScreenState extends State<POSScreen> {
                 childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 children: [
                   // Input nama pelanggan
-                  TextField(
+                  PerformantTextField(
                     controller: _customerNameController,
                     focusNode: _customerNameFocusNode,
                     autofocus: false,
@@ -3283,7 +3285,7 @@ class _POSScreenState extends State<POSScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: TextField(
+                        child: PerformantTextField(
                           controller: _voucherController,
                           focusNode: _voucherFocusNode,
                           autofocus: false,

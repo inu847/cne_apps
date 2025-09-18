@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +45,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoadingMore = false;
   
+  // Debounce timer untuk search
+  Timer? _debounceTimer;
+  
   @override
   void initState() {
     super.initState();
@@ -63,6 +67,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     _searchController.dispose();
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
   }
   

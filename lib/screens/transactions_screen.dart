@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../config/api_config.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import '../providers/transaction_provider.dart';
 import '../screens/receipt_screen.dart';
 import '../screens/transaction_detail_screen.dart';
 import '../utils/format_utils.dart';
+import '../widgets/keyboard_aware_widget.dart';
 // import '../utils/responsive_helper.dart';
 
 // Tema warna aplikasi
@@ -31,23 +33,35 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   bool _isFilterExpanded = false;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
     super.initState();
     _loadTransactions();
     _scrollController.addListener(_scrollListener);
+    _searchController.addListener(_onSearchChanged);
   }
   
   @override
   void dispose() {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _customerNameController.dispose();
     _minAmountController.dispose();
     _maxAmountController.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
+  }
+
+  // Debounced search handler
+  void _onSearchChanged() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _applyFilters();
+    });
   }
 
   // Listener untuk infinite scroll
@@ -253,7 +267,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             children: [
               const Text('Jumlah Minimal'),
               const SizedBox(height: 4),
-              TextField(
+              PerformantTextField(
                 controller: _minAmountController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
@@ -273,7 +287,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             children: [
               const Text('Jumlah Maksimal'),
               const SizedBox(height: 4),
-              TextField(
+              PerformantTextField(
                 controller: _maxAmountController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
@@ -514,6 +528,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     controller: _searchController,
                     autofocus: false,
                     enableInteractiveSelection: false,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    textInputAction: TextInputAction.search,
                     style: TextStyle(
                       color: ApiConfig.textColor,
                       fontSize: isMobile ? 14 : 16,
