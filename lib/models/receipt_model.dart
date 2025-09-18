@@ -59,11 +59,19 @@ class Receipt {
     String? checkerSequence,
     bool showPrices = true,
   }) {
+    // Prioritaskan customerName dari Order jika ada, kemudian dari transaction, terakhir default
+    String customerName = 'Pelanggan Umum';
+    if (order.customerName != null && order.customerName!.isNotEmpty) {
+      customerName = order.customerName!;
+    } else if (transaction['customer_name'] != null && transaction['customer_name'].toString().isNotEmpty) {
+      customerName = transaction['customer_name'].toString();
+    }
+    
     return Receipt(
       invoiceNumber: transaction['invoice_number'] ?? '',
       transactionId: transaction['id']?.toString() ?? transaction['invoice_number'] ?? '',
       order: order,
-      customerName: transaction['customer_name'] ?? 'Pelanggan Umum',
+      customerName: customerName,
       transactionDate: DateTime.parse(transaction['created_at'] ?? DateTime.now().toIso8601String()),
       payments: List<Map<String, dynamic>>.from(transaction['payments'] ?? []),
       voucherCode: transaction['voucher_code'],

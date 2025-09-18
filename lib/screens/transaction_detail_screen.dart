@@ -234,6 +234,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
       total: finalAmount,
       createdAt: createdAt,
       status: status,
+      customerName: transaction['customer_name']?.toString() ?? 'Pelanggan Umum',
     );
   }
 
