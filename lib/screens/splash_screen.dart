@@ -202,7 +202,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   
                                   // App Name
                                   Text(
-                                    'DompetKasir',
+                                    'Dompet Kasir - POS',
                                     style: TextStyle(
                                       fontSize: isTablet ? 32 : 28,
                                       fontWeight: FontWeight.bold,
@@ -295,7 +295,7 @@ class _SplashScreenState extends State<SplashScreen>
                     return FadeTransition(
                       opacity: _fadeAnimation,
                       child: Text(
-                        '© 2023 DompetKasir POS System',
+                        '© 2023 Dompet Kasir - POS',
                         style: TextStyle(
                           fontSize: 12,
                           color: ApiConfig.backgroundColor.withOpacity(0.5),

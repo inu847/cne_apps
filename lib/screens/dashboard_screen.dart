@@ -520,13 +520,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Helper method to get page title based on selected index
   String _getPageTitle() {
     switch (_selectedIndex) {
-      case 0: return 'Dashboard';
-      case 1: return 'Point of Sale';
-      case 2: return 'Manajemen Persediaan';
-      case 3: return 'Transactions';
-      case 4: return 'Reports & Analytics';
-      case 5: return 'Settings';
-      default: return 'Dashboard';
+      case 0: return 'Dompet Kasir - POS | Dashboard';
+      case 1: return 'Dompet Kasir - POS | Point of Sale';
+      case 2: return 'Dompet Kasir - POS | Manajemen Persediaan';
+      case 3: return 'Dompet Kasir - POS | Transactions';
+      case 4: return 'Dompet Kasir - POS | Reports & Analytics';
+      case 5: return 'Dompet Kasir - POS | Settings';
+      default: return 'Dompet Kasir - POS | Dashboard';
     }
   }
   

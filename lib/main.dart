@@ -70,7 +70,7 @@ class _MyAppState extends State<MyApp> {
       ],
       child: MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'DompetKasir',
+      title: 'DompetKasir - POS',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade800),

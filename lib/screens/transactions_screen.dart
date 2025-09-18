@@ -456,7 +456,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Daftar Transaksi',
+          'Dompet Kasir - POS | Daftar Transaksi',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: ApiConfig.backgroundColor,

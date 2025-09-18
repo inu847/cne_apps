@@ -34,7 +34,7 @@ class _SavedOrdersScreenState extends State<SavedOrdersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pesanan Tersimpan'),
+        title: const Text('Dompet Kasir - POS | Pesanan Tersimpan'),
         backgroundColor: _primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,

@@ -54,7 +54,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Struk Pembayaran'),
+        title: const Text('Dompet Kasir - POS | Struk Pembayaran'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

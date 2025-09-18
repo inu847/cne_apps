@@ -73,7 +73,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Laporan Penjualan',
+          'Dompet Kasir - POS | Laporan Penjualan',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: ApiConfig.backgroundColor,

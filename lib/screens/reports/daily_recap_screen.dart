@@ -102,7 +102,7 @@ class _DailyRecapScreenState extends State<DailyRecapScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _isShowingDetails ? 'Detail Rekapitulasi Harian' : 'Rekapitulasi Harian',
+          _isShowingDetails ? 'Dompet Kasir - POS | Detail Rekapitulasi Harian' : 'Dompet Kasir - POS | Rekapitulasi Harian',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: ApiConfig.backgroundColor,

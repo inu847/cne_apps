@@ -422,7 +422,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Detail Transaksi',
+          'Dompet Kasir - POS | Detail Transaksi',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: ApiConfig.backgroundColor,

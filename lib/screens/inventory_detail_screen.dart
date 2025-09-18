@@ -492,7 +492,7 @@ class _InventoryDetailScreenState extends State<InventoryDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Detail Persediaan',
+          'Dompet Kasir - POS | Detail Persediaan',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,

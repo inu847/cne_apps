@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen>
       foregroundColor: Colors.white,
       elevation: 0,
       title: const Text(
-        'CNE POS',
+        'Dompet Kasir - POS',
         style: TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 20,

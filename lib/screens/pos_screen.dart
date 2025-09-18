@@ -1097,8 +1097,8 @@ class _POSScreenState extends State<POSScreen> {
           builder: (context, settingsProvider, child) {
             return Text(
               settingsProvider.store.storeName.isNotEmpty 
-                ? '${settingsProvider.store.storeName} - POS'
-                : 'Point of Sale', 
+                ? 'Dompet Kasir - POS | ${settingsProvider.store.storeName}'
+                : 'Dompet Kasir - POS | Point of Sale', 
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: ApiConfig.backgroundColor,

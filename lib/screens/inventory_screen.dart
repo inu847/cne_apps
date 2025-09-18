@@ -298,7 +298,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Manajemen Persediaan',
+          'Dompet Kasir - POS | Manajemen Persediaan',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: ApiConfig.backgroundColor,

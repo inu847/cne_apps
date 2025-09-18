@@ -767,7 +767,7 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Buat Persediaan Baru',
+          'Dompet Kasir - POS | Buat Persediaan Baru',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: ApiConfig.backgroundColor,

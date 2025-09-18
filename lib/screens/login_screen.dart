@@ -254,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
                     // Footer
                     Text(
-                      '© 2023 DompetKasir POS System',
+                      '© 2025 Dompet Kasir - POS',
                       style: TextStyle(
                         color: ApiConfig.backgroundColor,
                         fontSize: 14,

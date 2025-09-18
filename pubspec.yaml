@@ -1,5 +1,5 @@
 name: cne_pos_apps
-description: "A new Flutter project."
+description: "DompetKasir - POS: Aplikasi Point of Sale untuk manajemen kasir dan transaksi."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
