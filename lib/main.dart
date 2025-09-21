@@ -20,6 +20,10 @@ import 'providers/payment_method_provider.dart';
 import 'providers/voucher_provider.dart';
 import 'providers/daily_inventory_stock_provider.dart';
 import 'providers/petty_cash_provider.dart';
+import 'providers/category_provider.dart';
+import 'providers/product_provider.dart';
+import 'providers/expense_category_provider.dart';
+import 'providers/expense_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +71,10 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => VoucherProvider()),
         ChangeNotifierProvider(create: (_) => DailyInventoryStockProvider()),
         ChangeNotifierProvider(create: (_) => PettyCashProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => ExpenseCategoryProvider()),
+        ChangeNotifierProvider(create: (_) => ExpenseProvider()),
       ],
       child: MaterialApp(
       navigatorKey: navigatorKey,

@@ -8,6 +8,10 @@ import '../config/api_config.dart';
 import '../main.dart';
 import '../widgets/promotion_section_widget.dart';
 import '../widgets/announcement_section_widget.dart';
+import 'category_screen.dart';
+import 'product_screen.dart';
+import 'expense_category_screen.dart';
+import 'expense_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -270,6 +274,34 @@ class _HomeScreenState extends State<HomeScreen>
         'route': '/inventory',
       },
       {
+        'title': 'Kategori',
+        'subtitle': 'Kelola kategori',
+        'icon': Icons.category,
+        'color': const Color(0xFF00BCD4),
+        'onTap': () => _navigateToCategories(),
+      },
+      {
+        'title': 'Produk',
+        'subtitle': 'Kelola produk',
+        'icon': Icons.shopping_bag,
+        'color': const Color(0xFFFF7043),
+        'onTap': () => _navigateToProducts(),
+      },
+      {
+        'title': 'Kategori Pengeluaran',
+        'subtitle': 'Kelola kategori pengeluaran',
+        'icon': Icons.category_outlined,
+        'color': const Color(0xFFE91E63),
+        'onTap': () => _navigateToExpenseCategories(),
+      },
+      {
+        'title': 'Pengeluaran',
+        'subtitle': 'Kelola pengeluaran',
+        'icon': Icons.receipt_long,
+        'color': const Color(0xFFFF5722),
+        'onTap': () => _navigateToExpenses(),
+      },
+      {
         'title': 'Laporan',
         'subtitle': 'Analisis bisnis',
         'icon': Icons.analytics,
@@ -481,6 +513,38 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(height: 20),
           ],
         ),
+      ),
+    );
+  }
+
+  void _navigateToCategories() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const CategoryScreen(),
+      ),
+    );
+  }
+
+  void _navigateToProducts() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ProductScreen(),
+      ),
+    );
+  }
+
+  void _navigateToExpenseCategories() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ExpenseCategoryScreen(),
+      ),
+    );
+  }
+
+  void _navigateToExpenses() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ExpenseScreen(),
       ),
     );
   }

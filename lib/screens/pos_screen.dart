@@ -218,13 +218,13 @@ class _POSScreenState extends State<POSScreen> {
       }
       
       // Tampilkan pesan sukses
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${product.name} ditambahkan ke keranjang'),
-          backgroundColor: _primaryColor,
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text('${product.name} ditambahkan ke keranjang'),
+      //     backgroundColor: _primaryColor,
+      //     duration: const Duration(seconds: 1),
+      //   ),
+      // );
     });
   }
 
@@ -330,10 +330,11 @@ class _POSScreenState extends State<POSScreen> {
         
         // Mendapatkan kategori dari API
         print('POSScreen: Calling CategoryService.getCategories()...');
-        final categories = await _categoryService.getCategories(
-          status: 'active', // Hanya kategori aktif
+        final categoryResponse = await _categoryService.getCategories(
+          isActive: true, // Hanya kategori aktif
           perPage: 50, // Jumlah kategori per halaman
         );
+        final categories = categoryResponse.categories;
         
         print('POSScreen: Categories fetched successfully: ${categories.length} items');
         setState(() {
@@ -393,7 +394,7 @@ class _POSScreenState extends State<POSScreen> {
           // Cari ID kategori berdasarkan nama yang dipilih
           final selectedCategoryObj = _apiCategories.firstWhere(
             (category) => category.name == _selectedCategory,
-            orElse: () => Category(id: 0, name: '', productCount: 0, isActive: false, createdAt: DateTime.now(), updatedAt: DateTime.now()),
+            orElse: () => Category(id: 0, name: '', code: '', productsCount: 0, isActive: false, createdAt: DateTime.now(), updatedAt: DateTime.now()),
           );
           
           if (selectedCategoryObj.id != 0) {
@@ -554,7 +555,8 @@ class _POSScreenState extends State<POSScreen> {
         final categories = categoryNames.map((name) => Category(
           id: categoryNames.toList().indexOf(name) + 1,
           name: name,
-          productCount: validProducts.where((p) => p.categoryName == name).length,
+          code: name.toLowerCase().replaceAll(' ', '_'),
+          productsCount: validProducts.where((p) => p.categoryName == name).length,
           isActive: true,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
@@ -2220,6 +2222,15 @@ class _POSScreenState extends State<POSScreen> {
   
   // Proses checkout dengan metode pembayaran yang dipilih
   void _processCheckout(PaymentMethod paymentMethod, double amount, {double? changeAmount}) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return _buildPaymentLoadingDialog();
+      },
+    );
+
     try {
       // Tambahkan log untuk debugging
       print('Memproses checkout dengan metode pembayaran: ${paymentMethod.name}');
@@ -2355,6 +2366,11 @@ class _POSScreenState extends State<POSScreen> {
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      // Tutup loading dialog
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
     }
   }
   
@@ -4071,6 +4087,61 @@ class _POSScreenState extends State<POSScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // Widget untuk loading dialog saat proses pembayaran
+  Widget _buildPaymentLoadingDialog() {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Loading animation
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: CircularProgressIndicator(
+                  strokeWidth: 4,
+                  valueColor: AlwaysStoppedAnimation<Color>(ApiConfig.primaryColor),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Loading text
+              Text(
+                'Memproses Pembayaran...',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Mohon tunggu sebentar',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+      ),
     );
   }
 }

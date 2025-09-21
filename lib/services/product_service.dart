@@ -97,4 +97,309 @@ class ProductService {
       throw Exception('Gagal memuat data produk: ${e.toString()}');
     }
   }
+
+  // Mendapatkan detail produk berdasarkan ID
+  Future<Product> getProductById(int id) async {
+    if (_token == null) {
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      }
+      throw Exception('Token tidak tersedia. Silakan login terlebih dahulu.');
+    }
+
+    final uri = Uri.parse('${ApiConfig.productsEndpoint}/$id');
+    
+    print('ProductService: Fetching product detail from $uri');
+    
+    try {
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('ProductService: Response status code - ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        
+        if (responseData['success'] == true && responseData['data'] != null) {
+          return Product.fromJson(responseData['data']);
+        } else {
+          throw Exception('Gagal memuat detail produk: ${responseData['message'] ?? "Unknown error"}');
+        }
+      } else {
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        throw Exception('Gagal memuat detail produk: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      print('ProductService: Exception occurred - ${e.toString()}');
+      throw Exception('Gagal memuat detail produk: ${e.toString()}');
+    }
+  }
+
+  // Membuat produk baru
+  Future<Product> createProduct({
+    required String name,
+    String? sku,
+    String? barcode,
+    String? description,
+    required int price,
+    int? cost,
+    required int stock,
+    required int categoryId,
+    bool isActive = true,
+    bool hasVariations = false,
+    List<Map<String, dynamic>>? variations,
+  }) async {
+    if (_token == null) {
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      }
+      throw Exception('Token tidak tersedia. Silakan login terlebih dahulu.');
+    }
+
+    final uri = Uri.parse(ApiConfig.productsEndpoint);
+    
+    final requestBody = {
+      'name': name,
+      'sku': sku,
+      'barcode': barcode,
+      'description': description,
+      'price': price,
+      'cost': cost,
+      'stock': stock,
+      'category_id': categoryId,
+      'is_active': isActive,
+      'has_variations': hasVariations,
+      'variations': variations,
+    };
+
+    print('ProductService: Creating product with data: $requestBody');
+    
+    try {
+      final response = await http.post(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode(requestBody),
+      );
+      
+      print('ProductService: Response status code - ${response.statusCode}');
+      
+      if (response.statusCode == 201) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        
+        if (responseData['success'] == true && responseData['data'] != null) {
+          return Product.fromJson(responseData['data']);
+        } else {
+          throw Exception('Gagal membuat produk: ${responseData['message'] ?? "Unknown error"}');
+        }
+      } else {
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        throw Exception('Gagal membuat produk: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      print('ProductService: Exception occurred - ${e.toString()}');
+      throw Exception('Gagal membuat produk: ${e.toString()}');
+    }
+  }
+
+  // Mengupdate produk
+  Future<Product> updateProduct({
+    required int id,
+    required String name,
+    String? sku,
+    String? barcode,
+    String? description,
+    required int price,
+    int? cost,
+    required int stock,
+    required int categoryId,
+    bool isActive = true,
+    bool hasVariations = false,
+    List<Map<String, dynamic>>? variations,
+  }) async {
+    if (_token == null) {
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      }
+      throw Exception('Token tidak tersedia. Silakan login terlebih dahulu.');
+    }
+
+    final uri = Uri.parse('${ApiConfig.productsEndpoint}/$id');
+    
+    final requestBody = {
+      'name': name,
+      'sku': sku,
+      'barcode': barcode,
+      'description': description,
+      'price': price,
+      'cost': cost,
+      'stock': stock,
+      'category_id': categoryId,
+      'is_active': isActive,
+      'has_variations': hasVariations,
+      'variations': variations,
+    };
+
+    print('ProductService: Updating product $id with data: $requestBody');
+    
+    try {
+      final response = await http.put(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode(requestBody),
+      );
+      
+      print('ProductService: Response status code - ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        
+        if (responseData['success'] == true && responseData['data'] != null) {
+          return Product.fromJson(responseData['data']);
+        } else {
+          throw Exception('Gagal mengupdate produk: ${responseData['message'] ?? "Unknown error"}');
+        }
+      } else {
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        throw Exception('Gagal mengupdate produk: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      print('ProductService: Exception occurred - ${e.toString()}');
+      throw Exception('Gagal mengupdate produk: ${e.toString()}');
+    }
+  }
+
+  // Menghapus produk
+  Future<bool> deleteProduct(int id) async {
+    if (_token == null) {
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      }
+      throw Exception('Token tidak tersedia. Silakan login terlebih dahulu.');
+    }
+
+    final uri = Uri.parse('${ApiConfig.productsEndpoint}/$id');
+    
+    print('ProductService: Deleting product $id');
+    
+    try {
+      final response = await http.delete(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+      
+      print('ProductService: Response status code - ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        return responseData['success'] == true;
+      } else {
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        throw Exception('Gagal menghapus produk: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      print('ProductService: Exception occurred - ${e.toString()}');
+      throw Exception('Gagal menghapus produk: ${e.toString()}');
+    }
+  }
+
+  // Mengupdate stok produk
+  Future<Product> updateStock({
+    required int id,
+    required int stock,
+    String? reason,
+  }) async {
+    if (_token == null) {
+      if (navigatorKey.currentState != null) {
+        navigatorKey.currentState!.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      }
+      throw Exception('Token tidak tersedia. Silakan login terlebih dahulu.');
+    }
+
+    final uri = Uri.parse('${ApiConfig.productsEndpoint}/$id/stock');
+    
+    final requestBody = {
+      'stock': stock,
+      'reason': reason,
+    };
+
+    print('ProductService: Updating stock for product $id with data: $requestBody');
+    
+    try {
+      final response = await http.patch(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $_token',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode(requestBody),
+      );
+      
+      print('ProductService: Response status code - ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        
+        if (responseData['success'] == true && responseData['data'] != null) {
+          return Product.fromJson(responseData['data']);
+        } else {
+          throw Exception('Gagal mengupdate stok: ${responseData['message'] ?? "Unknown error"}');
+        }
+      } else {
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+        throw Exception('Gagal mengupdate stok: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      print('ProductService: Exception occurred - ${e.toString()}');
+      throw Exception('Gagal mengupdate stok: ${e.toString()}');
+    }
+  }
 }
