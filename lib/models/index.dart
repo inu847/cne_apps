@@ -9,4 +9,5 @@ export 'product_model.dart';
 export 'promotion_model.dart';
 export 'receipt_model.dart';
 export 'settings_model.dart';
+export 'stock_movement_model.dart';
 export 'user_model.dart';

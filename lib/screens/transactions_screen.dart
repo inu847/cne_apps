@@ -7,6 +7,7 @@ import '../models/order_model.dart';
 import '../models/receipt_model.dart';
 import '../providers/settings_provider.dart';
 import '../providers/transaction_provider.dart';
+import '../providers/connectivity_provider.dart';
 import '../screens/receipt_screen.dart';
 import '../screens/transaction_detail_screen.dart';
 import '../utils/format_utils.dart';
@@ -38,9 +39,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadTransactions();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setupProviders();
+      _loadTransactions();
+    });
     _scrollController.addListener(_scrollListener);
     _searchController.addListener(_onSearchChanged);
+  }
+
+  // Setup providers untuk offline support
+  void _setupProviders() async {
+    final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+    final connectivityProvider = Provider.of<ConnectivityProvider>(context, listen: false);
+    transactionProvider.setConnectivityProvider(connectivityProvider);
+    
+    // Inisialisasi provider dan migrasi data
+    await transactionProvider.initialize();
   }
   
   @override
@@ -74,16 +88,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
   }
 
-  // Memuat daftar transaksi
+  // Memuat daftar transaksi dengan dukungan offline
   Future<void> _loadTransactions() async {
     final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
-    await transactionProvider.fetchTransactions();
+    await transactionProvider.fetchTransactionsWithOfflineSupport();
   }
 
-  // Refresh daftar transaksi
+  // Refresh daftar transaksi dengan dukungan offline
   Future<void> _refreshTransactions() async {
     final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
-    await transactionProvider.fetchTransactions();
+    await transactionProvider.fetchTransactionsWithOfflineSupport();
   }
   
   // Menerapkan filter
@@ -121,6 +135,220 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
     transactionProvider.resetFilters();
     _loadTransactions();
+  }
+
+  // Sinkronisasi transaksi yang belum tersinkronisasi
+  Future<void> _syncTransactions() async {
+    final connectivityProvider = Provider.of<ConnectivityProvider>(context, listen: false);
+    final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+    
+    // Verifikasi koneksi internet
+    if (connectivityProvider.isOffline) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tidak dapat melakukan sinkronisasi dalam mode offline'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Ambil transaksi yang belum tersinkronisasi dengan verifikasi status
+    final unsyncedTransactions = await transactionProvider.getUnsyncedTransactions();
+
+    // Verifikasi apakah ada transaksi yang perlu disinkronisasi
+    if (unsyncedTransactions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Semua transaksi offline sudah tersinkronisasi'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      return;
+    }
+
+    // Filter ulang untuk memastikan hanya transaksi dengan status "belum sync"
+    final validUnsyncedTransactions = unsyncedTransactions.where((transaction) {
+      return transaction['is_synced'] != true && transaction['source'] == 'offline';
+    }).toList();
+
+    if (validUnsyncedTransactions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tidak ada transaksi offline yang perlu disinkronisasi'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      return;
+    }
+
+    // Tampilkan dialog konfirmasi dengan informasi detail
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Sinkronisasi'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Akan melakukan sinkronisasi ${validUnsyncedTransactions.length} transaksi offline yang belum tersinkronisasi.'),
+            const SizedBox(height: 8),
+            Text(
+              'Proses ini akan mengirimkan data transaksi offline ke server menggunakan endpoint yang sama seperti pembuatan transaksi POS.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text('Lanjutkan?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ApiConfig.primaryColor,
+            ),
+            child: const Text('Sinkronisasi'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Tampilkan loading dengan progress
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text('Melakukan sinkronisasi ${validUnsyncedTransactions.length} transaksi offline...'),
+            const SizedBox(height: 8),
+            Text(
+              'Mohon tunggu, proses ini mungkin memerlukan waktu beberapa saat.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      int successCount = 0;
+      int failedCount = 0;
+      List<String> failedTransactions = [];
+      
+      // Proses sinkronisasi untuk setiap transaksi yang belum tersinkronisasi
+      // Menggunakan endpoint yang sama seperti di halaman POS
+      for (int i = 0; i < validUnsyncedTransactions.length; i++) {
+        final transaction = validUnsyncedTransactions[i];
+        
+        // Verifikasi ulang status sebelum sinkronisasi
+        if (transaction['is_synced'] == true) {
+          print('Transaksi ${transaction['invoice_number']} sudah tersinkronisasi, skip');
+          continue;
+        }
+        
+        final result = await transactionProvider.syncIndividualTransaction(transaction);
+        
+        if (result['success']) {
+          successCount++;
+          print('Sinkronisasi berhasil untuk transaksi: ${transaction['invoice_number']}');
+        } else {
+          failedCount++;
+          final invoiceNumber = transaction['invoice_number'] ?? transaction['id'].toString();
+          failedTransactions.add(invoiceNumber);
+          print('Sinkronisasi gagal untuk transaksi: $invoiceNumber - ${result['message']}');
+        }
+      }
+      
+      Navigator.of(context).pop(); // Tutup loading dialog
+      
+      // Tampilkan hasil sinkronisasi dengan detail
+      if (successCount > 0 && failedCount == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ Berhasil melakukan sinkronisasi $successCount transaksi'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } else if (successCount > 0 && failedCount > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('⚠️ Sinkronisasi selesai: $successCount berhasil, $failedCount gagal'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Detail',
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Detail Sinkronisasi'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Berhasil: $successCount transaksi'),
+                        Text('Gagal: $failedCount transaksi'),
+                        if (failedTransactions.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          const Text('Transaksi yang gagal:'),
+                          ...failedTransactions.map((invoice) => Text('• $invoice')),
+                        ],
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Semua sinkronisasi gagal ($failedCount transaksi)'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+      
+      // Refresh data setelah sinkronisasi untuk memperbarui status
+      _refreshTransactions();
+      
+    } catch (e) {
+      Navigator.of(context).pop(); // Tutup loading dialog
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Gagal melakukan sinkronisasi: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
   }
 
   // Membangun widget filter tanggal
@@ -485,6 +713,146 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
         actions: [
+          // Indikator status koneksi dan tombol switch mode
+          Consumer<ConnectivityProvider>(
+            builder: (context, connectivityProvider, child) {
+              return PopupMenuButton<String>(
+                icon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      connectivityProvider.getStatusIcon(),
+                      color: connectivityProvider.getStatusIconColor(),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: connectivityProvider.isOnline 
+                          ? Colors.green.withOpacity(0.2)
+                          : Colors.orange.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        connectivityProvider.isOnline ? 'Online' : 'Offline',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: connectivityProvider.isOnline 
+                            ? Colors.green.shade700
+                            : Colors.orange.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                tooltip: 'Mode Koneksi',
+                onSelected: (String value) {
+                  if (value == 'toggle') {
+                    connectivityProvider.toggleMode();
+                  }
+                },
+                itemBuilder: (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    enabled: false,
+                    child: Row(
+                      children: [
+                        Icon(
+                          connectivityProvider.getStatusIcon(),
+                          color: connectivityProvider.getStatusIconColor(),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          connectivityProvider.statusMessage,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<String>(
+                    value: 'toggle',
+                    child: Row(
+                      children: [
+                        Icon(
+                          connectivityProvider.isOnline 
+                            ? Icons.wifi_off 
+                            : Icons.wifi,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          connectivityProvider.isOnline 
+                            ? 'Beralih ke Offline'
+                            : 'Beralih ke Online',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          Consumer<ConnectivityProvider>(
+            builder: (context, connectivityProvider, child) {
+              return Consumer<TransactionProvider>(
+                builder: (context, transactionProvider, child) {
+                  return FutureBuilder<List<Map<String, dynamic>>>(
+                    future: transactionProvider.getUnsyncedTransactions(),
+                    builder: (context, snapshot) {
+                      final unsyncedCount = snapshot.data?.length ?? 0;
+
+                      return Stack(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.sync,
+                              color: connectivityProvider.isOffline 
+                                ? Colors.grey 
+                                : ApiConfig.backgroundColor,
+                            ),
+                            onPressed: connectivityProvider.isOffline 
+                              ? null 
+                              : () => _syncTransactions(),
+                            tooltip: connectivityProvider.isOffline 
+                              ? 'Sinkronisasi tidak tersedia (offline)' 
+                              : 'Sinkronisasi Data',
+                          ),
+                          if (unsyncedCount > 0 && connectivityProvider.isOnline)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  '$unsyncedCount',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshTransactions,
@@ -836,6 +1204,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final totalAmount = transaction['total_amount'] ?? 0;
     final id = transaction['id'] ?? 0;
     
+    // Cek apakah transaksi belum tersinkronisasi berdasarkan field is_synced
+    bool isUnsynced = transaction['is_synced'] != true;
+    
     Color statusColor;
     String statusText;
     if (status == 'completed') {
@@ -891,8 +1262,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
         ],
         border: Border.all(
-          color: ApiConfig.primaryColor.withOpacity(0.2),
-          width: 1,
+          color: isUnsynced ? Colors.orange : ApiConfig.primaryColor.withOpacity(0.2),
+          width: isUnsynced ? 2 : 1,
         ),
       ),
       child: Material(
@@ -920,13 +1291,47 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            invoiceNumber,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: isMobile ? 16 : 18,
-                              color: ApiConfig.textColor,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                invoiceNumber,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: isMobile ? 16 : 18,
+                                  color: ApiConfig.textColor,
+                                ),
+                              ),
+                              if (isUnsynced) ...[
+                                 const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: Colors.orange, width: 1),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.sync_problem,
+                                        size: 12,
+                                        color: Colors.orange[700],
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Belum Sync',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.orange[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Row(

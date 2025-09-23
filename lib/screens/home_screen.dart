@@ -5,13 +5,15 @@ import '../services/auth_service.dart';
 import '../services/receipt_service.dart';
 import '../utils/responsive_helper.dart';
 import '../config/api_config.dart';
-import '../main.dart';
+import '../main.dart' as main;
 import '../widgets/promotion_section_widget.dart';
 import '../widgets/announcement_section_widget.dart';
+import '../providers/connectivity_provider.dart';
 import 'category_screen.dart';
 import 'product_screen.dart';
 import 'expense_category_screen.dart';
 import 'expense_screen.dart';
+import 'stock_movement_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -136,6 +138,88 @@ class _HomeScreenState extends State<HomeScreen>
         ),
       ),
       actions: [
+        // Indikator status koneksi dan tombol switch mode
+        Consumer<ConnectivityProvider>(
+          builder: (context, connectivityProvider, child) {
+            return PopupMenuButton<String>(
+              icon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    connectivityProvider.getStatusIcon(),
+                    color: connectivityProvider.getStatusIconColor(),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: connectivityProvider.isOnline 
+                        ? Colors.green.withOpacity(0.2)
+                        : Colors.orange.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      connectivityProvider.isOnline ? 'Online' : 'Offline',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: connectivityProvider.isOnline 
+                          ? Colors.green.shade700
+                          : Colors.orange.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              tooltip: 'Mode Koneksi',
+              onSelected: (String value) {
+                if (value == 'toggle') {
+                  connectivityProvider.toggleMode();
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                PopupMenuItem<String>(
+                  enabled: false,
+                  child: Row(
+                    children: [
+                      Icon(
+                        connectivityProvider.getStatusIcon(),
+                        color: connectivityProvider.getStatusIconColor(),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        connectivityProvider.statusMessage,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem<String>(
+                  value: 'toggle',
+                  child: Row(
+                    children: [
+                      Icon(
+                        connectivityProvider.isOnline 
+                          ? Icons.wifi_off 
+                          : Icons.wifi,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        connectivityProvider.isOnline 
+                          ? 'Beralih ke Offline'
+                          : 'Beralih ke Online',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
         IconButton(
           icon: const Icon(Icons.notifications_outlined),
           onPressed: () {
@@ -251,181 +335,358 @@ class _HomeScreenState extends State<HomeScreen>
     final isTablet = ResponsiveHelper.isTablet(context);
     final isDesktop = ResponsiveHelper.isDesktop(context);
     
-    final quickActions = [
+    return Consumer<ConnectivityProvider>(
+      builder: (context, connectivityProvider, child) {
+        final quickActions = [
       {
         'title': 'Point of Sale',
-        'subtitle': 'Mulai transaksi',
-        'icon': Icons.point_of_sale,
-        'color': ApiConfig.primaryColor,
+        'subtitle': 'Mulai transaksi penjualan',
+        'icon': Icons.storefront_rounded,
+        'color': const Color(0xFF2E7D32),
         'route': '/pos',
       },
       {
-        'title': 'Transaksi',
-        'subtitle': 'Riwayat penjualan',
-        'icon': Icons.receipt_long,
-        'color': ApiConfig.secondaryColor,
+        'title': 'Riwayat Transaksi',
+        'subtitle': 'Lihat penjualan terdahulu',
+        'icon': Icons.history_rounded,
+        'color': const Color(0xFF388E3C),
         'route': '/transactions',
       },
       {
-        'title': 'Persediaan',
-        'subtitle': 'Kelola stok',
-        'icon': Icons.inventory_2,
-        'color': ApiConfig.accentColor,
+        'title': 'Persediaan Harian',
+        'subtitle': 'Kelola persediaan barang harian',
+        'icon': Icons.inventory_2_rounded,
+        'color': const Color(0xFF43A047),
         'route': '/inventory',
       },
       {
-        'title': 'Kategori',
-        'subtitle': 'Kelola kategori',
-        'icon': Icons.category,
-        'color': const Color(0xFF00BCD4),
+        'title': 'Kategori Produk',
+        'subtitle': 'Atur kategori barang',
+        'icon': Icons.folder_rounded,
+        'color': const Color(0xFF4CAF50),
         'onTap': () => _navigateToCategories(),
       },
       {
-        'title': 'Produk',
-        'subtitle': 'Kelola produk',
-        'icon': Icons.shopping_bag,
-        'color': const Color(0xFFFF7043),
+        'title': 'Data Produk',
+        'subtitle': 'Kelola informasi produk',
+        'icon': Icons.shopping_bag_rounded,
+        'color': const Color(0xFF558B2F),
         'onTap': () => _navigateToProducts(),
       },
       {
-        'title': 'Kategori Pengeluaran',
-        'subtitle': 'Kelola kategori pengeluaran',
-        'icon': Icons.category_outlined,
-        'color': const Color(0xFFE91E63),
+        'title': 'Kategori Biaya',
+        'subtitle': 'Atur jenis pengeluaran',
+        'icon': Icons.label_rounded,
+        'color': const Color(0xFF689F38),
         'onTap': () => _navigateToExpenseCategories(),
       },
       {
-        'title': 'Pengeluaran',
-        'subtitle': 'Kelola pengeluaran',
-        'icon': Icons.receipt_long,
-        'color': const Color(0xFFFF5722),
+        'title': 'Pencatatan Biaya',
+        'subtitle': 'Catat pengeluaran harian',
+        'icon': Icons.receipt_long_rounded,
+        'color': const Color(0xFF7CB342),
         'onTap': () => _navigateToExpenses(),
       },
       {
-        'title': 'Laporan',
-        'subtitle': 'Analisis bisnis',
-        'icon': Icons.analytics,
-        'color': const Color(0xFF7B1FA2),
+        'title': 'Pergerakan Stok Produk',
+        'subtitle': 'Penyesuaian Stock Produk',
+        'icon': Icons.swap_horiz_rounded,
+        'color': const Color(0xFF8BC34A),
+        'onTap': () => _navigateToStockMovements(),
+      },
+      {
+        'title': 'Laporan & Analisis',
+        'subtitle': 'Insight bisnis mendalam',
+        'icon': Icons.analytics_rounded,
+        'color': const Color(0xFF1B5E20),
         'onTap': _showReportsMenu,
       },
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Aksi Cepat',
-          style: TextStyle(
-            fontSize: isMobile ? 20 : isTablet ? 22 : 24,
-            fontWeight: FontWeight.w700,
-            color: textPrimary,
-            letterSpacing: -0.3,
-          ),
-        ),
-        SizedBox(height: isMobile ? 16 : isTablet ? 18 : 20),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isMobile ? 2 : isTablet ? 3 : 4,
-            crossAxisSpacing: isMobile ? 12 : isTablet ? 14 : 16,
-            mainAxisSpacing: isMobile ? 12 : isTablet ? 14 : 16,
-            childAspectRatio: isMobile ? 1.1 : isTablet ? 1.15 : 1.2,
-          ),
-          itemCount: quickActions.length,
-          itemBuilder: (context, index) {
-            final action = quickActions[index];
-            return _buildQuickActionCard(action);
-          },
-        ),
-      ],
+        // Filter actions based on offline mode
+        final filteredActions = connectivityProvider.isOffline 
+            ? quickActions.where((action) => 
+                action['title'] == 'Point of Sale' || 
+                action['title'] == 'Riwayat Transaksi'
+              ).toList()
+            : quickActions;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Fitur',
+                  style: TextStyle(
+                    fontSize: isMobile ? 20 : isTablet ? 22 : 24,
+                    fontWeight: FontWeight.w700,
+                    color: textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const Spacer(),
+                // Offline mode indicator
+                if (connectivityProvider.isOffline)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.wifi_off,
+                          size: 16,
+                          color: Colors.orange[700],
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Mode Offline',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.orange[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            SizedBox(height: isMobile ? 16 : isTablet ? 18 : 20),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isMobile ? 2 : isTablet ? 3 : 4,
+                crossAxisSpacing: isMobile ? 16 : isTablet ? 20 : 24,
+                mainAxisSpacing: isMobile ? 16 : isTablet ? 20 : 24,
+                childAspectRatio: isMobile ? 1.0 : isTablet ? 1.1 : 1.15,
+              ),
+              itemCount: filteredActions.length,
+              itemBuilder: (context, index) {
+                final action = filteredActions[index];
+                return TweenAnimationBuilder<double>(
+                  duration: Duration(milliseconds: 300 + (index * 100)),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Transform.translate(
+                      offset: Offset(0, 20 * (1 - value)),
+                      child: Opacity(
+                        opacity: value,
+                        child: _buildQuickActionCard(action),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildQuickActionCard(Map<String, dynamic> action) {
     final isMobile = ResponsiveHelper.isMobile(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
     
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            action['color'].withOpacity(0.1),
-            action['color'].withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: action['color'].withOpacity(0.2),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: action['color'].withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          splashColor: action['color'].withOpacity(0.1),
-          highlightColor: action['color'].withOpacity(0.05),
-          onTap: () {
-            if (action['onTap'] != null) {
-              action['onTap']();
-            } else if (action['route'] != null) {
-              navigatorKey.currentState?.pushNamed(action['route']);
-            }
-          },
-          child: Padding(
-            padding: EdgeInsets.all(isMobile ? 16 : 20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: isMobile ? 48 : 56,
-                  height: isMobile ? 48 : 56,
-                  decoration: BoxDecoration(
-                    color: action['color'].withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    action['icon'],
-                    color: action['color'],
-                    size: isMobile ? 24 : 28,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  action['title'],
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: isMobile ? 14 : 16,
-                    color: textPrimary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  action['subtitle'],
-                  style: TextStyle(
-                    fontSize: isMobile ? 12 : 13,
-                    color: textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
+    return Consumer<ConnectivityProvider>(
+      builder: (context, connectivityProvider, child) {
+        // Check if feature is available in current mode
+        final isAvailable = connectivityProvider.isOnline || 
+            action['title'] == 'Point of Sale' || 
+            action['title'] == 'Riwayat Transaksi';
+        
+        return StatefulBuilder(
+          builder: (context, setState) {
+            bool isHovered = false;
+        
+        return MouseRegion(
+          onEnter: (_) => setState(() => isHovered = true),
+          onExit: (_) => setState(() => isHovered = false),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            transform: Matrix4.identity()
+              ..scale(isHovered ? 1.05 : 1.0)
+              ..translate(0.0, isHovered ? -4.0 : 0.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: !isAvailable
+                  ? [
+                      Colors.grey.withOpacity(0.08),
+                      Colors.grey.withOpacity(0.03),
+                    ]
+                  : isHovered 
+                    ? [
+                        action['color'].withOpacity(0.15),
+                        action['color'].withOpacity(0.08),
+                      ]
+                    : [
+                        action['color'].withOpacity(0.08),
+                        action['color'].withOpacity(0.03),
+                      ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: !isAvailable
+                  ? Colors.grey.withOpacity(0.3)
+                  : isHovered 
+                    ? action['color'].withOpacity(0.4)
+                    : action['color'].withOpacity(0.15),
+                width: isHovered ? 2 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isHovered 
+                    ? action['color'].withOpacity(0.25)
+                    : action['color'].withOpacity(0.08),
+                  blurRadius: isHovered ? 20 : 8,
+                  offset: isHovered ? const Offset(0, 8) : const Offset(0, 2),
+                  spreadRadius: isHovered ? 2 : 0,
                 ),
               ],
             ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                splashColor: action['color'].withOpacity(0.15),
+                highlightColor: action['color'].withOpacity(0.08),
+                onTap: isAvailable ? () {
+                  // Add haptic feedback
+                  if (action['onTap'] != null) {
+                    action['onTap']();
+                  } else if (action['route'] != null) {
+                    main.navigatorKey.currentState?.pushNamed(action['route']);
+                  }
+                } : () {
+                  // Show unavailable feature dialog
+                  connectivityProvider.showFeatureUnavailableDialog(context, action['title']);
+                },
+                child: Padding(
+                  padding: EdgeInsets.all(isMobile ? 18 : isTablet ? 20 : 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Enhanced icon container with animation
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        width: isMobile ? 56 : isTablet ? 64 : 72,
+                        height: isMobile ? 56 : isTablet ? 64 : 72,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: isHovered
+                              ? [
+                                  action['color'].withOpacity(0.2),
+                                  action['color'].withOpacity(0.1),
+                                ]
+                              : [
+                                  action['color'].withOpacity(0.12),
+                                  action['color'].withOpacity(0.06),
+                                ],
+                          ),
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: isHovered
+                            ? [
+                                BoxShadow(
+                                  color: action['color'].withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                            : [],
+                        ),
+                        child: AnimatedScale(
+                          scale: isHovered ? 1.1 : 1.0,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Icon(
+                                action['icon'],
+                                color: !isAvailable
+                                  ? Colors.grey.withOpacity(0.5)
+                                  : isHovered 
+                                    ? action['color']
+                                    : action['color'].withOpacity(0.8),
+                                size: isMobile ? 28 : isTablet ? 32 : 36,
+                              ),
+                              if (!isAvailable)
+                                Icon(
+                                  Icons.lock_outline,
+                                  color: Colors.grey.withOpacity(0.7),
+                                  size: (isMobile ? 28 : isTablet ? 32 : 36) * 0.6,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: isMobile ? 14 : isTablet ? 16 : 18),
+                      
+                      // Enhanced title with better typography
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 300),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: isMobile ? 15 : isTablet ? 17 : 18,
+                          color: !isAvailable
+                            ? Colors.grey.withOpacity(0.6)
+                            : isHovered ? textPrimary : textPrimary.withOpacity(0.9),
+                          letterSpacing: -0.2,
+                          height: 1.2,
+                        ),
+                        child: Text(
+                          action['title'],
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(height: isMobile ? 6 : isTablet ? 8 : 10),
+                      
+                      // Enhanced subtitle with better contrast
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 300),
+                        style: TextStyle(
+                          fontSize: isMobile ? 12 : isTablet ? 13 : 14,
+                          color: !isAvailable
+                            ? Colors.grey.withOpacity(0.5)
+                            : isHovered 
+                              ? textSecondary 
+                              : textSecondary.withOpacity(0.8),
+                          fontWeight: FontWeight.w500,
+                          height: 1.3,
+                          letterSpacing: 0.1,
+                        ),
+                        child: Text(
+                          action['subtitle'],
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+          },
+        );
+      },
     );
   }
 
@@ -488,7 +749,7 @@ class _HomeScreenState extends State<HomeScreen>
               subtitle: const Text('Ringkasan transaksi harian'),
               onTap: () {
                 Navigator.pop(context);
-                navigatorKey.currentState?.pushNamed('/reports/daily-recap');
+                main.navigatorKey.currentState?.pushNamed('/reports/daily-recap');
               },
             ),
             ListTile(
@@ -507,7 +768,7 @@ class _HomeScreenState extends State<HomeScreen>
               subtitle: const Text('Analisis penjualan detail'),
               onTap: () {
                 Navigator.pop(context);
-                navigatorKey.currentState?.pushNamed('/reports/sales');
+                main.navigatorKey.currentState?.pushNamed('/reports/sales');
               },
             ),
             const SizedBox(height: 20),
@@ -545,6 +806,14 @@ class _HomeScreenState extends State<HomeScreen>
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const ExpenseScreen(),
+      ),
+    );
+  }
+
+  void _navigateToStockMovements() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const StockMovementScreen(),
       ),
     );
   }

@@ -393,4 +393,99 @@ class TransactionService {
       };
     }
   }
+
+  // Sinkronisasi transaksi individual ke server
+  Future<Map<String, dynamic>> syncTransaction(Map<String, dynamic> transaction) async {
+    try {
+      // Dapatkan token
+      final token = await _authService.getToken();
+      if (token == null) {
+        // Redirect ke halaman login
+        if (navigatorKey.currentState != null) {
+          navigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
+        return {
+          'success': false,
+          'message': 'Tidak ada token autentikasi. Silakan login kembali.'
+        };
+      }
+
+      // Siapkan body request dari data transaksi yang sudah ada
+      final Map<String, dynamic> requestBody = {
+        'items': transaction['items'] ?? [],
+        'payments': transaction['payments'] ?? [],
+        'subtotal': transaction['subtotal'] ?? 0,
+        'tax_amount': transaction['tax_amount'] ?? 0,
+        'discount_amount': transaction['discount_amount'] ?? 0,
+        'total_amount': transaction['total_amount'] ?? 0,
+        'customer_name': transaction['customer_name'] ?? 'Pelanggan Umum',
+        'customer_email': transaction['customer_email'],
+        'customer_phone': transaction['customer_phone'],
+        'notes': transaction['notes'] ?? '',
+        'is_parked': transaction['is_parked'] ?? false,
+        'warehouse_id': transaction['warehouse_id'] ?? 1,
+        'voucher_code': transaction['voucher_code'],
+        // Tambahkan invoice_number jika ada untuk referensi
+        'reference_invoice': transaction['invoice_number'],
+      };
+
+      // Kirim request ke endpoint yang sama seperti createTransaction
+      final response = await http.post(
+        Uri.parse(ApiConfig.transactionsEndpoint),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      // Cek apakah response adalah HTML (biasanya error page)
+      if (response.body.trim().startsWith('<!DOCTYPE html>') || response.body.trim().startsWith('<html')) {
+        print('TransactionService: Server mengembalikan HTML, kemungkinan masalah autentikasi atau endpoint');
+        return {
+          'success': false,
+          'message': 'Server error - kemungkinan masalah autentikasi atau endpoint tidak tersedia'
+        };
+      }
+
+      // Parse response JSON
+      Map<String, dynamic> responseData;
+      try {
+        responseData = jsonDecode(response.body);
+      } catch (e) {
+        print('TransactionService: Gagal parse JSON response: ${response.body}');
+        return {
+          'success': false,
+          'message': 'Response server tidak valid'
+        };
+      }
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        return {
+          'success': true,
+          'data': responseData['data'],
+          'message': responseData['message']
+        };
+      } else {
+        // Handle API errors including unauthorized
+        await ErrorHandler.handleApiError(
+          statusCode: response.statusCode,
+          responseBody: response.body,
+        );
+
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Gagal melakukan sinkronisasi transaksi'
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Terjadi kesalahan: $e'
+      };
+    }
+  }
 }

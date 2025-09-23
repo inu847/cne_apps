@@ -24,6 +24,11 @@ import 'providers/category_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/expense_category_provider.dart';
 import 'providers/expense_provider.dart';
+import 'providers/stock_movement_provider.dart';
+import 'providers/connectivity_provider.dart';
+
+// Global navigator key
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,6 +80,8 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => ExpenseCategoryProvider()),
         ChangeNotifierProvider(create: (_) => ExpenseProvider()),
+        ChangeNotifierProvider(create: (_) => StockMovementProvider()),
+        ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
       ],
       child: MaterialApp(
       navigatorKey: navigatorKey,

@@ -18,6 +18,7 @@ import '../providers/order_provider.dart';
 import '../providers/payment_method_provider.dart';
 import '../providers/voucher_provider.dart';
 import '../providers/petty_cash_provider.dart';
+import '../providers/connectivity_provider.dart';
 import '../widgets/keyboard_aware_widget.dart';
 import '../utils/performance_utils.dart';
 import '../widgets/payment_method_dialog.dart';
@@ -1119,6 +1120,88 @@ class _POSScreenState extends State<POSScreen> {
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
         ),
         actions: [
+          // Indikator status koneksi dan tombol switch mode
+          Consumer<ConnectivityProvider>(
+            builder: (context, connectivityProvider, child) {
+              return PopupMenuButton<String>(
+                icon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      connectivityProvider.getStatusIcon(),
+                      color: connectivityProvider.getStatusIconColor(),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: connectivityProvider.isOnline 
+                          ? Colors.green.withOpacity(0.2)
+                          : Colors.orange.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        connectivityProvider.isOnline ? 'Online' : 'Offline',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: connectivityProvider.isOnline 
+                            ? Colors.green.shade700
+                            : Colors.orange.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                tooltip: 'Mode Koneksi',
+                onSelected: (String value) {
+                  if (value == 'toggle') {
+                    connectivityProvider.toggleMode();
+                  }
+                },
+                itemBuilder: (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    enabled: false,
+                    child: Row(
+                      children: [
+                        Icon(
+                          connectivityProvider.getStatusIcon(),
+                          color: connectivityProvider.getStatusIconColor(),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          connectivityProvider.statusMessage,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<String>(
+                    value: 'toggle',
+                    child: Row(
+                      children: [
+                        Icon(
+                          connectivityProvider.isOnline 
+                            ? Icons.wifi_off 
+                            : Icons.wifi,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          connectivityProvider.isOnline 
+                            ? 'Beralih ke Offline'
+                            : 'Beralih ke Online',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
           // Tombol filter kategori
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
@@ -1223,12 +1306,14 @@ class _POSScreenState extends State<POSScreen> {
             ],
           ),
           // Tombol petty cash
-          Consumer2<SettingsProvider, PettyCashProvider>(
-            builder: (context, settingsProvider, pettyCashProvider, child) {
+          Consumer3<SettingsProvider, PettyCashProvider, ConnectivityProvider>(
+            builder: (context, settingsProvider, pettyCashProvider, connectivityProvider, child) {
               // Hanya tampilkan jika petty cash diaktifkan
               if (!settingsProvider.system.pettyCashEnabled) {
                 return const SizedBox.shrink();
               }
+              
+              final isOffline = connectivityProvider.isOffline;
               
               return PopupMenuButton<String>(
                 icon: Icon(
@@ -1242,8 +1327,20 @@ class _POSScreenState extends State<POSScreen> {
                    if (value == 'status') {
                      _showPettyCashStatusDialog();
                    } else if (value == 'open') {
+                     // Cek koneksi sebelum membuka kasir
+                     final connectivityProvider = Provider.of<ConnectivityProvider>(context, listen: false);
+                     if (connectivityProvider.isOffline) {
+                       connectivityProvider.showFeatureUnavailableDialog(context, 'Buka Kasir');
+                       return;
+                     }
                      _showPettyCashOpeningDialog();
                    } else if (value == 'close') {
+                     // Cek koneksi sebelum menutup kasir
+                     final connectivityProvider = Provider.of<ConnectivityProvider>(context, listen: false);
+                     if (connectivityProvider.isOffline) {
+                       connectivityProvider.showFeatureUnavailableDialog(context, 'Tutup Kasir');
+                       return;
+                     }
                      _showPettyCashClosingDialog();
                    }
                  },
@@ -1276,29 +1373,65 @@ class _POSScreenState extends State<POSScreen> {
                   
                   items.add(const PopupMenuDivider());
                   
-                  // Tombol buka/tutup petty cash
+                  // Tombol buka/tutup petty cash dengan indikator offline
                    if (pettyCashProvider.canMakeTransaction) {
                      items.add(
-                       const PopupMenuItem<String>(
-                         value: 'close',
+                       PopupMenuItem<String>(
+                         value: isOffline ? null : 'close', // Disable jika offline
+                         enabled: !isOffline,
                          child: Row(
                            children: [
-                             Icon(Icons.lock, size: 16),
-                             SizedBox(width: 8),
-                             Text('Tutup Kasir'),
+                             Icon(
+                               Icons.lock, 
+                               size: 16,
+                               color: isOffline ? Colors.grey : null,
+                             ),
+                             const SizedBox(width: 8),
+                             Text(
+                               'Tutup Kasir',
+                               style: TextStyle(
+                                 color: isOffline ? Colors.grey : null,
+                               ),
+                             ),
+                             if (isOffline) ...[
+                               const SizedBox(width: 8),
+                               Icon(
+                                 Icons.wifi_off,
+                                 size: 12,
+                                 color: Colors.grey,
+                               ),
+                             ],
                            ],
                          ),
                        ),
                      );
                    } else {
                      items.add(
-                       const PopupMenuItem<String>(
-                         value: 'open',
+                       PopupMenuItem<String>(
+                         value: isOffline ? null : 'open', // Disable jika offline
+                         enabled: !isOffline,
                          child: Row(
                            children: [
-                             Icon(Icons.lock_open, size: 16),
-                             SizedBox(width: 8),
-                             Text('Buka Petty Cash'),
+                             Icon(
+                               Icons.lock_open, 
+                               size: 16,
+                               color: isOffline ? Colors.grey : null,
+                             ),
+                             const SizedBox(width: 8),
+                             Text(
+                               'Buka Petty Cash',
+                               style: TextStyle(
+                                 color: isOffline ? Colors.grey : null,
+                               ),
+                             ),
+                             if (isOffline) ...[
+                               const SizedBox(width: 8),
+                               Icon(
+                                 Icons.wifi_off,
+                                 size: 12,
+                                 color: Colors.grey,
+                               ),
+                             ],
                            ],
                          ),
                        ),
@@ -2245,11 +2378,12 @@ class _POSScreenState extends State<POSScreen> {
       print('totalAmount: $totalAmount');
       print('customerName: $customerName');
       
-      // Dapatkan OrderProvider, TransactionProvider, dan VoucherProvider
+      // Dapatkan OrderProvider, TransactionProvider, VoucherProvider, dan ConnectivityProvider
       final orderProvider = Provider.of<OrderProvider>(context, listen: false);
       final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
       final voucherProvider = Provider.of<VoucherProvider>(context, listen: false);
       final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+      final connectivityProvider = Provider.of<ConnectivityProvider>(context, listen: false);
       
       // Konversi item keranjang ke OrderItem
       final List<OrderItem> orderItems = _cart.map((item) => OrderItem.fromCartItem(item)).toList();
@@ -2297,14 +2431,42 @@ class _POSScreenState extends State<POSScreen> {
       
       final List<Map<String, dynamic>> payments = [paymentData];
       
-      // Kirim transaksi ke API
-      final result = await transactionProvider.createTransaction(
-        order,
-        isParked: false, // Transaksi langsung selesai
-        customerName: customerName.isNotEmpty ? customerName : null,
-        payments: payments,
-        voucherCode: voucherProvider.activeVoucher != null ? voucherProvider.voucherCode : null,
-      );
+      // Siapkan data order untuk transaksi
+      final orderData = {
+        'total_amount': order.subtotal,
+        'discount_amount': 0, // TODO: Implementasi discount jika ada
+        'tax_amount': order.tax,
+        'grand_total': order.total,
+        'items': order.items.map((item) => {
+          'product_id': item.productId,
+          'product_name': item.productName,
+          'quantity': item.quantity,
+          'price': item.price,
+          'total': item.total,
+        }).toList(),
+      };
+      
+      // Cek apakah sedang offline dan gunakan method yang sesuai
+      final bool result;
+      if (connectivityProvider.isOffline) {
+        // Jika offline, simpan transaksi ke local storage
+        result = await transactionProvider.createOfflineTransaction(
+          orderData,
+          isParked: false, // Transaksi langsung selesai
+          customerName: customerName.isNotEmpty ? customerName : null,
+          payments: payments,
+          voucherCode: voucherProvider.activeVoucher != null ? voucherProvider.voucherCode : null,
+        );
+      } else {
+        // Jika online, kirim transaksi ke API
+        result = await transactionProvider.createTransaction(
+          order,
+          isParked: false, // Transaksi langsung selesai
+          customerName: customerName.isNotEmpty ? customerName : null,
+          payments: payments,
+          voucherCode: voucherProvider.activeVoucher != null ? voucherProvider.voucherCode : null,
+        );
+      }
       
       // Tambahkan log untuk debugging
       print('Hasil createTransaction: $result');
@@ -2324,6 +2486,25 @@ class _POSScreenState extends State<POSScreen> {
         
         print('Sebelum menampilkan dialog sukses transaksi');
         print('lastTransaction: ${transactionProvider.lastTransaction}');
+        
+        // Tampilkan pesan khusus untuk transaksi offline
+        if (connectivityProvider.isOffline) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.wifi_off, color: Colors.white),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text('Transaksi berhasil disimpan offline. Data akan disinkronisasi saat online.'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
         
         // Gunakan Future.delayed untuk memastikan state sudah diperbarui sebelum menampilkan dialog
         Future.delayed(Duration(milliseconds: 300), () {
