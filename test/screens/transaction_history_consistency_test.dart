@@ -119,27 +119,27 @@ void main() {
       
       // Status badge
       final status = transactionWithMetadata['status'] ?? 'pending';
-      final paymentStatus = transactionWithMetadata['payment_status'] ?? 'pending';
+      // final paymentStatus = transactionWithMetadata['payment_status'] ?? 'pending';
       
       String statusText;
-      String paymentText;
+      // String paymentText;
       
       if (status == 'completed') {
         statusText = 'Selesai';
       } else if (status == 'cancelled') {
         statusText = 'Dibatalkan';
-      } else {
+      } else {``
         statusText = 'Pending';
       }
       
-      if (paymentStatus == 'paid') {
-        paymentText = 'Lunas';
-      } else {
-        paymentText = 'Belum Lunas';
-      }
+      // if (paymentStatus == 'paid') {
+      //   paymentText = 'Lunas';
+      // } else {
+      //   paymentText = 'Belum Lunas';
+      // }
       
       print('   🏷️ Status Badge: $statusText');
-      print('   💰 Payment Badge: $paymentText');
+      // print('   💰 Payment Badge: $paymentText');
       
       // Sync status indicator
       if (isUnsynced) {

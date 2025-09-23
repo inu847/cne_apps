@@ -409,25 +409,60 @@ class TransactionProvider with ChangeNotifier {
     notifyListeners();
   }
   
-  // Mendapatkan detail transaksi berdasarkan ID
-  Future<Map<String, dynamic>?> getTransactionDetail(int transactionId) async {
+  // Mendapatkan detail transaksi berdasarkan ID (support offline dan online)
+  Future<Map<String, dynamic>?> getTransactionDetail(dynamic transactionId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
     
     try {
-      final result = await _transactionService.getTransactionDetail(transactionId);
-      
-      _isLoading = false;
-      
-      if (result['success']) {
-        final transactionData = result['data']['transaction'];
-        notifyListeners();
-        return transactionData;
+      // Cek apakah ID adalah string (transaksi offline)
+      if (transactionId is String && transactionId.startsWith('offline_')) {
+        // Ambil dari local storage untuk transaksi offline
+        final localTransaction = await _localStorageService.getTransactionById(transactionId);
+        
+        _isLoading = false;
+        
+        if (localTransaction != null) {
+          notifyListeners();
+          return localTransaction;
+        } else {
+          _error = 'Transaksi offline tidak ditemukan';
+          notifyListeners();
+          return null;
+        }
       } else {
-        _error = result['message'];
-        notifyListeners();
-        return null;
+        // Coba ambil dari local storage terlebih dahulu (cache)
+        final localTransaction = await _localStorageService.getTransactionById(transactionId);
+        
+        if (localTransaction != null) {
+          _isLoading = false;
+          notifyListeners();
+          return localTransaction;
+        }
+        
+        // Jika tidak ada di local storage, ambil dari API
+        final intId = transactionId is int ? transactionId : int.tryParse(transactionId.toString());
+        if (intId == null) {
+          _isLoading = false;
+          _error = 'ID transaksi tidak valid';
+          notifyListeners();
+          return null;
+        }
+        
+        final result = await _transactionService.getTransactionDetail(intId);
+        
+        _isLoading = false;
+        
+        if (result['success']) {
+          final transactionData = result['data']['transaction'];
+          notifyListeners();
+          return transactionData;
+        } else {
+          _error = result['message'];
+          notifyListeners();
+          return null;
+        }
       }
     } catch (e) {
       _isLoading = false;

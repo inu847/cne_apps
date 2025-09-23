@@ -1220,15 +1220,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       statusText = 'Pending';
     }
     
-    Color paymentColor;
-    String paymentText;
-    if (paymentStatus == 'paid') {
-      paymentColor = ApiConfig.primaryColor;
-      paymentText = 'Lunas';
-    } else {
-      paymentColor = Colors.orange;
-      paymentText = 'Belum Lunas';
-    }
+    // Color paymentColor;
+    // String paymentText;
+    // if (paymentStatus == 'paid') {
+    //   paymentColor = ApiConfig.primaryColor;
+    //   paymentText = 'Lunas';
+    // } else {
+    //   paymentColor = Colors.orange;
+    //   paymentText = 'Belum Lunas';
+    // }
     
     String formattedDate;
     try {
@@ -1426,25 +1426,25 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isMobile ? 8 : 10,
-                            vertical: isMobile ? 4 : 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: paymentColor,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            paymentText,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: isMobile ? 11 : 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                        // const SizedBox(width: 8),
+                        // Container(
+                        //   padding: EdgeInsets.symmetric(
+                        //     horizontal: isMobile ? 8 : 10,
+                        //     vertical: isMobile ? 4 : 6,
+                        //   ),
+                        //   decoration: BoxDecoration(
+                        //     color: paymentColor,
+                        //     borderRadius: BorderRadius.circular(20),
+                        //   ),
+                        //   child: Text(
+                        //     paymentText,
+                        //     style: TextStyle(
+                        //       color: Colors.white,
+                        //       fontSize: isMobile ? 11 : 12,
+                        //       fontWeight: FontWeight.bold,
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                     Row(

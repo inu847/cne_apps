@@ -364,7 +364,7 @@ class _StockMovementScreenState extends State<StockMovementScreen> {
                           // Additional quantity info in header
                           if (movement.quantityBefore != null && movement.quantityAfter != null)
                             Text(
-                              '${movement.quantityBefore} → ${movement.quantityAfter}',
+                              '${movement.formattedQuantityBefore} → ${movement.formattedQuantityAfter}',
                               style: TextStyle(
                                 fontSize: isMobile ? 10 : 12,
                                 color: ApiConfig.textColor.withOpacity(0.6),
@@ -379,22 +379,6 @@ class _StockMovementScreenState extends State<StockMovementScreen> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: movement.typeColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: movement.typeColor.withOpacity(0.3)),
-                          ),
-                          child: Text(
-                            '#${movement.id}',
-                            style: TextStyle(
-                              fontSize: isMobile ? 9 : 11,
-                              fontWeight: FontWeight.w600,
-                              color: movement.typeColor,
-                            ),
-                          ),
-                        ),
                         if (!_isSelectionMode) ...[
                           const SizedBox(width: 8),
                           Icon(
@@ -419,27 +403,13 @@ class _StockMovementScreenState extends State<StockMovementScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      movement.formattedCreatedAt,
+                      movement.formattedMovementDate,
                       style: TextStyle(
                         fontSize: isMobile ? 11 : 13,
                         color: ApiConfig.textColor.withOpacity(0.6),
                       ),
                     ),
                     const Spacer(),
-                    Icon(
-                      Icons.person_outline,
-                      size: isMobile ? 12 : 14,
-                      color: ApiConfig.textColor.withOpacity(0.6),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      movement.userName,
-                      style: TextStyle(
-                        fontSize: isMobile ? 11 : 13,
-                        color: ApiConfig.textColor.withOpacity(0.6),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
                   ],
                 ),
                 
@@ -471,7 +441,7 @@ class _StockMovementScreenState extends State<StockMovementScreen> {
                         // Quantity Information
                         _buildDetailRow(
                           'Quantity Before',
-                          movement.quantityBefore != null ? '${movement.quantityBefore}' : '-',
+                          movement.formattedQuantityBefore,
                           Icons.inventory_2_outlined,
                           Colors.grey[600]!,
                           isMobile,
@@ -480,7 +450,7 @@ class _StockMovementScreenState extends State<StockMovementScreen> {
                         
                         _buildDetailRow(
                           'Quantity Change',
-                          movement.quantityChange != null ? '${movement.quantityChange}' : '-',
+                          movement.quantityChange?.toString() ?? '0',
                           Icons.swap_horiz,
                           movement.quantityChange != null && movement.quantityChange! >= 0 
                               ? Colors.green[600]! 
@@ -491,7 +461,7 @@ class _StockMovementScreenState extends State<StockMovementScreen> {
                         
                         _buildDetailRow(
                           'Quantity After',
-                          movement.quantityAfter != null ? '${movement.quantityAfter}' : '-',
+                          movement.formattedQuantityAfter,
                           Icons.inventory,
                           ApiConfig.primaryColor,
                           isMobile,
@@ -500,7 +470,7 @@ class _StockMovementScreenState extends State<StockMovementScreen> {
                         
                         _buildDetailRow(
                           'Movement Type',
-                          movement.movementType ?? '-',
+                          movement.movementTypeDisplayName,
                           movement.typeIcon,
                           movement.typeColor,
                           isMobile,
@@ -509,11 +479,57 @@ class _StockMovementScreenState extends State<StockMovementScreen> {
                         
                         _buildDetailRow(
                           'Source Type',
-                          movement.sourceType ?? '-',
+                          movement.sourceTypeDisplayName,
                           Icons.source,
                           Colors.purple,
                           isMobile,
                         ),
+                        const SizedBox(height: 8),
+                        
+                        // Notes
+                        if (movement.notes != null && movement.notes!.isNotEmpty) ...[
+                          _buildDetailRow(
+                            'Catatan',
+                            movement.notes!,
+                            Icons.note_outlined,
+                            Colors.blue,
+                            isMobile,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        
+                        // Cost Information
+                        if (movement.unitCost != null) ...[
+                          _buildDetailRow(
+                            'Unit Cost',
+                            movement.formattedUnitCost,
+                            Icons.attach_money,
+                            Colors.green[700]!,
+                            isMobile,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        
+                        if (movement.totalCost != null) ...[
+                          _buildDetailRow(
+                            'Total Cost',
+                            movement.formattedTotalCost,
+                            Icons.monetization_on,
+                            Colors.green[800]!,
+                            isMobile,
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        
+                        // Movement Date
+                        _buildDetailRow(
+                          'Movement Date',
+                          movement.formattedMovementDate,
+                          Icons.calendar_today,
+                          Colors.blue[600]!,
+                          isMobile,
+                        ),
+                        const SizedBox(height: 8),
                         
                         // Reference Information
                         if (movement.referenceType != null || movement.referenceId != null) ...[
@@ -550,16 +566,7 @@ class _StockMovementScreenState extends State<StockMovementScreen> {
                           ),
                         ],
                         
-                        if (movement.notes != null && movement.notes!.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          _buildDetailRow(
-                            'Catatan',
-                            movement.notes!,
-                            Icons.note_outlined,
-                            Colors.blue,
-                            isMobile,
-                          ),
-                        ],
+
                       ],
                     ),
                   ),

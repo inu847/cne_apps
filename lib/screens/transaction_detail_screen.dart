@@ -15,7 +15,7 @@ import '../widgets/category_checker_dialog.dart';
 // Theme colors - menggunakan warna dari ApiConfig
 
 class TransactionDetailScreen extends StatefulWidget {
-  final int transactionId;
+  final dynamic transactionId; // Can be int (synced) or String (unsynced)
 
   const TransactionDetailScreen({Key? key, required this.transactionId}) : super(key: key);
 
@@ -649,7 +649,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     final isMobile = screenWidth < 650;
     final transaction = _transaction!;
     final status = transaction['status'] ?? 'pending';
-    final paymentStatus = transaction['payment_status'] ?? 'pending';
+    // final paymentStatus = transaction['payment_status'] ?? 'pending';
     
     Color statusColor;
     String statusText;
@@ -666,13 +666,13 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     
     Color paymentColor;
     String paymentText;
-    if (paymentStatus == 'paid') {
-      paymentColor = ApiConfig.primaryColor;
-      paymentText = 'Lunas';
-    } else {
-      paymentColor = Colors.orange;
-      paymentText = 'Belum Lunas';
-    }
+    // if (paymentStatus == 'paid') {
+    //   paymentColor = ApiConfig.primaryColor;
+    //   paymentText = 'Lunas';
+    // } else {
+    //   paymentColor = Colors.orange;
+    //   paymentText = 'Belum Lunas';
+    // }
     
     String formattedDate;
     try {
@@ -919,36 +919,36 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 12 : 16,
-                    vertical: isMobile ? 8 : 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: paymentColor,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.payment,
-                        size: isMobile ? 14 : 16,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        paymentText,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: isMobile ? 12 : 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                // const SizedBox(width: 12),
+                // Container(
+                //   padding: EdgeInsets.symmetric(
+                //     horizontal: isMobile ? 12 : 16,
+                //     vertical: isMobile ? 8 : 10,
+                //   ),
+                //   decoration: BoxDecoration(
+                //     color: paymentColor,
+                //     borderRadius: BorderRadius.circular(20),
+                //   ),
+                //   child: Row(
+                //     mainAxisSize: MainAxisSize.min,
+                //     children: [
+                //       Icon(
+                //         Icons.payment,
+                //         size: isMobile ? 14 : 16,
+                //         color: Colors.white,
+                //       ),
+                //       const SizedBox(width: 6),
+                //       Text(
+                //         paymentText,
+                //         style: TextStyle(
+                //           color: Colors.white,
+                //           fontSize: isMobile ? 12 : 14,
+                //           fontWeight: FontWeight.bold,
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
               ],
             ),
           ],

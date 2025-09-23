@@ -488,25 +488,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
           
           // Quick filters untuk stock opname
-          if (!_isSelectionMode)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              height: 50,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _buildQuickFilterChip('all', 'Semua', Icons.list_alt),
-                  const SizedBox(width: 8),
-                  _buildQuickFilterChip('today', 'Hari Ini', Icons.today),
-                  const SizedBox(width: 8),
-                  _buildQuickFilterChip('week', 'Minggu Ini', Icons.date_range),
-                  const SizedBox(width: 8),
-                  _buildQuickFilterChip('locked', 'Terkunci', Icons.lock),
-                  const SizedBox(width: 8),
-                  _buildQuickFilterChip('unlocked', 'Belum Terkunci', Icons.lock_open),
-                ],
-              ),
-            ),
+          // if (!_isSelectionMode)
+          //   Container(
+          //     margin: const EdgeInsets.symmetric(horizontal: 16),
+          //     height: 50,
+          //     child: ListView(
+          //       scrollDirection: Axis.horizontal,
+          //       children: [
+          //         _buildQuickFilterChip('all', 'Semua', Icons.list_alt),
+          //         const SizedBox(width: 8),
+          //         _buildQuickFilterChip('today', 'Hari Ini', Icons.today),
+          //         const SizedBox(width: 8),
+          //         _buildQuickFilterChip('week', 'Minggu Ini', Icons.date_range),
+          //         const SizedBox(width: 8),
+          //         _buildQuickFilterChip('locked', 'Terkunci', Icons.lock),
+          //         const SizedBox(width: 8),
+          //         _buildQuickFilterChip('unlocked', 'Belum Terkunci', Icons.lock_open),
+          //       ],
+          //     ),
+          //   ),
           
           // Filter section
           AnimatedContainer(

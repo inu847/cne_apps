@@ -667,23 +667,23 @@ class _CategoryScreenState extends State<CategoryScreen> {
           ),
           
           // Quick filters
-          if (!_isSelectionMode)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              height: 50,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _buildQuickFilterChip('all', 'Semua', Icons.list_alt),
-                  const SizedBox(width: 8),
-                  _buildQuickFilterChip('active', 'Aktif', Icons.check_circle),
-                  const SizedBox(width: 8),
-                  _buildQuickFilterChip('inactive', 'Nonaktif', Icons.cancel),
-                ],
-              ),
-            ),
+          // if (!_isSelectionMode)
+          //   Container(
+          //     margin: const EdgeInsets.symmetric(horizontal: 16),
+          //     height: 50,
+          //     child: ListView(
+          //       scrollDirection: Axis.horizontal,
+          //       children: [
+          //         _buildQuickFilterChip('all', 'Semua', Icons.list_alt),
+          //         const SizedBox(width: 8),
+          //         _buildQuickFilterChip('active', 'Aktif', Icons.check_circle),
+          //         const SizedBox(width: 8),
+          //         _buildQuickFilterChip('inactive', 'Nonaktif', Icons.cancel),
+          //       ],
+          //     ),
+          //   ),
           
-          const SizedBox(height: 8),
+          // const SizedBox(height: 8),
           
           // Content
           Expanded(

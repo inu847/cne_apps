@@ -711,4 +711,38 @@ class LocalStorageService {
       print('LocalStorageService: Error migrasi data - $e');
     }
   }
+
+  /// Ambil detail transaksi berdasarkan ID dari local storage
+  Future<Map<String, dynamic>?> getTransactionById(dynamic transactionId) async {
+    try {
+      if (!isLocalStorageAvailable) return null;
+      
+      // Convert ID to string for comparison
+      final idString = transactionId.toString();
+      
+      // Cari di offline transactions
+      final offlineTransactions = await getOfflineTransactions();
+      for (final transaction in offlineTransactions) {
+        if (transaction['id'].toString() == idString) {
+          print('LocalStorageService: Transaksi offline ditemukan dengan ID: $idString');
+          return transaction;
+        }
+      }
+      
+      // Cari di cached transactions (dari API)
+      final cachedTransactions = await getTransactionsCache() ?? [];
+      for (final transaction in cachedTransactions) {
+        if (transaction['id'].toString() == idString) {
+          print('LocalStorageService: Transaksi cache ditemukan dengan ID: $idString');
+          return transaction;
+        }
+      }
+      
+      print('LocalStorageService: Transaksi tidak ditemukan dengan ID: $idString');
+      return null;
+    } catch (e) {
+      print('LocalStorageService: Error mengambil transaksi dengan ID $transactionId - $e');
+      return null;
+    }
+  }
 }

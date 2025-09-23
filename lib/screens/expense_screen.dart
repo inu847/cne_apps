@@ -17,6 +17,12 @@ class ExpenseScreen extends StatefulWidget {
 
 class _ExpenseScreenState extends State<ExpenseScreen> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  bool _isFilterExpanded = false;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  int? _selectedCategoryId;
+  String? _selectedPaymentMethod;
 
   @override
   void initState() {
@@ -36,7 +42,376 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  // Menerapkan filter
+  void _applyFilters() {
+    final provider = Provider.of<ExpenseProvider>(context, listen: false);
+    
+    // Apply date filters
+    if (_startDate != null && _endDate != null) {
+      provider.setDateFilter(
+        _startDate!.toIso8601String().split('T')[0],
+        _endDate!.toIso8601String().split('T')[0],
+      );
+    }
+    
+    // Apply category filter
+    if (_selectedCategoryId != null) {
+      provider.setCategoryFilter(_selectedCategoryId);
+    }
+    
+    // Apply payment method filter
+    if (_selectedPaymentMethod != null) {
+      provider.setPaymentMethodFilter(_selectedPaymentMethod);
+    }
+    
+    setState(() {
+      _isFilterExpanded = false;
+    });
+  }
+
+  // Reset filter
+  void _resetFilters() {
+    setState(() {
+      _searchController.clear();
+      _startDate = null;
+      _endDate = null;
+      _selectedCategoryId = null;
+      _selectedPaymentMethod = null;
+    });
+    
+    final provider = Provider.of<ExpenseProvider>(context, listen: false);
+    provider.clearFilters();
+  }
+
+  // Membangun widget filter tanggal
+  Widget _buildDateFilter() {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Dari Tanggal'),
+              const SizedBox(height: 4),
+              InkWell(
+                onTap: () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: _startDate ?? DateTime.now(),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _startDate = picked;
+                    });
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _startDate != null
+                            ? DateFormat('dd/MM/yyyy').format(_startDate!)
+                            : 'Pilih Tanggal',
+                        style: TextStyle(
+                          color: _startDate != null ? Colors.black : Colors.grey,
+                        ),
+                      ),
+                      const Icon(Icons.calendar_today, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Sampai Tanggal'),
+              const SizedBox(height: 4),
+              InkWell(
+                onTap: () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: _endDate ?? DateTime.now(),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _endDate = picked;
+                    });
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _endDate != null
+                            ? DateFormat('dd/MM/yyyy').format(_endDate!)
+                            : 'Pilih Tanggal',
+                        style: TextStyle(
+                          color: _endDate != null ? Colors.black : Colors.grey,
+                        ),
+                      ),
+                      const Icon(Icons.calendar_today, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Membangun widget filter kategori
+  Widget _buildCategoryFilter() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Kategori Pengeluaran'),
+        const SizedBox(height: 4),
+        Consumer<ExpenseCategoryProvider>(
+          builder: (context, categoryProvider, child) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<int?>(
+                  isExpanded: true,
+                  value: _selectedCategoryId,
+                  hint: const Text('Semua Kategori'),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('Semua Kategori'),
+                    ),
+                    ...categoryProvider.expenseCategories.map((category) {
+                      return DropdownMenuItem<int?>(
+                        value: category.id,
+                        child: Text(category.name),
+                      );
+                    }).toList(),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCategoryId = value;
+                    });
+                  },
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // Membangun widget filter metode pembayaran
+  Widget _buildPaymentMethodFilter() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Metode Pembayaran'),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String?>(
+              isExpanded: true,
+              value: _selectedPaymentMethod,
+              hint: const Text('Semua Metode'),
+              items: const [
+                DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text('Semua Metode'),
+                ),
+                DropdownMenuItem<String?>(
+                  value: 'cash',
+                  child: Text('Tunai'),
+                ),
+                DropdownMenuItem<String?>(
+                  value: 'bank_transfer',
+                  child: Text('Transfer Bank'),
+                ),
+                DropdownMenuItem<String?>(
+                  value: 'credit_card',
+                  child: Text('Kartu Kredit'),
+                ),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedPaymentMethod = value;
+                });
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Membangun widget filter section
+  Widget _buildFilterSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+    
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      height: _isFilterExpanded ? null : 0,
+      child: Container(
+        margin: EdgeInsets.symmetric(
+          horizontal: isMobile ? 12 : 16,
+        ),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              ApiConfig.backgroundColor,
+              ApiConfig.backgroundColor.withOpacity(0.8),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: ApiConfig.primaryColor.withOpacity(0.1),
+              blurRadius: 15,
+              spreadRadius: 0,
+              offset: const Offset(0, 8),
+            ),
+          ],
+          border: Border.all(
+            color: ApiConfig.primaryColor.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          ApiConfig.primaryColor,
+                          ApiConfig.primaryColor.withOpacity(0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.filter_alt,
+                      color: ApiConfig.backgroundColor,
+                      size: isMobile ? 18 : 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Filter Pengeluaran',
+                    style: TextStyle(
+                      fontSize: isMobile ? 16 : 18,
+                      fontWeight: FontWeight.bold,
+                      color: ApiConfig.textColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _buildDateFilter(),
+              const SizedBox(height: 16),
+              _buildCategoryFilter(),
+              const SizedBox(height: 16),
+              _buildPaymentMethodFilter(),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton(
+                    onPressed: _resetFilters,
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: ApiConfig.primaryColor, width: 2),
+                      foregroundColor: ApiConfig.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 16 : 20,
+                        vertical: isMobile ? 12 : 14,
+                      ),
+                    ),
+                    child: Text(
+                      'Reset',
+                      style: TextStyle(
+                        fontSize: isMobile ? 14 : 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: _applyFilters,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ApiConfig.primaryColor,
+                      foregroundColor: ApiConfig.backgroundColor,
+                      elevation: 2,
+                      shadowColor: ApiConfig.primaryColor.withOpacity(0.3),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 16 : 20,
+                        vertical: isMobile ? 12 : 14,
+                      ),
+                    ),
+                    child: Text(
+                      'Terapkan',
+                      style: TextStyle(
+                        fontSize: isMobile ? 14 : 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -70,13 +445,44 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
             onPressed: () => _navigateToBulkInput(),
             tooltip: 'Input Massal',
           ),
-          IconButton(
-            icon: Icon(
-              Icons.filter_list,
-              color: ApiConfig.backgroundColor,
-            ),
-            onPressed: () => _showFilterDialog(),
-            tooltip: 'Filter',
+          Consumer<ExpenseProvider>(
+            builder: (context, provider, child) {
+              final hasActiveFilters = provider.startDate != null || 
+                                    provider.endDate != null || 
+                                    provider.selectedCategoryId != null || 
+                                    provider.selectedPaymentMethod != null;
+              
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      _isFilterExpanded ? Icons.filter_alt : Icons.filter_alt_outlined,
+                      color: ApiConfig.backgroundColor,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isFilterExpanded = !_isFilterExpanded;
+                      });
+                    },
+                    tooltip: 'Filter',
+                  ),
+                  if (hasActiveFilters)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           IconButton(
             icon: Icon(
@@ -124,6 +530,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
           return Column(
             children: [
               _buildStatistics(provider),
+              _buildFilterSection(),
+              _buildActiveFilters(provider),
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: () => provider.refresh(),
@@ -626,15 +1034,451 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   }
 
   void _showFilterDialog() {
+    final provider = context.read<ExpenseProvider>();
+    final categoryProvider = context.read<ExpenseCategoryProvider>();
+    
+    // Initialize filter values
+    DateTime? startDate = provider.startDate != null ? DateTime.parse(provider.startDate!) : DateTime.now();
+    DateTime? endDate = provider.endDate != null ? DateTime.parse(provider.endDate!) : DateTime.now();
+    int? selectedCategoryId = provider.selectedCategoryId;
+    String? selectedPaymentMethod = provider.selectedPaymentMethod;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filter Pengeluaran'),
-        content: const Text('Fitur filter akan segera tersedia'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tutup'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.filter_list, color: ApiConfig.primaryColor),
+                const SizedBox(width: 8),
+                const Text('Filter Pengeluaran'),
+              ],
+            ),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.9,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Date Range Section
+                    const Text(
+                      'Rentang Tanggal',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Start Date
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: startDate ?? DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: ColorScheme.light(
+                                  primary: ApiConfig.primaryColor,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            startDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today, color: ApiConfig.primaryColor, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Tanggal Awal',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  Text(
+                                    startDate != null 
+                                        ? DateFormat('dd MMMM yyyy').format(startDate!)
+                                        : 'Pilih tanggal awal',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // End Date
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: endDate ?? DateTime.now(),
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: ColorScheme.light(
+                                  primary: ApiConfig.primaryColor,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            endDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today, color: ApiConfig.primaryColor, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Tanggal Akhir',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  Text(
+                                    endDate != null 
+                                        ? DateFormat('dd MMMM yyyy').format(endDate!)
+                                        : 'Pilih tanggal akhir',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Category Filter Section
+                    const Text(
+                      'Kategori Pengeluaran',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Consumer<ExpenseCategoryProvider>(
+                      builder: (context, categoryProvider, child) {
+                        return DropdownButtonFormField<int?>(
+                          value: selectedCategoryId,
+                          decoration: InputDecoration(
+                            labelText: 'Pilih Kategori',
+                            prefixIcon: Icon(Icons.category, color: ApiConfig.primaryColor),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: ApiConfig.primaryColor, width: 2),
+                            ),
+                          ),
+                          items: [
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text('Semua Kategori'),
+                            ),
+                            ...categoryProvider.expenseCategories.map((category) {
+                              return DropdownMenuItem<int?>(
+                                value: category.id,
+                                child: Text(category.name),
+                              );
+                            }).toList(),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              selectedCategoryId = value;
+                            });
+                          },
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Payment Method Filter Section
+                    const Text(
+                      'Metode Pembayaran',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String?>(
+                      value: selectedPaymentMethod,
+                      decoration: InputDecoration(
+                        labelText: 'Pilih Metode Pembayaran',
+                        prefixIcon: Icon(Icons.payment, color: ApiConfig.primaryColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: ApiConfig.primaryColor, width: 2),
+                        ),
+                      ),
+                      items: const [
+                        DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('Semua Metode'),
+                        ),
+                        DropdownMenuItem<String?>(
+                          value: 'cash',
+                          child: Text('Tunai'),
+                        ),
+                        DropdownMenuItem<String?>(
+                          value: 'bank_transfer',
+                          child: Text('Transfer Bank'),
+                        ),
+                        DropdownMenuItem<String?>(
+                          value: 'credit_card',
+                          child: Text('Kartu Kredit'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          selectedPaymentMethod = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              // Reset Button
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    startDate = DateTime.now();
+                    endDate = DateTime.now();
+                    selectedCategoryId = null;
+                    selectedPaymentMethod = null;
+                  });
+                  provider.clearFilters();
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Reset',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ),
+              
+              // Cancel Button
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Batal',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ),
+              
+              // Apply Button
+              ElevatedButton(
+                onPressed: () {
+                  // Apply filters
+                  if (startDate != null && endDate != null) {
+                    provider.setDateFilter(
+                      startDate!.toIso8601String().split('T')[0],
+                      endDate!.toIso8601String().split('T')[0],
+                    );
+                  }
+                  
+                  if (selectedCategoryId != null) {
+                    provider.setCategoryFilter(selectedCategoryId);
+                  } else {
+                    provider.setCategoryFilter(null);
+                  }
+                  
+                  if (selectedPaymentMethod != null) {
+                    provider.setPaymentMethodFilter(selectedPaymentMethod);
+                  } else {
+                    provider.setPaymentMethodFilter(null);
+                  }
+                  
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ApiConfig.primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Terapkan'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildActiveFilters(ExpenseProvider provider) {
+    final List<Widget> filterChips = [];
+    
+    // Date range filter
+    if (provider.startDate != null || provider.endDate != null) {
+      String dateText = '';
+      if (provider.startDate != null && provider.endDate != null) {
+        if (provider.startDate == provider.endDate) {
+          dateText = 'Tanggal: ${provider.startDate}';
+        } else {
+          dateText = 'Periode: ${provider.startDate} - ${provider.endDate}';
+        }
+      } else if (provider.startDate != null) {
+        dateText = 'Dari: ${provider.startDate}';
+      } else if (provider.endDate != null) {
+        dateText = 'Sampai: ${provider.endDate}';
+      }
+      
+      filterChips.add(
+        Chip(
+          label: Text(dateText),
+          deleteIcon: const Icon(Icons.close, size: 18),
+          onDeleted: () {
+            provider.setDateFilter(null, null);
+          },
+          backgroundColor: ApiConfig.primaryColor.withOpacity(0.1),
+          deleteIconColor: ApiConfig.primaryColor,
+        ),
+      );
+    }
+    
+    // Category filter
+    if (provider.selectedCategoryId != null) {
+      filterChips.add(
+        Consumer<ExpenseCategoryProvider>(
+          builder: (context, categoryProvider, child) {
+            final category = categoryProvider.expenseCategories
+                .where((cat) => cat.id == provider.selectedCategoryId)
+                .firstOrNull;
+            
+            return Chip(
+              label: Text('Kategori: ${category?.name ?? 'Kategori Tidak Diketahui'}'),
+              deleteIcon: const Icon(Icons.close, size: 18),
+              onDeleted: () {
+                provider.setCategoryFilter(null);
+              },
+              backgroundColor: ApiConfig.primaryColor.withOpacity(0.1),
+              deleteIconColor: ApiConfig.primaryColor,
+            );
+          },
+        ),
+      );
+    }
+    
+    // Payment method filter
+    if (provider.selectedPaymentMethod != null) {
+      filterChips.add(
+        Chip(
+          label: Text('Pembayaran: ${provider.selectedPaymentMethod}'),
+          deleteIcon: const Icon(Icons.close, size: 18),
+          onDeleted: () {
+            provider.setPaymentMethodFilter(null);
+          },
+          backgroundColor: ApiConfig.primaryColor.withOpacity(0.1),
+          deleteIconColor: ApiConfig.primaryColor,
+        ),
+      );
+    }
+    
+    if (filterChips.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.filter_alt,
+                size: 16,
+                color: Colors.grey.shade600,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Filter Aktif:',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              if (filterChips.isNotEmpty)
+                TextButton(
+                  onPressed: () {
+                    provider.setDateFilter(null, null);
+                    provider.setCategoryFilter(null);
+                    provider.setPaymentMethodFilter(null);
+                  },
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'Hapus Semua',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: ApiConfig.primaryColor,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: filterChips,
           ),
         ],
       ),

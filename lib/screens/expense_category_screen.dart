@@ -1,10 +1,10 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cne_pos_apps/models/expense_category_model.dart';
-import 'package:cne_pos_apps/providers/expense_category_provider.dart';
-import 'package:cne_pos_apps/screens/expense_category_form_screen.dart';
+import 'dart:async';
+import '../providers/expense_category_provider.dart';
+import '../models/expense_category_model.dart';
 import '../config/api_config.dart';
+import 'expense_category_form_screen.dart';
 
 class ExpenseCategoryScreen extends StatefulWidget {
   const ExpenseCategoryScreen({Key? key}) : super(key: key);
@@ -100,6 +100,137 @@ class _ExpenseCategoryScreenState extends State<ExpenseCategoryScreen> {
     final provider = Provider.of<ExpenseCategoryProvider>(context, listen: false);
     provider.resetFilters();
     provider.fetchExpenseCategories();
+  }
+
+  Widget _buildFilterSection() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      height: _isFilterExpanded ? null : 0,
+      child: _isFilterExpanded
+          ? Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white,
+                    Colors.grey[50]!,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(
+                  color: Colors.grey[200]!,
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.filter_list,
+                        color: Colors.green[600],
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Filter Kategori',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildStatusFilter(),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: _resetFilters,
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.grey[600],
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        ),
+                        child: const Text('Reset'),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: _applyFilters,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('Terapkan'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildStatusFilter() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Status Kategori',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.white,
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<bool?>(
+              value: _isActiveFilter,
+              hint: const Text('Pilih Status'),
+              isExpanded: true,
+              items: const [
+                DropdownMenuItem(value: null, child: Text('Semua Status')),
+                DropdownMenuItem(value: true, child: Text('Aktif')),
+                DropdownMenuItem(value: false, child: Text('Tidak Aktif')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _isActiveFilter = value;
+                  _quickFilter = value == null ? 'all' : (value ? 'active' : 'inactive');
+                });
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
   
   // Fungsi untuk melakukan pencarian
@@ -248,6 +379,15 @@ class _ExpenseCategoryScreenState extends State<ExpenseCategoryScreen> {
               tooltip: 'Mode Pilih',
             ),
             IconButton(
+              icon: Icon(_isFilterExpanded ? Icons.filter_list : Icons.filter_list_outlined),
+              onPressed: () {
+                setState(() {
+                  _isFilterExpanded = !_isFilterExpanded;
+                });
+              },
+              tooltip: 'Filter',
+            ),
+            IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: () {
                 Provider.of<ExpenseCategoryProvider>(context, listen: false).refreshExpenseCategories();
@@ -261,150 +401,53 @@ class _ExpenseCategoryScreenState extends State<ExpenseCategoryScreen> {
         builder: (context, provider, child) {
           return Column(
             children: [
-              // Search dan Filter Section
+              // Search Section
               Container(
                 color: Colors.white,
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    // Search Bar
-                    TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Cari kategori pengeluaran...',
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _searchQuery = '';
-                                });
-                                _performSearch();
-                              },
-                            )
-                          : null,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey[300]!),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Colors.green),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[50],
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                        _performSearch();
-                      },
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Quick Filters
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                _buildQuickFilterChip('all', 'Semua', null),
-                                const SizedBox(width: 8),
-                                _buildQuickFilterChip('active', 'Aktif', true),
-                                const SizedBox(width: 8),
-                                _buildQuickFilterChip('inactive', 'Tidak Aktif', false),
-                              ],
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            _isFilterExpanded ? Icons.expand_less : Icons.expand_more,
-                            color: Colors.grey[600],
-                          ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Cari kategori pengeluaran...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
                           onPressed: () {
+                            _searchController.clear();
                             setState(() {
-                              _isFilterExpanded = !_isFilterExpanded;
+                              _searchQuery = '';
                             });
+                            _performSearch();
                           },
-                          tooltip: 'Filter Lanjutan',
-                        ),
-                      ],
+                        )
+                      : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
                     ),
-                    
-                    // Advanced Filters (Expandable)
-                    if (_isFilterExpanded) ...[
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey[300]!),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Filter Lanjutan',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: DropdownButtonFormField<bool?>(
-                                    value: _isActiveFilter,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Status',
-                                      border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    ),
-                                    items: const [
-                                      DropdownMenuItem(value: null, child: Text('Semua Status')),
-                                      DropdownMenuItem(value: true, child: Text('Aktif')),
-                                      DropdownMenuItem(value: false, child: Text('Tidak Aktif')),
-                                    ],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _isActiveFilter = value;
-                                        _quickFilter = value == null ? 'all' : (value ? 'active' : 'inactive');
-                                      });
-                                      _applyFilters();
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                ElevatedButton(
-                                  onPressed: _resetFilters,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey[600],
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  child: const Text('Reset'),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.green),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                    _performSearch();
+                  },
                 ),
               ),
+              
+              // Filter Section
+              _buildFilterSection(),
               
               // Content Section
               Expanded(
@@ -432,29 +475,7 @@ class _ExpenseCategoryScreenState extends State<ExpenseCategoryScreen> {
     );
   }
 
-  Widget _buildQuickFilterChip(String key, String label, bool? isActive) {
-    final isSelected = _quickFilter == key;
-    
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        if (selected) {
-          setState(() {
-            _quickFilter = key;
-            _isActiveFilter = isActive;
-          });
-          _applyFilters();
-        }
-      },
-      selectedColor: Colors.green.withOpacity(0.2),
-      checkmarkColor: Colors.green,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.green : Colors.grey[700],
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-    );
-  }
+
 
   Widget _buildContent(ExpenseCategoryProvider provider) {
     if (provider.isLoading && provider.expenseCategories.isEmpty) {

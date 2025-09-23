@@ -1064,7 +1064,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => TransactionDetailScreen(
-                          transactionId: int.parse(transaction['id'].toString().replaceAll('INV-', '')),
+                          transactionId: transaction['id'],
                         ),
                       ),
                     );
@@ -1172,7 +1172,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => TransactionDetailScreen(
-                          transactionId: int.parse(transaction['id'].toString().replaceAll('INV-', '')),
+                          transactionId: transaction['id'],
                         ),
                       ),
                     );

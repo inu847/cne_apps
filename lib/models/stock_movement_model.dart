@@ -25,6 +25,9 @@ class StockMovement {
   final double? quantityAfter;
   final String? movementType;
   final String? sourceType;
+  final double? unitCost;
+  final double? totalCost;
+  final DateTime? movementDate;
 
   StockMovement({
     required this.id,
@@ -48,6 +51,9 @@ class StockMovement {
     this.quantityAfter,
     this.movementType,
     this.sourceType,
+    this.unitCost,
+    this.totalCost,
+    this.movementDate,
   });
 
   factory StockMovement.fromJson(Map<String, dynamic> json) {
@@ -87,6 +93,15 @@ class StockMovement {
             : null,
         movementType: json['movement_type'],
         sourceType: json['source_type'],
+        unitCost: json['unit_cost'] != null 
+            ? double.tryParse(json['unit_cost'].toString()) 
+            : null,
+        totalCost: json['total_cost'] != null 
+            ? double.tryParse(json['total_cost'].toString()) 
+            : null,
+        movementDate: json['movement_date'] != null 
+            ? DateTime.tryParse(json['movement_date']) 
+            : null,
       );
     } catch (e) {
       print('Error parsing StockMovement JSON: $e');
@@ -102,11 +117,27 @@ class StockMovement {
         updatedAt: DateTime.now(),
         userId: json['user_id'] is int ? json['user_id'] : 0,
         userName: json['user_name'] ?? 'Unknown User',
-        quantityBefore: null,
-        quantityChange: null,
-        quantityAfter: null,
-        movementType: null,
-        sourceType: null,
+        // Properly handle double fields in catch block
+        quantityBefore: json['quantity_before'] != null 
+            ? double.tryParse(json['quantity_before'].toString()) 
+            : null,
+        quantityChange: json['quantity_change'] != null 
+            ? double.tryParse(json['quantity_change'].toString()) 
+            : null,
+        quantityAfter: json['quantity_after'] != null 
+            ? double.tryParse(json['quantity_after'].toString()) 
+            : null,
+        movementType: json['movement_type'],
+        sourceType: json['source_type'],
+        unitCost: json['unit_cost'] != null 
+            ? double.tryParse(json['unit_cost'].toString()) 
+            : null,
+        totalCost: json['total_cost'] != null 
+            ? double.tryParse(json['total_cost'].toString()) 
+            : null,
+        movementDate: json['movement_date'] != null 
+            ? DateTime.tryParse(json['movement_date']) 
+            : null,
       );
     }
   }
@@ -134,19 +165,56 @@ class StockMovement {
       'quantity_after': quantityAfter?.toString(),
       'movement_type': movementType,
       'source_type': sourceType,
+      'unit_cost': unitCost?.toString(),
+      'total_cost': totalCost?.toString(),
+      'movement_date': movementDate?.toIso8601String(),
     };
   }
 
   // Helper methods
   String get formattedCreatedAt => _formatDateTime(createdAt);
   String get formattedUpdatedAt => _formatDateTime(updatedAt);
+  String get formattedMovementDate => movementDate != null ? _formatDateTime(movementDate!) : _formatDateTime(createdAt);
+  String get formattedUnitCost => unitCost != null ? FormatUtils.formatCurrency(unitCost!) : '-';
+  String get formattedTotalCost => totalCost != null ? FormatUtils.formatCurrency(totalCost!) : '-';
+  
+  // Helper methods for quantity formatting
+  String get formattedQuantityBefore {
+    if (quantityBefore != null) return _formatQuantity(quantityBefore!);
+    // Fallback to previousStock if available
+    if (previousStock != null) return _formatQuantity(previousStock!.toDouble());
+    return '-';
+  }
+  
+  String get formattedQuantityAfter {
+    if (quantityAfter != null) return _formatQuantity(quantityAfter!);
+    // Fallback to currentStock if available
+    if (currentStock != null) return _formatQuantity(currentStock!.toDouble());
+    return '-';
+  }
+  
+  String get formattedQuantityChange {
+    if (quantityChange != null) return _formatQuantity(quantityChange!);
+    // Fallback to quantity if available
+    if (quantity != null) {
+      final sign = type == 'out' ? '-' : '+';
+      return '$sign${_formatQuantity(quantity!.toDouble())}';
+    }
+    return '-';
+  }
+  
+  String _formatQuantity(double quantity) {
+    return quantity % 1 == 0 ? quantity.toInt().toString() : quantity.toString();
+  }
   
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
   
   String get typeDisplayName {
-    switch (type) {
+    // Use new API field if available, fallback to old field
+    final displayType = movementType ?? type;
+    switch (displayType) {
       case 'in':
         return 'Masuk';
       case 'out':
@@ -154,7 +222,7 @@ class StockMovement {
       case 'adjustment':
         return 'Penyesuaian';
       default:
-        return type;
+        return displayType;
     }
   }
 
@@ -172,9 +240,82 @@ class StockMovement {
         return referenceType ?? '-';
     }
   }
+  
+  // New helper methods for API response fields
+  String get movementTypeDisplayName {
+    // Use new API field if available
+    if (movementType != null) {
+      switch (movementType) {
+        case 'in':
+          return 'Masuk';
+        case 'out':
+          return 'Keluar';
+        case 'adjustment':
+          return 'Penyesuaian';
+        default:
+          return movementType!;
+      }
+    }
+    
+    // Fallback to old type field
+    switch (type) {
+      case 'in':
+        return 'Masuk';
+      case 'out':
+        return 'Keluar';
+      case 'adjustment':
+        return 'Penyesuaian';
+      default:
+        return type.isNotEmpty ? type : '-';
+    }
+  }
+  
+  String get sourceTypeDisplayName {
+    // Use new API field if available
+    if (sourceType != null) {
+      switch (sourceType) {
+        case 'sale':
+          return 'Penjualan';
+        case 'purchase':
+          return 'Pembelian';
+        case 'manual_adjustment':
+          return 'Penyesuaian Manual';
+        case 'transfer':
+          return 'Transfer';
+        case 'return':
+          return 'Retur';
+        case 'damage':
+          return 'Kerusakan';
+        case 'expired':
+          return 'Kadaluarsa';
+        default:
+          return sourceType!;
+      }
+    }
+    
+    // Fallback to referenceType if available
+    if (referenceType != null) {
+      switch (referenceType) {
+        case 'sale':
+          return 'Penjualan';
+        case 'purchase':
+          return 'Pembelian';
+        case 'adjustment':
+          return 'Penyesuaian';
+        case 'transfer':
+          return 'Transfer';
+        default:
+          return referenceType!;
+      }
+    }
+    
+    return '-';
+  }
 
   IconData get typeIcon {
-    switch (type) {
+    // Use new API field if available, fallback to old field
+    final displayType = movementType ?? type;
+    switch (displayType) {
       case 'in':
         return Icons.add_circle;
       case 'out':
@@ -187,7 +328,9 @@ class StockMovement {
   }
 
   Color get typeColor {
-    switch (type) {
+    // Use new API field if available, fallback to old field
+    final displayType = movementType ?? type;
+    switch (displayType) {
       case 'in':
         return Colors.green;
       case 'out':
@@ -200,8 +343,12 @@ class StockMovement {
   }
 
   String get quantityDisplay {
+    // Use new API fields if available, fallback to old fields
+    final displayQuantity = quantityChange ?? quantity.toDouble();
+    final displayType = movementType ?? type;
+    
     String prefix = '';
-    switch (type) {
+    switch (displayType) {
       case 'in':
         prefix = '+';
         break;
@@ -209,10 +356,16 @@ class StockMovement {
         prefix = '-';
         break;
       case 'adjustment':
-        prefix = quantity >= 0 ? '+' : '';
+        prefix = displayQuantity >= 0 ? '+' : '';
         break;
     }
-    return '$prefix$quantity';
+    
+    // Format quantity to remove unnecessary decimals
+    final formattedQuantity = displayQuantity % 1 == 0 
+        ? displayQuantity.toInt().toString() 
+        : displayQuantity.toString();
+    
+    return '$prefix$formattedQuantity';
   }
 
   StockMovement copyWith({

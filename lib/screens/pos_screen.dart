@@ -2327,11 +2327,6 @@ class _POSScreenState extends State<POSScreen> {
     // Jika keranjang kosong, tidak perlu melakukan apa-apa
     if (_cart.isEmpty) return;
     
-    // Validasi petty cash sebelum melakukan transaksi
-    if (!_validatePettyCashForTransaction()) {
-      return;
-    }
-    
     // Tambahkan log untuk debugging
     print('Menampilkan dialog pemilihan metode pembayaran');
     print('totalAmount: $_totalAmount');
@@ -2913,7 +2908,7 @@ class _POSScreenState extends State<POSScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => TransactionDetailScreen(
-                                    transactionId: int.parse(transactionId.toString()),
+                                    transactionId: transactionId,
                                   ),
                                 ),
                               );
